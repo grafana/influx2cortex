@@ -1,10 +1,10 @@
 name: build-and-push-image
 on:
   push:
-    branches: master
+    branches: main
 
 jobs:
-  main:
+  docker_build_push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -14,7 +14,7 @@ jobs:
         id: docker_meta
         uses: crazy-max/ghaction-docker-meta@v1
         with:
-          images: gouthamve/flood
+          images: ghcr.io/gouthamve/flood
           tag-sha: true
 
       - name: Set up QEMU
