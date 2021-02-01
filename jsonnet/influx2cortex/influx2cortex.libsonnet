@@ -6,7 +6,7 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
 
 {
   _images+:: {
-    influx2cortex: 'ghcr.io/gouthamve/influx2cortex:sha-e055b7f',
+    influx2cortex: 'ghcr.io/gouthamve/influx2cortex:sha-caecbb5',
   },
 
   _config+:: {
