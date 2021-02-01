@@ -1,12 +1,12 @@
-# Flood: An Influx Proxy for Cortex
+# influx2cortex: An Influx Proxy for Cortex
 
-Flood is a proxy that accepts Influx Line protocol and writes it to Cortex.
+influx2cortex is a proxy that accepts Influx Line protocol and writes it to Cortex.
 While today it only accepts writes, I have plans to add Flux read support too!
 
 To run it:
 
 ```
-./flood -server.http-listen-port=8080 -auth.enable=false -distributor.endpoint=localhost:9095
+./influx2cortex -server.http-listen-port=8080 -auth.enable=false -distributor.endpoint=localhost:9095
 ```
 
 ## Roadmap

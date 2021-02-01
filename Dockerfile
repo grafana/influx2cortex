@@ -1,10 +1,10 @@
 FROM golang:1.15-alpine3.12 as build
 RUN apk add --update --no-cache git
 
-WORKDIR /go/src/github.com/gouthamve/flood
+WORKDIR /go/src/github.com/grafana/influx2cortex
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o /bin/flood --ldflags "-w -extldflags '-static'"  github.com/gouthamve/flood/cmd/flood 
+RUN CGO_ENABLED=0 go build -o /bin/influx2cortex --ldflags "-w -extldflags '-static'"  github.com/grafana/influx2cortex/cmd/influx2cortex 
 
 
 FROM alpine:3.12
@@ -15,5 +15,5 @@ RUN addgroup -g 1000 app && \
 WORKDIR /app
 USER app
 
-COPY --from=build /bin/flood /bin/flood
-ENTRYPOINT [ "/bin/flood" ]
+COPY --from=build /bin/influx2cortex /bin/influx2cortex
+ENTRYPOINT [ "/bin/influx2cortex" ]

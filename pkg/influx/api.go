@@ -18,7 +18,7 @@ import (
 )
 
 var ingesterClientRequestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Namespace: "flood",
+	Namespace: "influx2cortex",
 	Name:      "distributor_client_request_duration_seconds",
 	Help:      "Time spent doing Distributor requests.",
 	Buckets:   prometheus.ExponentialBuckets(0.001, 4, 6),

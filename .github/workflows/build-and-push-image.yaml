@@ -14,7 +14,7 @@ jobs:
         id: docker_meta
         uses: crazy-max/ghaction-docker-meta@v1
         with:
-          images: ghcr.io/gouthamve/flood
+          images: ghcr.io/gouthamve/influx2cortex
           tag-sha: true
 
       - name: Set up QEMU
@@ -27,7 +27,7 @@ jobs:
         uses: docker/login-action@v1 
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: gouthamve 
           password: ${{ secrets.CR_PAT }}
 
       - name: Build and push

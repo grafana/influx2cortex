@@ -9,7 +9,7 @@ import (
 	"github.com/cortexproject/cortex/pkg/util/flagext"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/gouthamve/flood/pkg/influx"
+	"github.com/grafana/influx2cortex/pkg/influx"
 	"github.com/weaveworks/common/logging"
 	"github.com/weaveworks/common/server"
 )
@@ -54,7 +54,7 @@ func Run() error {
 func main() {
 	err := Run()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error running flood: %s", err)
+		fmt.Fprintf(os.Stderr, "error running influx2cortex: %s", err)
 		os.Exit(1)
 	}
 	os.Exit(0)
