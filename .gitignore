@@ -1,2 +1,2 @@
-/flood
-jsonnet/flood/vendor
+/influx2cortex
+jsonnet/influx2cortex/vendor
