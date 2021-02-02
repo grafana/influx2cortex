@@ -2,7 +2,8 @@ local jaeger_mixin = import 'github.com/grafana/jsonnet-libs/jaeger-agent-mixin/
 local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet',
       container = k.core.v1.container,
       containerPort = k.core.v1.containerPort,
-      deployment = k.apps.v1.deployment;
+      deployment = k.apps.v1.deployment,
+      service = k.core.v1.service;
 
 {
   _images+:: {
@@ -18,12 +19,13 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
 
   influx2cortex_args:: {
     'distributor.endpoint': $._config.influx2cortex.distributor_endpoint,
+    'server.http-listen-port': '8080',
   },
 
   influx2cortex_container::
     container.new('influx2cortex', $._images.influx2cortex) +
     container.withPorts([
-      containerPort.newNamed(name='http-metrics', containerPort=80),
+      containerPort.newNamed(name='http-metrics', containerPort=8080),
       containerPort.newNamed(name='grpc', containerPort=9095),
     ]) +
     container.withArgsMixin(k.util.mapToFlags($.influx2cortex_args)) +
@@ -36,5 +38,6 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
     k.util.antiAffinity,
 
   influx2cortex_service:
-    k.util.serviceFor($.influx2cortex_deployment),
+    k.util.serviceFor($.influx2cortex_deployment) +
+    service.mixin.spec.withClusterIp('None'),
 }
