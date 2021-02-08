@@ -17,3 +17,33 @@ require (
 
 // We can't upgrade to grpc 1.30.0 until go.etcd.io/etcd will support it.
 replace google.golang.org/grpc => google.golang.org/grpc v1.29.1
+
+// Replacing this cuts that dependency branch by making an older cortex version depend on on a newer thanos
+replace github.com/thanos-io/thanos v0.13.1-0.20210108102609-f85e4003ba51 => github.com/thanos-io/thanos v0.13.1-0.20210122144644-4b4994212b24
+
+exclude (
+	// Exclude pre-go-mod kubernetes tags, as they are older
+	// than v0.x releases but are picked when we update the dependencies.
+	k8s.io/client-go v1.4.0
+	k8s.io/client-go v1.4.0+incompatible
+	k8s.io/client-go v1.5.0
+	k8s.io/client-go v1.5.0+incompatible
+	k8s.io/client-go v1.5.1
+	k8s.io/client-go v1.5.1+incompatible
+	k8s.io/client-go v10.0.0+incompatible
+	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/client-go v12.0.0+incompatible
+	k8s.io/client-go v2.0.0+incompatible
+	k8s.io/client-go v2.0.0-alpha.1+incompatible
+	k8s.io/client-go v3.0.0+incompatible
+	k8s.io/client-go v3.0.0-beta.0+incompatible
+	k8s.io/client-go v4.0.0+incompatible
+	k8s.io/client-go v4.0.0-beta.0+incompatible
+	k8s.io/client-go v5.0.0+incompatible
+	k8s.io/client-go v5.0.1+incompatible
+	k8s.io/client-go v6.0.0+incompatible
+	k8s.io/client-go v7.0.0+incompatible
+	k8s.io/client-go v8.0.0+incompatible
+	k8s.io/client-go v9.0.0+incompatible
+	k8s.io/client-go v9.0.0-invalid+incompatible
+)
