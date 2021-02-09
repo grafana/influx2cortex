@@ -21,6 +21,9 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.29.1
 // Replacing this cuts that dependency branch by making an older cortex version depend on on a newer thanos
 replace github.com/thanos-io/thanos v0.13.1-0.20210108102609-f85e4003ba51 => github.com/thanos-io/thanos v0.13.1-0.20210122144644-4b4994212b24
 
+// We can't upgrade until grpc upgrade is unblocked.
+replace github.com/sercand/kuberesolver => github.com/sercand/kuberesolver v2.4.0+incompatible
+
 exclude (
 	// Exclude pre-go-mod kubernetes tags, as they are older
 	// than v0.x releases but are picked when we update the dependencies.
