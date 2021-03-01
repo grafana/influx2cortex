@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cortexproject/cortex/pkg/distributor/distributorpb"
 	"github.com/cortexproject/cortex/pkg/ingester/client"
 	"github.com/cortexproject/cortex/pkg/util/grpcclient"
 	"github.com/go-kit/kit/log"
@@ -37,7 +38,7 @@ func (c *APIConfig) RegisterFlags(flags *flag.FlagSet) {
 
 type API struct {
 	logger log.Logger
-	client client.PushOnlyIngesterClient
+	client distributorpb.DistributorClient
 }
 
 func (a *API) Register(server *server.Server, authMiddleware middleware.Interface) {
@@ -55,7 +56,7 @@ func NewAPI(logger log.Logger, cfg APIConfig) (*API, error) {
 		return nil, err
 	}
 
-	distClient := client.NewPushOnlyIngesterClient(conn)
+	distClient := distributorpb.NewDistributorClient(conn)
 
 	return &API{
 		logger: logger,

@@ -3,13 +3,12 @@ module github.com/grafana/influx2cortex
 go 1.15
 
 require (
-	github.com/cortexproject/cortex v1.6.1-0.20210129172402-0976147451ee
+	github.com/cortexproject/cortex v1.7.1-0.20210225112510-261801bb0c7a
 	github.com/go-kit/kit v0.10.0
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/influxdata/influxdb/v2 v2.0.3
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.9.0
-	github.com/prometheus/prometheus v1.8.2-0.20210124145330-b5dfa2414b9e
+	github.com/prometheus/prometheus v1.8.2-0.20210215121130-6f488061dfb4
 	github.com/sirupsen/logrus v1.7.0
 	github.com/weaveworks/common v0.0.0-20210112142934-23c8d7fa6120
 	google.golang.org/grpc v1.35.0
