@@ -3,19 +3,16 @@ module github.com/grafana/influx2cortex
 go 1.15
 
 require (
-	github.com/cortexproject/cortex v1.7.1-0.20210225112510-261801bb0c7a
-	github.com/go-kit/kit v0.10.0
+	github.com/cortexproject/cortex v1.11.0
+	github.com/go-kit/kit v0.12.0
 	github.com/influxdata/influxdb/v2 v2.0.3
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.9.0
-	github.com/prometheus/prometheus v1.8.2-0.20210215121130-6f488061dfb4
-	github.com/sirupsen/logrus v1.7.0
-	github.com/weaveworks/common v0.0.0-20210112142934-23c8d7fa6120
-	google.golang.org/grpc v1.35.0
+	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/prometheus v1.8.2-0.20210914090109-37468d88dce8
+	github.com/sirupsen/logrus v1.8.1
+	github.com/weaveworks/common v0.0.0-20210901124008-1fa3f9fa874c
+	google.golang.org/grpc v1.40.0
 )
-
-// We can't upgrade to grpc 1.30.0 until go.etcd.io/etcd will support it.
-replace google.golang.org/grpc => google.golang.org/grpc v1.29.1
 
 // Replacing this cuts that dependency branch by making an older cortex version depend on on a newer thanos
 replace github.com/thanos-io/thanos v0.13.1-0.20210108102609-f85e4003ba51 => github.com/thanos-io/thanos v0.13.1-0.20210122144644-4b4994212b24

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"grafana/dskit/flagext"
+
 	"github.com/cortexproject/cortex/pkg/util/fakeauth"
-	"github.com/cortexproject/cortex/pkg/util/flagext"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/grafana/influx2cortex/pkg/influx"
