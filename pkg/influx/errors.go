@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
-	grpc_status "google.golang.org/grpc/status"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 type status string
@@ -81,6 +81,6 @@ func isNetworkTimeout(err error) bool {
 }
 
 func isGRPCTimeout(err error) bool {
-	s, ok := grpc_status.FromError(errors.Cause(err))
+	s, ok := grpcstatus.FromError(errors.Cause(err))
 	return ok && s.Code() == codes.DeadlineExceeded
 }

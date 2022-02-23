@@ -1,2 +1,4 @@
 /influx2cortex
 jsonnet/influx2cortex/vendor
+.idea/
+cmd/influx2cortex/influx2cortex
