@@ -11,6 +11,8 @@ import (
 	"gotest.tools/assert"
 )
 
+const maxSize = 100 << 10
+
 func TestParseInfluxLineReader(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -21,7 +23,7 @@ func TestParseInfluxLineReader(t *testing.T) {
 		{
 			name: "parse simple line",
 			url:  "/",
-			data: "measurement,t1=v1 f1=2 1465839830100400200",
+			data: "measurement,t1=v1 f1=\"v2\" 1465839830100400200",
 			expectedResult: []client.TimeSeries{
 				{
 					Labels:  []client.LabelAdapter{{Name: "__name__", Value: "measurement_f1"}, {Name: "t1", Value: "v1"}},
@@ -60,7 +62,7 @@ func TestParseInfluxLineReader(t *testing.T) {
 			},
 		},
 		{
-			name: "parse invalid chars",
+			name: "parse invalid char conversion",
 			url:  "/",
 			data: "*measurement,#t1?=v1 f1=0 1465839830100400200",
 			expectedResult: []client.TimeSeries{
@@ -71,7 +73,6 @@ func TestParseInfluxLineReader(t *testing.T) {
 			},
 		},
 	}
-	maxSize := 100 << 10
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -79,7 +80,7 @@ func TestParseInfluxLineReader(t *testing.T) {
 
 			timeSeries, err := parseInfluxLineReader(context.Background(), req, maxSize)
 			require.NoError(t, err)
-			for i := 1; i < len(timeSeries); i++ {
+			for i := 0; i < len(timeSeries); i++ {
 				assert.Equal(t, timeSeries[i].String(), tt.expectedResult[i].String())
 			}
 		})
@@ -102,8 +103,22 @@ func TestInvalidInput(t *testing.T) {
 			url:  "/write",
 			data: "measurement,t1=v1 f1= 1465839830100400200", // field value is missing
 		},
+		{
+			name: "parse invalid tags",
+			url:  "/write",
+			data: "measurement,t1=v1,t2 f1=2 1465839830100400200", // field value is missing
+		},
+		{
+			name: "parse field value invalid quotes",
+			url:  "/write",
+			data: "measurement,t1=v1 f1=v1 1465839830100400200", // string type field values require double quotes
+		},
+		{
+			name: "parse missing field",
+			url:  "/write",
+			data: "measurement,t1=v1 1465839830100400200", // missing field
+		},
 	}
-	maxSize := 100 << 10
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -116,8 +131,6 @@ func TestInvalidInput(t *testing.T) {
 }
 
 func TestBatchReadCloser(t *testing.T) {
-	maxSize := 100 << 10
-
 	req := httptest.NewRequest("POST", "/write", bytes.NewReader([]byte("m,t1=v1 f1=2 1465839830100400200")))
 	req.Header.Add("Content-Encoding", "gzip")
 
