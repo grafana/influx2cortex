@@ -21,52 +21,52 @@ func TestParseInfluxLineReader(t *testing.T) {
 		{
 			name: "parse simple line",
 			url:  "/",
-			data: "measurement,t1=v1 f1=2 100",
+			data: "measurement,t1=v1 f1=2 1465839830100400200",
 			expectedResult: []client.TimeSeries{
 				{
 					Labels:  []client.LabelAdapter{{Name: "__name__", Value: "measurement_f1"}, {Name: "t1", Value: "v1"}},
-					Samples: []client.Sample{{Value: 2, TimestampMs: 0}},
+					Samples: []client.Sample{{Value: 2, TimestampMs: 1465839830100}},
 				},
 			},
 		},
 		{
 			name: "parse multiple tags",
 			url:  "/",
-			data: "measurement,t1=v1,t2=v2,t3=v3 f1=36 100",
+			data: "measurement,t1=v1,t2=v2,t3=v3 f1=36 1465839830100400200",
 			expectedResult: []client.TimeSeries{
 				{
 					Labels:  []client.LabelAdapter{{Name: "__name__", Value: "measurement_f1"}, {Name: "t1", Value: "v1"}, {Name: "t2", Value: "v2"}, {Name: "t3", Value: "v3"}},
-					Samples: []client.Sample{{Value: 36, TimestampMs: 0}},
+					Samples: []client.Sample{{Value: 36, TimestampMs: 1465839830100}},
 				},
 			},
 		},
 		{
 			name: "parse multiple fields",
 			url:  "/",
-			data: "measurement,t1=v1 f1=3.0,f2=365,f3=0 100",
+			data: "measurement,t1=v1 f1=3.0,f2=365,f3=0 1465839830100400200",
 			expectedResult: []client.TimeSeries{
 				{
 					Labels:  []client.LabelAdapter{{Name: "__name__", Value: "measurement_f1"}, {Name: "t1", Value: "v1"}},
-					Samples: []client.Sample{{Value: 3, TimestampMs: 0}},
+					Samples: []client.Sample{{Value: 3, TimestampMs: 1465839830100}},
 				},
 				{
 					Labels:  []client.LabelAdapter{{Name: "__name__", Value: "measurement_f2"}, {Name: "t1", Value: "v1"}},
-					Samples: []client.Sample{{Value: 365, TimestampMs: 0}},
+					Samples: []client.Sample{{Value: 365, TimestampMs: 1465839830100}},
 				},
 				{
 					Labels:  []client.LabelAdapter{{Name: "__name__", Value: "measurement_f3"}, {Name: "t1", Value: "v1"}},
-					Samples: []client.Sample{{Value: 0, TimestampMs: 0}},
+					Samples: []client.Sample{{Value: 0, TimestampMs: 1465839830100}},
 				},
 			},
 		},
 		{
 			name: "parse invalid chars",
 			url:  "/",
-			data: "*measurement,#t1?=v1 f1=0 100",
+			data: "*measurement,#t1?=v1 f1=0 1465839830100400200",
 			expectedResult: []client.TimeSeries{
 				{
 					Labels:  []client.LabelAdapter{{Name: "__name__", Value: "_measurement_f1"}, {Name: "_t1_", Value: "v1"}},
-					Samples: []client.Sample{{Value: 0, TimestampMs: 0}},
+					Samples: []client.Sample{{Value: 0, TimestampMs: 1465839830100}},
 				},
 			},
 		},
@@ -95,12 +95,12 @@ func TestInvalidInput(t *testing.T) {
 		{
 			name: "parse invalid precision",
 			url:  "/write?precision=ss", // precision must be of type "ns", "us", "ms", "s"
-			data: "measurement,t1=v1 f1=2 100",
+			data: "measurement,t1=v1 f1=2 1465839830100400200",
 		},
 		{
 			name: "parse invalid field input",
 			url:  "/write",
-			data: "measurement,t1=v1 f1= 100", // field value is missing
+			data: "measurement,t1=v1 f1= 1465839830100400200", // field value is missing
 		},
 	}
 	maxSize := 100 << 10
@@ -118,7 +118,7 @@ func TestInvalidInput(t *testing.T) {
 func TestBatchReadCloser(t *testing.T) {
 	maxSize := 100 << 10
 
-	req := httptest.NewRequest("POST", "/write", bytes.NewReader([]byte("m,t1=v1 f1=2 100")))
+	req := httptest.NewRequest("POST", "/write", bytes.NewReader([]byte("m,t1=v1 f1=2 1465839830100400200")))
 	req.Header.Add("Content-Encoding", "gzip")
 
 	_, err := batchReadCloser(req.Body, "gzip", int64(maxSize))
