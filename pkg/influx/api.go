@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/cortexproject/cortex/pkg/distributor/distributorpb"
-	"github.com/cortexproject/cortex/pkg/ingester/client"
 	"github.com/cortexproject/cortex/pkg/util/grpcclient"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
@@ -77,14 +77,14 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Sigh, a write API optimisation needs me to jump through hoops.
-	pts := make([]client.PreallocTimeseries, 0, len(ts))
+	pts := make([]cortexpb.PreallocTimeseries, 0, len(ts))
 	for i := range ts {
-		pts = append(pts, client.PreallocTimeseries{
+		pts = append(pts, cortexpb.PreallocTimeseries{
 			TimeSeries: &ts[i],
 		})
 	}
 
-	rwReq := &client.WriteRequest{
+	rwReq := &cortexpb.WriteRequest{
 		Timeseries: pts,
 	}
 

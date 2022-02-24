@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/cortexproject/cortex/pkg/util/fakeauth"
-	"github.com/cortexproject/cortex/pkg/util/flagext"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/grafana/dskit/flagext"
 	"github.com/grafana/influx2cortex/pkg/influx"
 	"github.com/weaveworks/common/logging"
 	"github.com/weaveworks/common/server"
