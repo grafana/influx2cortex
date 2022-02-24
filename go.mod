@@ -84,3 +84,6 @@ exclude (
 	k8s.io/client-go v9.0.0+incompatible
 	k8s.io/client-go v9.0.0-invalid+incompatible
 )
+
+// Replacing this cuts that dependency branch by making an older cortex version depend on on a newer thanos
+replace github.com/thanos-io/thanos v0.13.1-0.20210108102609-f85e4003ba51 => github.com/thanos-io/thanos v0.13.1-0.20210122144644-4b4994212b24
