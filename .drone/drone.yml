@@ -1,0 +1,78 @@
+---
+image_pull_secrets:
+- dockerconfigjson
+kind: pipeline
+name: pr
+steps:
+- commands:
+  - go test ./...
+  image: golang:1.17
+  name: test
+  settings: {}
+- commands:
+  - echo -n "${DRONE_SOURCE_BRANCH}-${DRONE_COMMIT_SHA}" | tr "/" "_" > .tags
+  image: golang:1.17
+  name: generate tags
+  settings: {}
+- commands: []
+  image: plugins/gcr
+  name: build
+  settings:
+    json_key:
+      from_secret: gcr_admin
+    registry: us.gcr.io
+    repo: kubernetes-dev/influx2cortex
+trigger:
+  event:
+    include:
+    - pull_request
+type: docker
+---
+image_pull_secrets:
+- dockerconfigjson
+kind: pipeline
+name: master
+steps:
+- commands:
+  - go test ./...
+  image: golang:1.17
+  name: test
+  settings: {}
+- commands:
+  - echo -n "${DRONE_BRANCH}-${DRONE_COMMIT_SHA},latest" > .tags
+  image: golang:1.17
+  name: generate tags
+  settings: {}
+- commands: []
+  image: plugins/gcr
+  name: build + push
+  settings:
+    json_key:
+      from_secret: gcr_admin
+    registry: us.gcr.io
+    repo: kubernetes-dev/influx2cortex
+trigger:
+  branch:
+  - master
+  event:
+    include:
+    - push
+type: docker
+---
+get:
+  name: .dockerconfigjson
+  path: secret/data/common/gcr
+kind: secret
+name: dockerconfigjson
+---
+get:
+  name: pat
+  path: infra/data/ci/github/grafanabot
+kind: secret
+name: gh_token
+---
+get:
+  name: service-account
+  path: infra/data/ci/gcr-admin
+kind: secret
+name: gcr_admin
