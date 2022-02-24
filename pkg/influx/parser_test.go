@@ -49,6 +49,14 @@ func TestParseInfluxLineReader(t *testing.T) {
 					Labels:  []client.LabelAdapter{{Name: "__name__", Value: "measurement_f1"}, {Name: "t1", Value: "v1"}},
 					Samples: []client.Sample{{Value: 3, TimestampMs: 0}},
 				},
+				{
+					Labels:  []client.LabelAdapter{{Name: "__name__", Value: "measurement_f2"}, {Name: "t1", Value: "v1"}},
+					Samples: []client.Sample{{Value: 365, TimestampMs: 0}},
+				},
+				{
+					Labels:  []client.LabelAdapter{{Name: "__name__", Value: "measurement_f3"}, {Name: "t1", Value: "v1"}},
+					Samples: []client.Sample{{Value: 0, TimestampMs: 0}},
+				},
 			},
 		},
 		{
@@ -71,7 +79,9 @@ func TestParseInfluxLineReader(t *testing.T) {
 
 			timeSeries, err := parseInfluxLineReader(context.Background(), req, maxSize)
 			require.NoError(t, err)
-			assert.Equal(t, timeSeries[0].String(), tt.expectedResult[0].String())
+			for i := 1; i < len(timeSeries); i++ {
+				assert.Equal(t, timeSeries[i].String(), tt.expectedResult[i].String())
+			}
 		})
 	}
 }
