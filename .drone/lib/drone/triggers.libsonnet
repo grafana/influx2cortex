@@ -1,7 +1,7 @@
 {
-  master:: {
+  main:: {
     trigger+: {
-      branch+: ['master'],
+      branch+: ['main'],
       event+: {
         include+: ['push'],
       },

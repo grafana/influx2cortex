@@ -19,7 +19,7 @@ local generatePullRequestTags = [
   'echo -n "${DRONE_SOURCE_BRANCH}-${DRONE_COMMIT_SHA}" | tr "/" "_" > .tags',
 ];
 
-local generateMasterTags = [
+local generateMainTags = [
   // `.tags` is the file consumed by the Docker (GCR inluded) plugins to tag the built Docker image accordingly.
   // It is a comma-separated list of tags.
   'echo -n "${DRONE_BRANCH}-${DRONE_COMMIT_SHA},latest" > .tags',
@@ -37,12 +37,12 @@ local withImagePullSecrets = {
   + withImagePullSecrets
   + triggers.pr,
 
-  pipeline('master')
+  pipeline('main')
   + withInlineStep('test', ['go test ./...'])
-  + withInlineStep('generate tags', generateMasterTags)
+  + withInlineStep('generate tags', generateMainTags)
   + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + withImagePullSecrets
-  + triggers.master,
+  + triggers.main,
 ]
 + [
   vault.secret('dockerconfigjson', 'secret/data/common/gcr', '.dockerconfigjson'),

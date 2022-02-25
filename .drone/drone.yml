@@ -31,7 +31,7 @@ type: docker
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
-name: master
+name: main
 steps:
 - commands:
   - go test ./...
@@ -53,7 +53,7 @@ steps:
     repo: kubernetes-dev/influx2cortex
 trigger:
   branch:
-  - master
+  - main
   event:
     include:
     - push
@@ -78,6 +78,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: 1b41b408d33d7639e5dfcea77f016502d1f6e089e2b9f3c8a5c1679fe23f9202
+hmac: d9567894ca5eeca168bd00b117d23bfc34c19bace5577282619fed173c170ef1
 
 ...
