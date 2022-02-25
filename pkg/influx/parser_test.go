@@ -3,6 +3,7 @@ package influx
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
@@ -89,34 +90,40 @@ func TestParseInfluxLineReader(t *testing.T) {
 
 func TestInvalidInput(t *testing.T) {
 	tests := []struct {
-		name string
-		url  string
-		data string
+		name         string
+		url          string
+		data         string
+		errorMessage string
 	}{
 		{
-			name: "parse invalid precision",
-			url:  "/write?precision=ss", // precision must be of type "ns", "us", "ms", "s"
-			data: "measurement,t1=v1 f1=2 1465839830100400200",
+			name:         "parse invalid precision",
+			url:          "/write?precision=ss", // precision must be of type "ns", "us", "ms", "s"
+			data:         "measurement,t1=v1 f1=2 1465839830100400200",
+			errorMessage: "precision supplied is not valid",
 		},
 		{
-			name: "parse invalid field input",
-			url:  "/write",
-			data: "measurement,t1=v1 f1= 1465839830100400200", // field value is missing
+			name:         "parse invalid field input",
+			url:          "/write",
+			data:         "measurement,t1=v1 f1= 1465839830100400200", // field value is missing
+			errorMessage: "missing field value",
 		},
 		{
-			name: "parse invalid tags",
-			url:  "/write",
-			data: "measurement,t1=v1,t2 f1=2 1465839830100400200", // field value is missing
+			name:         "parse invalid tags",
+			url:          "/write",
+			data:         "measurement,t1=v1,t2 f1=2 1465839830100400200", // field value is missing
+			errorMessage: "missing tag value",
 		},
 		{
-			name: "parse field value invalid quotes",
-			url:  "/write",
-			data: "measurement,t1=v1 f1=v1 1465839830100400200", // string type field values require double quotes
+			name:         "parse field value invalid quotes",
+			url:          "/write",
+			data:         "measurement,t1=v1 f1=v1 1465839830100400200", // string type field values require double quotes
+			errorMessage: "invalid boolean",
 		},
 		{
-			name: "parse missing field",
-			url:  "/write",
-			data: "measurement,t1=v1 1465839830100400200", // missing field
+			name:         "parse missing field",
+			url:          "/write",
+			data:         "measurement,t1=v1 1465839830100400200", // missing field
+			errorMessage: "invalid field format",
 		},
 	}
 
@@ -125,7 +132,9 @@ func TestInvalidInput(t *testing.T) {
 			req := httptest.NewRequest("POST", tt.url, bytes.NewReader([]byte(tt.data)))
 
 			_, err := parseInfluxLineReader(context.Background(), req, maxSize)
+			fmt.Println("Error: ", err)
 			require.Error(t, err)
+			assert.ErrorContains(t, err, tt.errorMessage)
 		})
 	}
 }
