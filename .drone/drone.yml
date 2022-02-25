@@ -76,3 +76,8 @@ get:
   path: infra/data/ci/gcr-admin
 kind: secret
 name: gcr_admin
+---
+kind: signature
+hmac: 1b41b408d33d7639e5dfcea77f016502d1f6e089e2b9f3c8a5c1679fe23f9202
+
+...
