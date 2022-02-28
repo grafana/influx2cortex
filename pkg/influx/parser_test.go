@@ -3,8 +3,8 @@ package influx
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"net/http/httptest"
+	"sort"
 	"testing"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
@@ -81,7 +81,14 @@ func TestParseInfluxLineReader(t *testing.T) {
 
 			timeSeries, err := parseInfluxLineReader(context.Background(), req, maxSize)
 			require.NoError(t, err)
-			for i := 0; i < len(timeSeries); i++ {
+
+			if len(timeSeries) > 1 {
+				// sort the returned timeSeries results in guarantee expected order for comparison
+				sort.Slice(timeSeries, func(i, j int) bool {
+					return timeSeries[i].String() < timeSeries[j].String()
+				})
+			}
+			for i := 1; i < len(timeSeries); i++ {
 				assert.Equal(t, timeSeries[i].String(), tt.expectedResult[i].String())
 			}
 		})
@@ -132,7 +139,6 @@ func TestInvalidInput(t *testing.T) {
 			req := httptest.NewRequest("POST", tt.url, bytes.NewReader([]byte(tt.data)))
 
 			_, err := parseInfluxLineReader(context.Background(), req, maxSize)
-			fmt.Println("Error: ", err)
 			require.Error(t, err)
 			assert.ErrorContains(t, err, tt.errorMessage)
 		})
