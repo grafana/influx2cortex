@@ -14,7 +14,7 @@ import (
 	"github.com/cortexproject/cortex/pkg/util"
 	io2 "github.com/influxdata/influxdb/v2/kit/io"
 	"github.com/influxdata/influxdb/v2/models"
-	"github.com/prometheus/prometheus/pkg/labels"
+	"github.com/prometheus/prometheus/model/labels"
 )
 
 // parseInfluxLineReader parses a Influx Line Protocol request from an io.Reader.
