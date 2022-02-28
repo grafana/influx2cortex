@@ -2,7 +2,7 @@
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
-name: pr
+name: build
 steps:
 - commands:
   - go test ./...
@@ -10,36 +10,10 @@ steps:
   name: test
   settings: {}
 - commands:
-  - echo -n "${DRONE_SOURCE_BRANCH}-${DRONE_COMMIT_SHA}" | tr "/" "_" > .tags
-  image: golang:1.17
-  name: generate tags
-  settings: {}
-- commands: []
-  image: plugins/gcr
-  name: build
-  settings:
-    json_key:
-      from_secret: gcr_admin
-    registry: us.gcr.io
-    repo: kubernetes-dev/influx2cortex
-trigger:
-  event:
-    include:
-    - pull_request
-type: docker
----
-image_pull_secrets:
-- dockerconfigjson
-kind: pipeline
-name: main
-steps:
-- commands:
-  - go test ./...
-  image: golang:1.17
-  name: test
-  settings: {}
-- commands:
-  - echo -n "${DRONE_BRANCH}-${DRONE_COMMIT_SHA},latest" > .tags
+  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
+    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
+  - tail -n +1 .tags
   image: golang:1.17
   name: generate tags
   settings: {}
@@ -56,6 +30,7 @@ trigger:
   - main
   event:
     include:
+    - pull_request
     - push
 type: docker
 ---
@@ -78,6 +53,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: d9567894ca5eeca168bd00b117d23bfc34c19bace5577282619fed173c170ef1
+hmac: b06b9cd5c2205aa7738fe68d718aa9639e6655417a7f6d25d9a3e3b09cfd156c
 
 ...

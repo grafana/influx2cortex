@@ -13,16 +13,13 @@ local dockerPluginBaseSettings = {
   },
 };
 
-local generatePullRequestTags = [
+local generateTags = [
+  'DOCKER_TAG=$(bash scripts/generate-tags.sh)',
   // `.tags` is the file consumed by the Docker (GCR inluded) plugins to tag the built Docker image accordingly.
   // We escape any `/`s in the source branch name by replacing them with `_`.
-  'echo -n "${DRONE_SOURCE_BRANCH}-${DRONE_COMMIT_SHA}" | tr "/" "_" > .tags',
-];
-
-local generateMainTags = [
-  // `.tags` is the file consumed by the Docker (GCR inluded) plugins to tag the built Docker image accordingly.
-  // It is a comma-separated list of tags.
-  'echo -n "${DRONE_BRANCH}-${DRONE_COMMIT_SHA},latest" > .tags',
+  'if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest" > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi',
+  // Print the contents of .tags for debugging purposes.
+  'tail -n +1 .tags',
 ];
 
 local withImagePullSecrets = {
@@ -30,18 +27,12 @@ local withImagePullSecrets = {
 };
 
 [
-  pipeline('pr')
+  pipeline('build')
   + withInlineStep('test', ['go test ./...'])
-  + withInlineStep('generate tags', generatePullRequestTags)
-  + withInlineStep('build', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
-  + withImagePullSecrets
-  + triggers.pr,
-
-  pipeline('main')
-  + withInlineStep('test', ['go test ./...'])
-  + withInlineStep('generate tags', generateMainTags)
+  + withInlineStep('generate tags', generateTags)
   + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + withImagePullSecrets
+  + triggers.pr
   + triggers.main,
 ]
 + [
