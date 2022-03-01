@@ -2,8 +2,8 @@ package influx
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/cortexproject/cortex/pkg/distributor/distributorpb"
@@ -15,6 +15,7 @@ import (
 	"github.com/weaveworks/common/httpgrpc"
 	"github.com/weaveworks/common/middleware"
 	"github.com/weaveworks/common/server"
+	"github.com/weaveworks/common/user"
 	"google.golang.org/grpc"
 )
 
@@ -37,8 +38,9 @@ func (c *APIConfig) RegisterFlags(flags *flag.FlagSet) {
 }
 
 type API struct {
-	logger log.Logger
-	client distributorpb.DistributorClient
+	logger   log.Logger
+	client   distributorpb.DistributorClient
+	recorder Recorder
 }
 
 func (a *API) Register(server *server.Server, authMiddleware middleware.Interface) {
@@ -58,9 +60,12 @@ func NewAPI(logger log.Logger, cfg APIConfig) (*API, error) {
 
 	distClient := distributorpb.NewDistributorClient(conn)
 
+	recorder := NewRecorder(prometheus.NewRegistry())
+
 	return &API{
-		logger: logger,
-		client: distClient,
+		logger:   logger,
+		client:   distClient,
+		recorder: recorder,
 	}, nil
 }
 
@@ -68,13 +73,23 @@ func NewAPI(logger log.Logger, cfg APIConfig) (*API, error) {
 func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	maxSize := 100 << 10 // TODO: Make this a CLI flag. 100KB for now.
 
+	userID, err := user.ExtractOrgID(r.Context())
+	if err != nil {
+		level.Error(a.logger).Log("msg", "error extracting org ID", "err", err)
+		panic(err)
+	}
+
+	beforeConversion := time.Now()
+
 	ts, err := parseInfluxLineReader(r.Context(), r, maxSize)
 	if err != nil {
-		fmt.Println("error decoding line protocol data", err)
+		a.recorder.measureRejectedPoints(userID, "cant_parse_body")
+		level.Error(a.logger).Log("msg", "error decoding line protocol data", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
-
 		return
 	}
+	a.recorder.measureIncomingPoints(userID, len(ts))
+	a.recorder.measureConversionDuration(userID, time.Since(beforeConversion))
 
 	// Sigh, a write API optimisation needs me to jump through hoops.
 	pts := make([]cortexpb.PreallocTimeseries, 0, len(ts))
@@ -91,6 +106,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	if _, err := a.client.Push(r.Context(), rwReq); err != nil {
 		resp, ok := httpgrpc.HTTPResponseFromError(err)
 		if !ok {
+			level.Error(a.logger).Log("msg", "server error", "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -98,9 +114,10 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 			level.Error(a.logger).Log("msg", "push error", "err", err)
 		}
 		http.Error(w, string(resp.Body), int(resp.Code))
-
 		return
 	}
+
+	a.recorder.measureReceivedPoints(userID, len(rwReq.Timeseries))
 
 	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
 }
