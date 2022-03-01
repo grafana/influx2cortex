@@ -1,3 +1,6 @@
+<a href="https://drone.grafana.net/grafana/influx2cortex"><img src="https://drone.grafana.net/api/badges/grafana/influx2cortex/status.svg" alt="Drone CI" /></a>
+<a href="https://goreportcard.com/report/github.com/grafana/influx2cortex"><img src="https://goreportcard.com/badge/github.com/grafana/influx2cortex" alt="Go Report Card" /></a>
+
 # influx2cortex: An Influx Proxy for Cortex
 
 influx2cortex is a proxy that accepts Influx Line protocol and writes it to Cortex.

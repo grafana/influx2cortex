@@ -1,0 +1,58 @@
+---
+image_pull_secrets:
+- dockerconfigjson
+kind: pipeline
+name: build
+steps:
+- commands:
+  - go test ./...
+  image: golang:1.17
+  name: test
+  settings: {}
+- commands:
+  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
+    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
+  - tail -n +1 .tags
+  image: golang:1.17
+  name: generate tags
+  settings: {}
+- commands: []
+  image: plugins/gcr
+  name: build + push
+  settings:
+    json_key:
+      from_secret: gcr_admin
+    registry: us.gcr.io
+    repo: kubernetes-dev/influx2cortex
+trigger:
+  branch:
+  - main
+  event:
+    include:
+    - pull_request
+    - push
+type: docker
+---
+get:
+  name: .dockerconfigjson
+  path: secret/data/common/gcr
+kind: secret
+name: dockerconfigjson
+---
+get:
+  name: pat
+  path: infra/data/ci/github/grafanabot
+kind: secret
+name: gh_token
+---
+get:
+  name: service-account
+  path: infra/data/ci/gcr-admin
+kind: secret
+name: gcr_admin
+---
+kind: signature
+hmac: b06b9cd5c2205aa7738fe68d718aa9639e6655417a7f6d25d9a3e3b09cfd156c
+
+...
