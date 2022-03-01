@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	prefix = "infuxdb_proxy_ingester"
+	prefix = "influxdb_proxy_ingester"
 )
 
+//go:generate mockery --inpackage --testonly --case underscore --name Recorder
 type Recorder interface {
 	measureReceivedPoints(user string, count int)
 	measureIncomingPoints(user string, count int)
@@ -58,22 +59,22 @@ type prometheusRecorder struct {
 	conversionDuration *prometheus.HistogramVec
 }
 
-// measureMetricsParsed measures the total amount of received metrics on Prometheus.
+// measureMetricsParsed measures the total amount of received points on Prometheus.
 func (r prometheusRecorder) measureReceivedPoints(user string, count int) {
 	r.receivedPoints.WithLabelValues(user).Add(float64(count))
 }
 
-// measureIncomingmetrics measures the total amount of incoming metrics on Prometheus.
+// measureIncomingmetrics measures the total amount of incoming points on Prometheus.
 func (r prometheusRecorder) measureIncomingPoints(user string, count int) {
 	r.incomingPoints.WithLabelValues(user).Add(float64(count))
 }
 
-// measureRejectedmetrics measures the total amount of rejected metrics on Prometheus.
+// measureRejectedmetrics measures the total amount of rejected points on Prometheus.
 func (r prometheusRecorder) measureRejectedPoints(user, reason string) {
 	r.rejectedPoints.WithLabelValues(user, reason).Add(1)
 }
 
-// measureConversionDuration measures the total time spent translating metrics to Prometheus format
+// measureConversionDuration measures the total time spent translating points to Prometheus format
 func (r prometheusRecorder) measureConversionDuration(user string, duration time.Duration) {
 	r.conversionDuration.WithLabelValues(user).Observe(duration.Seconds())
 }
