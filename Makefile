@@ -1,17 +1,16 @@
-# .ONESHELL:
-# .DELETE_ON_ERROR:
-# SHELL       := bash
-# SHELLOPTS   := -euf -o pipefail
-# MAKEFLAGS   += --warn-undefined-variables
-# MAKEFLAGS   += --no-builtin-rule
+.PHONY: help
 
-# # Adapted from https://suva.sh/posts/well-documented-makefiles/
-# .PHONY: help
-# help: ## Display this help
-# help:
-# 	@awk 'BEGIN {FS = ": ##"; printf "Usage:\n  make <target>\n\nTargets:\n"} /^[a-zA-Z0-9_\.\-\/%]+: ##/ { printf "  %-45s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-# GIT_REVISION := $(shell git rev-parse --short HEAD)
+test: ## Run golang tests
+	go test -race ./...
+
+coverage-output:
+	go test ./... -coverprofile=cover.out
+
+coverage-show-func:
+	go tool cover -func cover.out
 
 # .PHONY: build
 # build: ## Build the grpc-cortex-gw docker image
