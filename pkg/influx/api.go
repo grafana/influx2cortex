@@ -74,18 +74,12 @@ func NewAPI(logger log.Logger, cfg APIConfig) (*API, error) {
 func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	maxSize := 100 << 10 // TODO: Make this a CLI flag. 100KB for now.
 
-	//userID, err := user.ExtractOrgID(r.Context())
-	//if err != nil {
-	//	level.Error(a.logger).Log("msg", "error extracting org ID", "err", err)
-	//	panic(err)
-	//}
-
 	beforeConversion := time.Now()
 
 	ts, err := parseInfluxLineReader(r.Context(), r, maxSize)
 	if err != nil {
 		a.recorder.measureMetricsRejected(len(ts))
-		level.Error(a.logger).Log("msg", "error decoding line protocol data", "err", err)
+		level.Info(a.logger).Log("msg", "error decoding line protocol data", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -107,12 +101,12 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	if _, err := a.client.Push(r.Context(), rwReq); err != nil {
 		resp, ok := httpgrpc.HTTPResponseFromError(err)
 		if !ok {
-			level.Error(a.logger).Log("msg", "failed to push metric data", "err", err)
+			level.Warn(a.logger).Log("msg", "failed to push metric data", "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		if resp.GetCode() != 202 {
-			level.Error(a.logger).Log("msg", "push error", "err", err)
+			level.Warn(a.logger).Log("msg", "push error", "err", err)
 		}
 		http.Error(w, string(resp.Body), int(resp.Code))
 		return
