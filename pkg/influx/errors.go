@@ -3,6 +3,7 @@ package influx
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 
@@ -25,6 +26,7 @@ const (
 	errorTimeout     errorType = "timeout"
 	errorCanceled    errorType = "canceled"
 	errorUnavailable errorType = "unavailable"
+	errorClient      errorType = "client error"
 )
 
 type ErrorResponse struct {
@@ -33,12 +35,34 @@ type ErrorResponse struct {
 	Error     string    `json:"error,omitempty"`
 }
 
+type ProxyError struct {
+	HttpStatus int
+	Msg        string
+	Err        error
+}
+
+func (p ProxyError) Error() string {
+	if p.Err != nil {
+		return fmt.Sprintf("%s: %s", p.Msg, p.Err)
+	}
+	return p.Msg
+}
+
+func NewProxyError(err error, message string) error {
+	return ProxyError{
+		HttpStatus: http.StatusBadRequest,
+		Msg:        message,
+		Err:        err,
+	}
+}
+
 func errorHandler(w http.ResponseWriter, r *http.Request, err error) {
 	response := ErrorResponse{
 		Status: statusError,
 		Error:  err.Error(),
 	}
 	var statusCode int
+	var proxyErr ProxyError
 	switch {
 	case errors.Is(err, context.Canceled):
 		statusCode = StatusClientClosedRequest
@@ -46,6 +70,9 @@ func errorHandler(w http.ResponseWriter, r *http.Request, err error) {
 	case errors.Is(err, context.DeadlineExceeded) || isGRPCTimeout(err):
 		statusCode = http.StatusGatewayTimeout
 		response.ErrorType = errorTimeout
+	case errors.As(err, &proxyErr):
+		statusCode = http.StatusBadRequest
+		response.ErrorType = errorClient
 	case isNetworkTimeout(err):
 		if r.Body != nil {
 			// Try to read 1 byte from the request body. If it fails with the same error
