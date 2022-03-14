@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 )
 
 const maxSize = 100 << 10
@@ -140,7 +140,7 @@ func TestInvalidInput(t *testing.T) {
 
 			_, err := parseInfluxLineReader(context.Background(), req, maxSize)
 			require.Error(t, err)
-			assert.ErrorContains(t, err, tt.errorMessage)
+			assert.ErrorAs(t, err, &ProxyError{})
 		})
 	}
 }
