@@ -7,8 +7,9 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 )
@@ -56,23 +57,26 @@ func NewProxyError(err error, message string) error {
 	}
 }
 
-func errorHandler(w http.ResponseWriter, r *http.Request, err error) {
+func errorHandler(w http.ResponseWriter, r *http.Request, err error, logger log.Logger) {
 	response := ErrorResponse{
 		Status: statusError,
 		Error:  err.Error(),
 	}
 	var statusCode int
-	var proxyErr ProxyError
+	var proxyErr *ProxyError
 	switch {
 	case errors.Is(err, context.Canceled):
 		statusCode = StatusClientClosedRequest
 		response.ErrorType = errorCanceled
+		level.Error(logger).Log("msg", "request cancelled", "err", err)
 	case errors.Is(err, context.DeadlineExceeded) || isGRPCTimeout(err):
 		statusCode = http.StatusGatewayTimeout
 		response.ErrorType = errorTimeout
+		level.Error(logger).Log("msg", "response timeout", "err", err)
 	case errors.As(err, &proxyErr):
 		statusCode = http.StatusBadRequest
 		response.ErrorType = errorClient
+		level.Info(logger).Log("msg", "error decoding line protocol data", "err", err)
 	case isNetworkTimeout(err):
 		if r.Body != nil {
 			// Try to read 1 byte from the request body. If it fails with the same error
@@ -80,22 +84,25 @@ func errorHandler(w http.ResponseWriter, r *http.Request, err error) {
 			if _, readErr := r.Body.Read([]byte{0}); isNetworkTimeout(readErr) {
 				statusCode = http.StatusRequestTimeout
 				response.ErrorType = errorTimeout
+				level.Error(logger).Log("msg", "response timeout", "err", err)
 				break
 			}
 		}
 
 		statusCode = http.StatusGatewayTimeout
 		response.ErrorType = errorTimeout
+		level.Error(logger).Log("msg", "network timeout", "err", err)
 	default:
-		log.Warnf("Request failed: %v", err)
+		level.Warn(logger).Log("msg", "request failed", "err", err)
 		statusCode = http.StatusBadGateway
 		response.ErrorType = errorUnavailable
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.WithError(err).Error("failed to encode error response")
+		level.Error(logger).Log("msg", "failed to encode error response", "err", err)
 	}
+	http.Error(w, err.Error(), statusCode)
 }
 
 func isNetworkTimeout(err error) bool {
