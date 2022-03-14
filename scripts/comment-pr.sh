@@ -12,6 +12,8 @@ then
   exit 1
 fi
 
+command -v jq >/dev/null 2>&1 || { echo "jq is not installed"; exit 1; }
+
 AUTH="grafanabot:${GRAFANABOT_PAT}"
 ACCEPT_HEADER="Accept: application/vnd.github.v3+json"
 ENDPOINT="https://api.github.com/repos/grafana/influx2cortex/issues/${DRONE_PULL_REQUEST}/comments"
