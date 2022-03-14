@@ -2,8 +2,8 @@ package influx
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/cortexproject/cortex/pkg/distributor/distributorpb"
@@ -37,8 +37,9 @@ func (c *APIConfig) RegisterFlags(flags *flag.FlagSet) {
 }
 
 type API struct {
-	logger log.Logger
-	client distributorpb.DistributorClient
+	logger   log.Logger
+	client   distributorpb.DistributorClient
+	recorder Recorder
 }
 
 func (a *API) Register(server *server.Server, authMiddleware middleware.Interface) {
@@ -51,16 +52,21 @@ func NewAPI(logger log.Logger, cfg APIConfig) (*API, error) {
 		return nil, err
 	}
 
+	level.Info(logger).Log("msg", "Creating GRPC connection to", "addr", cfg.DistributorEndpoint)
 	conn, err := grpc.Dial(cfg.DistributorEndpoint, dialOpts...)
 	if err != nil {
+		level.Error(logger).Log("msg", "Failed to connect to server", "err", err)
 		return nil, err
 	}
 
 	distClient := distributorpb.NewDistributorClient(conn)
 
+	recorder := NewRecorder(prometheus.NewRegistry())
+
 	return &API{
-		logger: logger,
-		client: distClient,
+		logger:   logger,
+		client:   distClient,
+		recorder: recorder,
 	}, nil
 }
 
@@ -68,13 +74,17 @@ func NewAPI(logger log.Logger, cfg APIConfig) (*API, error) {
 func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	maxSize := 100 << 10 // TODO: Make this a CLI flag. 100KB for now.
 
+	beforeConversion := time.Now()
+
 	ts, err := parseInfluxLineReader(r.Context(), r, maxSize)
 	if err != nil {
-		fmt.Println("error decoding line protocol data", err)
+		a.recorder.measureMetricsRejected(len(ts))
+		level.Info(a.logger).Log("msg", "error decoding line protocol data", "err", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
-
 		return
 	}
+	a.recorder.measureMetricsParsed(len(ts))
+	a.recorder.measureConversionDuration(time.Since(beforeConversion))
 
 	// Sigh, a write API optimisation needs me to jump through hoops.
 	pts := make([]cortexpb.PreallocTimeseries, 0, len(ts))
@@ -91,16 +101,18 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	if _, err := a.client.Push(r.Context(), rwReq); err != nil {
 		resp, ok := httpgrpc.HTTPResponseFromError(err)
 		if !ok {
+			level.Warn(a.logger).Log("msg", "failed to push metric data", "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		if resp.GetCode() != 202 {
-			level.Error(a.logger).Log("msg", "push error", "err", err)
+			level.Warn(a.logger).Log("msg", "push error", "err", err)
 		}
 		http.Error(w, string(resp.Body), int(resp.Code))
-
 		return
 	}
+
+	level.Debug(a.logger).Log("msg", "successful series write", "len", len(rwReq.Timeseries))
 
 	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
 }

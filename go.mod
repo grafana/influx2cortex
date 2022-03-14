@@ -47,6 +47,7 @@ require (
 	github.com/prometheus/exporter-toolkit v0.7.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/sercand/kuberesolver v2.4.0+incompatible // indirect
+	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/uber/jaeger-client-go v2.29.1+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	github.com/weaveworks/promrus v1.2.0 // indirect
