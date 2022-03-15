@@ -1,5 +1,7 @@
 [Drone CI](https://drone.grafana.net/grafana/influx2cortex)
 
+The `drone.yml` file is a generated file; do not edit it directly.
+
 To make changes, edit the `drone.jsonnet` file in this directory and then run the following commands:
 
 ```
