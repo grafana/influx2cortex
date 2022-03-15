@@ -9,9 +9,7 @@ steps:
   image: golang:1.17
   name: test
   settings: {}
-- GRAFANABOT_PAT:
-    from_secret: gh_token
-  commands:
+- commands:
   - go test -coverprofile=coverage.out ./...
   - go tool cover -func=coverage.out > coverage_report.raw
   - echo "Go coverage report:" > coverage_report.out
@@ -20,6 +18,9 @@ steps:
   - "cat coverage_report.raw | sed -E 's/\t+/ | /g' | sed -E 's/^/| /g' | sed -E 's/$/
     |/g' >> coverage_report.out"
   - bash scripts/comment-pr.sh "`cat coverage_report.out`"
+  environment:
+    GRAFANABOT_PAT:
+      from_secret: gh_token
   image: golang:1.17
   name: test coverage
   settings: {}
@@ -67,6 +68,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: 10ab0e8bff5e63bcc18642991a1c23a1b24f1db27152504e6d16037ae1dc7804
+hmac: 6c232635a2fb0462cdc2a8bb3763f47162d205f4661a063ee4a0233d0365023d
 
 ...
