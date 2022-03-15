@@ -34,3 +34,9 @@ docker tag i2c/drone-env:latest us.gcr.io/kubernetes-dev/influx2cortex/drone-env
 
 docker push us.gcr.io/kubernetes-dev/influx2cortex/drone-env:latest
 ```
+
+Alternatively, run the following `make` command forem the project root directory:
+
+```
+make drone-env
+```
