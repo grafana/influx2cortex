@@ -21,7 +21,7 @@ steps:
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
-  image: golang:1.17
+  image: us.gcr.io/kubernetes-dev/influx2cortex/drone-env:latest
   name: test coverage
   settings: {}
 - commands:
@@ -68,6 +68,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: 6c232635a2fb0462cdc2a8bb3763f47162d205f4661a063ee4a0233d0365023d
+hmac: 8d54596e10a545adef36f0c38b0b12f8ddc1280203c5af35228bd3c92102b874
 
 ...

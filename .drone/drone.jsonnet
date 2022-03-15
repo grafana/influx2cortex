@@ -1,6 +1,7 @@
 local triggers = import 'lib/drone/triggers.libsonnet';
 local pipeline = (import 'lib/drone/drone.libsonnet').pipeline;
 local withInlineStep = (import 'lib/drone/drone.libsonnet').withInlineStep;
+local images = import 'lib/drone/images.libsonnet';
 local vault = import 'lib/vault/vault.libsonnet';
 
 local dockerPluginName = 'plugins/gcr';
@@ -13,8 +14,7 @@ local dockerPluginBaseSettings = {
 };
 
 local generateTags = [
-  'DOCKER_TAG=$(bash scripts/generate-tags.sh)',
-  // `.tags` is the file consumed by the Docker (GCR inluded) plugins to tag the built Docker image accordingly.
+  'DOCKER_TAG=$(bash scripts/generate-tags.sh)',  // `.tags` is the file consumed by the Docker (GCR inluded) plugins to tag the built Docker image accordingly.
   // We escape any `/`s in the source branch name by replacing them with `_`.
   'if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest" > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi',
   // Print the contents of .tags for debugging purposes.
@@ -41,7 +41,7 @@ local commentTestCoverage = [
 [
   pipeline('build')
   + withInlineStep('test', ['go test ./...'])
-  + withInlineStep('test coverage', commentTestCoverage, environment={
+  + withInlineStep('test coverage', commentTestCoverage, image=images._images.goWithJq, environment={
     environment: {
       GRAFANABOT_PAT: { from_secret: 'gh_token' },
     },
