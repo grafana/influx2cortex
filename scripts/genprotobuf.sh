@@ -18,11 +18,8 @@ go mod vendor
 
 DIRS=( "protos/errorx/v1")
 
-echo "INFO: Installing gogofast"
-(cd; GO111MODULE=on go install "github.com/gogo/protobuf/protoc-gen-gogofast@v1.3.1")
-
-echo "INFO: Installing gogoslick"
-(cd; GO111MODULE=on go install "github.com/gogo/protobuf/protoc-gen-gogoslick@v1.3.2")
+command -v protoc-gen-gogofast >/dev/null 2>&1 || { echo "protoc-gen-gogofast is not installed"; exit 1; }
+command -v protoc-gen-gogoslick >/dev/null 2>&1 || { echo "protoc-gen-gogoslick is not installed"; exit 1; }
 
 # Set the import path for Proto files
 GOGOPROTO_ROOT="$(go list -mod=mod -f '{{ .Dir }}' -m github.com/gogo/protobuf)"
