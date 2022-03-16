@@ -12,7 +12,6 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/weaveworks/common/httpgrpc"
 	"github.com/weaveworks/common/middleware"
 	"github.com/weaveworks/common/server"
 	"google.golang.org/grpc"
@@ -79,8 +78,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	ts, err := parseInfluxLineReader(r.Context(), r, maxSize)
 	if err != nil {
 		a.recorder.measureMetricsRejected(len(ts))
-		level.Info(a.logger).Log("msg", "error decoding line protocol data", "err", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		handleError(w, r, a.logger, err)
 		return
 	}
 	a.recorder.measureMetricsParsed(len(ts))
@@ -99,16 +97,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := a.client.Push(r.Context(), rwReq); err != nil {
-		resp, ok := httpgrpc.HTTPResponseFromError(err)
-		if !ok {
-			level.Warn(a.logger).Log("msg", "failed to push metric data", "err", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		if resp.GetCode() != 202 {
-			level.Warn(a.logger).Log("msg", "push error", "err", err)
-		}
-		http.Error(w, string(resp.Body), int(resp.Code))
+		handleError(w, r, a.logger, err)
 		return
 	}
 

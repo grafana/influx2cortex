@@ -2,12 +2,13 @@ package influx
 
 import (
 	"context"
-	"encoding/json"
 	"net"
 	"net/http"
 
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/grafana/influx2cortex/pkg/errorx"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 )
@@ -15,60 +16,52 @@ import (
 type status string
 
 const (
-	StatusClientClosedRequest        = 499
-	statusError               status = "error"
+	StatusClientClosedRequest = 499
 )
 
-type errorType string
-
-const (
-	errorTimeout     errorType = "timeout"
-	errorCanceled    errorType = "canceled"
-	errorUnavailable errorType = "unavailable"
-)
-
-type ErrorResponse struct {
-	Status    status    `json:"status"`
-	ErrorType errorType `json:"errorType,omitempty"`
-	Error     string    `json:"error,omitempty"`
+func tryUnwrap(err error) error {
+	if wrapped, ok := err.(interface{ Unwrap() error }); ok {
+		return wrapped.Unwrap()
+	}
+	return err
 }
 
-func errorHandler(w http.ResponseWriter, r *http.Request, err error) {
-	response := ErrorResponse{
-		Status: statusError,
-		Error:  err.Error(),
-	}
+func handleError(w http.ResponseWriter, r *http.Request, logger log.Logger, err error) {
 	var statusCode int
+	var errx errorx.Error
 	switch {
 	case errors.Is(err, context.Canceled):
 		statusCode = StatusClientClosedRequest
-		response.ErrorType = errorCanceled
+		level.Error(logger).Log("msg", "request cancelled", "err", err)
+	case errors.As(err, &errx):
+		switch statusCode = errx.HTTPStatusCode(); statusCode {
+		case http.StatusBadRequest:
+			level.Warn(logger).Log("msg", errx.Message(), "response_code", statusCode, "err", tryUnwrap(errx))
+		default:
+			level.Error(logger).Log("msg", errx.Message(), "response_code", statusCode, "err", tryUnwrap(errx))
+		}
 	case errors.Is(err, context.DeadlineExceeded) || isGRPCTimeout(err):
 		statusCode = http.StatusGatewayTimeout
-		response.ErrorType = errorTimeout
+		level.Error(logger).Log("msg", "response timeout", "err", err)
 	case isNetworkTimeout(err):
 		if r.Body != nil {
 			// Try to read 1 byte from the request body. If it fails with the same error
 			// it means the timeout occurred while reading the request body, so it's a 408.
 			if _, readErr := r.Body.Read([]byte{0}); isNetworkTimeout(readErr) {
 				statusCode = http.StatusRequestTimeout
-				response.ErrorType = errorTimeout
+				level.Error(logger).Log("msg", "response timeout", "err", err)
 				break
 			}
 		}
 
 		statusCode = http.StatusGatewayTimeout
-		response.ErrorType = errorTimeout
+		level.Error(logger).Log("msg", "network timeout", "err", err)
 	default:
-		log.Warnf("Request failed: %v", err)
+		level.Warn(logger).Log("msg", "request failed", "err", err)
 		statusCode = http.StatusBadGateway
-		response.ErrorType = errorUnavailable
 	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.WithError(err).Error("failed to encode error response")
-	}
+
+	http.Error(w, err.Error(), statusCode)
 }
 
 func isNetworkTimeout(err error) bool {
