@@ -8,8 +8,9 @@ import (
 	"testing"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
+	"github.com/grafana/influx2cortex/pkg/errorx"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 )
 
 const maxSize = 100 << 10
@@ -97,40 +98,40 @@ func TestParseInfluxLineReader(t *testing.T) {
 
 func TestInvalidInput(t *testing.T) {
 	tests := []struct {
-		name         string
-		url          string
-		data         string
-		errorMessage string
+		name      string
+		url       string
+		data      string
+		errorType error
 	}{
 		{
-			name:         "parse invalid precision",
-			url:          "/write?precision=ss", // precision must be of type "ns", "us", "ms", "s"
-			data:         "measurement,t1=v1 f1=2 1465839830100400200",
-			errorMessage: "precision supplied is not valid",
+			name:      "parse invalid precision",
+			url:       "/write?precision=ss", // precision must be of type "ns", "us", "ms", "s"
+			data:      "measurement,t1=v1 f1=2 1465839830100400200",
+			errorType: &errorx.BadRequest{},
 		},
 		{
-			name:         "parse invalid field input",
-			url:          "/write",
-			data:         "measurement,t1=v1 f1= 1465839830100400200", // field value is missing
-			errorMessage: "missing field value",
+			name:      "parse invalid field input",
+			url:       "/write",
+			data:      "measurement,t1=v1 f1= 1465839830100400200", // field value is missing
+			errorType: &errorx.BadRequest{},
 		},
 		{
-			name:         "parse invalid tags",
-			url:          "/write",
-			data:         "measurement,t1=v1,t2 f1=2 1465839830100400200", // field value is missing
-			errorMessage: "missing tag value",
+			name:      "parse invalid tags",
+			url:       "/write",
+			data:      "measurement,t1=v1,t2 f1=2 1465839830100400200", // field value is missing
+			errorType: &errorx.BadRequest{},
 		},
 		{
-			name:         "parse field value invalid quotes",
-			url:          "/write",
-			data:         "measurement,t1=v1 f1=v1 1465839830100400200", // string type field values require double quotes
-			errorMessage: "invalid boolean",
+			name:      "parse field value invalid quotes",
+			url:       "/write",
+			data:      "measurement,t1=v1 f1=v1 1465839830100400200", // string type field values require double quotes
+			errorType: &errorx.BadRequest{},
 		},
 		{
-			name:         "parse missing field",
-			url:          "/write",
-			data:         "measurement,t1=v1 1465839830100400200", // missing field
-			errorMessage: "invalid field format",
+			name:      "parse missing field",
+			url:       "/write",
+			data:      "measurement,t1=v1 1465839830100400200", // missing field
+			errorType: &errorx.BadRequest{},
 		},
 	}
 
@@ -140,7 +141,7 @@ func TestInvalidInput(t *testing.T) {
 
 			_, err := parseInfluxLineReader(context.Background(), req, maxSize)
 			require.Error(t, err)
-			assert.ErrorContains(t, err, tt.errorMessage)
+			assert.ErrorAs(t, err, tt.errorType)
 		})
 	}
 }
