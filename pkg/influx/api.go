@@ -34,14 +34,7 @@ func (a *API) Register(server *server.Server, authMiddleware middleware.Interfac
 	server.HTTP.Handle("/api/v1/push/influx/write", authMiddleware.Wrap(http.HandlerFunc(a.handleSeriesPush)))
 }
 
-func NewAPI(logger log.Logger, config remotewrite.Config) (*API, error) {
-	remoteWriteRecorder := remotewrite.NewRecorder("influx", prometheus.DefaultRegisterer)
-
-	client, err := remotewrite.NewClient(config, remoteWriteRecorder, nil)
-	if err != nil {
-		level.Error(logger).Log("msg", "Failed to instantiate remotewrite.API for influx2cortex", "err", err)
-		return nil, err
-	}
+func NewAPI(logger log.Logger, client remotewrite.Client) (*API, error) {
 
 	recorder := NewRecorder(prometheus.NewRegistry())
 

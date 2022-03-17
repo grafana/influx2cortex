@@ -11,6 +11,7 @@ import (
 	"github.com/grafana/dskit/flagext"
 	"github.com/grafana/influx2cortex/pkg/influx"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/weaveworks/common/logging"
 	"github.com/weaveworks/common/server"
 )
@@ -41,7 +42,14 @@ func Run() error {
 		return err
 	}
 
-	api, err := influx.NewAPI(logger, remoteWriteConfig)
+	remoteWriteRecorder := remotewrite.NewRecorder("influx", prometheus.DefaultRegisterer)
+	client, err := remotewrite.NewClient(remoteWriteConfig, remoteWriteRecorder, nil)
+	if err != nil {
+		level.Error(logger).Log("msg", "Failed to instantiate remotewrite.API for influx2cortex", "err", err)
+		return err
+	}
+
+	api, err := influx.NewAPI(logger, client)
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to start API", "err", err)
 		return err
