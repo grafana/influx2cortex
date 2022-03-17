@@ -10,22 +10,23 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/grafana/dskit/flagext"
 	"github.com/grafana/influx2cortex/pkg/influx"
+	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/weaveworks/common/logging"
 	"github.com/weaveworks/common/server"
 )
 
 func Run() error {
 	var (
-		serverConfig server.Config
-		enableAuth   bool
-		apiConfig    influx.APIConfig
+		serverConfig      server.Config
+		enableAuth        bool
+		remoteWriteConfig remotewrite.Config
 	)
 
 	// Register flags.
 	flag.BoolVar(&enableAuth, "auth.enable", true, "enable X-Scope-OrgId header")
 	flagext.RegisterFlags(
 		&serverConfig,
-		&apiConfig,
+		&remoteWriteConfig,
 	)
 	flag.Parse()
 
@@ -40,7 +41,7 @@ func Run() error {
 		return err
 	}
 
-	api, err := influx.NewAPI(logger, apiConfig)
+	api, err := influx.NewAPI(logger, remoteWriteConfig)
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to start API", "err", err)
 		return err
