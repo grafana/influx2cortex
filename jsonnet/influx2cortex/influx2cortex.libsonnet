@@ -1,4 +1,3 @@
-local externalSecrets = import 'external-secrets/main.libsonnet';
 local jaeger_mixin = import 'github.com/grafana/jsonnet-libs/jaeger-agent-mixin/jaeger.libsonnet';
 local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet',
       container = k.core.v1.container,
@@ -9,10 +8,6 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
 {
   _images+:: {
     influx2cortex: error 'must specify image',
-  },
-
-  secrets+: {
-    gcr: externalSecrets.mapGCRSecret(),
   },
 
   _config+:: {
@@ -40,7 +35,7 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
 
   influx2cortex_deployment:
     deployment.new('influx2cortex', $._config.influx2cortex.replicas, [$.influx2cortex_container])
-    + deployment.mixin.spec.template.spec.withImagePullSecrets({ name: $.secrets.gcr.metadata.name })
+    + deployment.mixin.spec.template.spec.withImagePullSecrets({ name: $.pentagon.gcr_secret_name })
     + k.util.antiAffinity,
 
   influx2cortex_service:
