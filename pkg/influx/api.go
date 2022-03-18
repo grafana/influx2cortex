@@ -1,15 +1,12 @@
 package influx
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
-	"github.com/grafana/influx2cortex/pkg/errorx"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -34,9 +31,9 @@ func (a *API) Register(server *server.Server, authMiddleware middleware.Interfac
 	server.HTTP.Handle("/api/v1/push/influx/write", authMiddleware.Wrap(http.HandlerFunc(a.handleSeriesPush)))
 }
 
-func NewAPI(logger log.Logger, client remotewrite.Client) (*API, error) {
+func NewAPI(logger log.Logger, client remotewrite.Client, reg prometheus.Registerer) (*API, error) {
 
-	recorder := NewRecorder(prometheus.NewRegistry())
+	recorder := NewRecorder(reg)
 
 	return &API{
 		logger:   logger,
@@ -72,12 +69,6 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.client.Write(r.Context(), rwReq); err != nil {
-		if errors.As(err, &errorx.RateLimited{}) {
-			level.Warn(a.logger).Log("msg", "too many requests", err, err)
-			http.Error(w, fmt.Sprintf("too many requests: %s", err), http.StatusTooManyRequests)
-			return
-		}
-
 		level.Error(a.logger).Log("msg", "failed to push metric data", err, err)
 		http.Error(w, "failed to push metric data", http.StatusInternalServerError)
 		return
