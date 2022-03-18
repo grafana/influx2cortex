@@ -34,6 +34,7 @@ func handleError(w http.ResponseWriter, r *http.Request, logger log.Logger, err 
 	case errors.As(err, &errx):
 		httpErrString = errx.Message()
 		statusCode = errx.HTTPStatusCode()
+		err = errx
 	case errors.Is(err, context.DeadlineExceeded) || isGRPCTimeout(err):
 		httpErrString = "network timeout"
 		statusCode = http.StatusGatewayTimeout
@@ -59,9 +60,9 @@ func handleError(w http.ResponseWriter, r *http.Request, logger log.Logger, err 
 		statusCode = http.StatusInternalServerError
 	}
 	if statusCode < 500 {
-		level.Info(logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(errx))
+		level.Info(logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(err))
 	} else if statusCode >= 500 {
-		level.Warn(logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(errx))
+		level.Warn(logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(err))
 	}
 	http.Error(w, httpErrString, statusCode)
 }
