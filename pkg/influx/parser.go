@@ -12,6 +12,7 @@ import (
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/cortexproject/cortex/pkg/util"
+	"github.com/grafana/influx2cortex/pkg/errorx"
 	io2 "github.com/influxdata/influxdb/v2/kit/io"
 	"github.com/influxdata/influxdb/v2/models"
 	"github.com/prometheus/prometheus/model/labels"
@@ -26,24 +27,24 @@ func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([
 	}
 
 	if !models.ValidPrecision(precision) {
-		return nil, fmt.Errorf("precision supplied is not valid: %s", precision)
+		return nil, errorx.BadRequest{Err: fmt.Errorf("precision supplied is not valid: %s", precision)}
 	}
 
 	encoding := r.Header.Get("Content-Encoding")
 	reader, err := batchReadCloser(r.Body, encoding, int64(maxSize))
 	if err != nil {
-		return nil, err
+		return nil, errorx.BadRequest{Msg: "gzip compression error", Err: err}
+
 	}
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return nil, err
+		return nil, errorx.BadRequest{Msg: "can't read body", Err: err}
 	}
 
 	points, err := models.ParsePointsWithPrecision(data, time.Now().UTC(), precision)
 	if err != nil {
-		return nil, err
+		return nil, errorx.BadRequest{Msg: "error parsing points", Err: err}
 	}
-
 	return writeRequestFromInfluxPoints(points)
 }
 
