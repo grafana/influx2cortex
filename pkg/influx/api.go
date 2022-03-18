@@ -1,20 +1,17 @@
 package influx
 
 import (
-	"flag"
 	"net/http"
 	"time"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
-	"github.com/cortexproject/cortex/pkg/distributor/distributorpb"
-	"github.com/cortexproject/cortex/pkg/util/grpcclient"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/weaveworks/common/middleware"
 	"github.com/weaveworks/common/server"
-	"google.golang.org/grpc"
 )
 
 var ingesterClientRequestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
@@ -24,20 +21,9 @@ var ingesterClientRequestDuration = promauto.NewHistogramVec(prometheus.Histogra
 	Buckets:   prometheus.ExponentialBuckets(0.001, 4, 6),
 }, []string{"operation", "status_code"})
 
-type APIConfig struct {
-	DistributorEndpoint     string
-	DistributorClientConfig grpcclient.Config
-}
-
-func (c *APIConfig) RegisterFlags(flags *flag.FlagSet) {
-	flags.StringVar(&c.DistributorEndpoint, "distributor.endpoint", "", "The grpc endpoint for downstream Cortex distributor.")
-
-	c.DistributorClientConfig.RegisterFlagsWithPrefix("distributor.client", flags)
-}
-
 type API struct {
 	logger   log.Logger
-	client   distributorpb.DistributorClient
+	client   remotewrite.Client
 	recorder Recorder
 }
 
@@ -45,26 +31,13 @@ func (a *API) Register(server *server.Server, authMiddleware middleware.Interfac
 	server.HTTP.Handle("/api/v1/push/influx/write", authMiddleware.Wrap(http.HandlerFunc(a.handleSeriesPush)))
 }
 
-func NewAPI(logger log.Logger, cfg APIConfig) (*API, error) {
-	dialOpts, err := cfg.DistributorClientConfig.DialOption(grpcclient.Instrument(ingesterClientRequestDuration))
-	if err != nil {
-		return nil, err
-	}
+func NewAPI(logger log.Logger, client remotewrite.Client, reg prometheus.Registerer) (*API, error) {
 
-	level.Info(logger).Log("msg", "Creating GRPC connection to", "addr", cfg.DistributorEndpoint)
-	conn, err := grpc.Dial(cfg.DistributorEndpoint, dialOpts...)
-	if err != nil {
-		level.Error(logger).Log("msg", "Failed to connect to server", "err", err)
-		return nil, err
-	}
-
-	distClient := distributorpb.NewDistributorClient(conn)
-
-	recorder := NewRecorder(prometheus.NewRegistry())
+	recorder := NewRecorder(reg)
 
 	return &API{
 		logger:   logger,
-		client:   distClient,
+		client:   client,
 		recorder: recorder,
 	}, nil
 }
@@ -91,12 +64,11 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 			TimeSeries: &ts[i],
 		})
 	}
-
 	rwReq := &cortexpb.WriteRequest{
 		Timeseries: pts,
 	}
 
-	if _, err := a.client.Push(r.Context(), rwReq); err != nil {
+	if err := a.client.Write(r.Context(), rwReq); err != nil {
 		handleError(w, r, a.logger, err)
 		return
 	}

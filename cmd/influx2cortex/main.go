@@ -10,27 +10,31 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/grafana/dskit/flagext"
 	"github.com/grafana/influx2cortex/pkg/influx"
+	"github.com/grafana/influx2cortex/pkg/remotewrite"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/weaveworks/common/logging"
 	"github.com/weaveworks/common/server"
 )
 
 func Run() error {
 	var (
-		serverConfig server.Config
-		enableAuth   bool
-		apiConfig    influx.APIConfig
+		serverConfig      server.Config
+		enableAuth        bool
+		remoteWriteConfig remotewrite.Config
 	)
 
 	// Register flags.
 	flag.BoolVar(&enableAuth, "auth.enable", true, "enable X-Scope-OrgId header")
 	flagext.RegisterFlags(
 		&serverConfig,
-		&apiConfig,
+		&remoteWriteConfig,
 	)
 	flag.Parse()
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	serverConfig.Log = logging.GoKit(logger)
+
+	reg := prometheus.DefaultRegisterer
 
 	httpAuthMiddleware := fakeauth.SetupAuthMiddleware(&serverConfig, enableAuth, nil)
 
@@ -40,7 +44,14 @@ func Run() error {
 		return err
 	}
 
-	api, err := influx.NewAPI(logger, apiConfig)
+	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", prometheus.DefaultRegisterer)
+	client, err := remotewrite.NewClient(remoteWriteConfig, remoteWriteRecorder, nil)
+	if err != nil {
+		level.Error(logger).Log("msg", "failed to instantiate remotewrite.API for influx2cortex", "err", err)
+		return err
+	}
+
+	api, err := influx.NewAPI(logger, client, reg)
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to start API", "err", err)
 		return err
