@@ -69,8 +69,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.client.Write(r.Context(), rwReq); err != nil {
-		level.Error(a.logger).Log("msg", "failed to push metric data", err, err)
-		http.Error(w, "failed to push metric data", http.StatusInternalServerError)
+		handleError(w, r, a.logger, err)
 		return
 	}
 
