@@ -8,9 +8,10 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/grafana/influx2cortex/pkg/errorx"
-	"github.com/grpc-ecosystem/go-grpc-prometheus/packages/grpcstatus"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
+
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 func tryUnwrap(err error) error {
