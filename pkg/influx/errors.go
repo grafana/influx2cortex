@@ -8,15 +8,9 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/grafana/influx2cortex/pkg/errorx"
+	"github.com/grpc-ecosystem/go-grpc-prometheus/packages/grpcstatus"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
-	grpcstatus "google.golang.org/grpc/status"
-)
-
-type status string
-
-const (
-	StatusClientClosedRequest = 499
 )
 
 func tryUnwrap(err error) error {
@@ -26,42 +20,49 @@ func tryUnwrap(err error) error {
 	return err
 }
 
+// handleError tries to extract an errorx.Error from the given error, logging
+// and setting the http response code as needed. All non-errorx errors are
+// considered internal errors. Please do not try to fix error categorization in
+// this function. All client errors should be categorized as an errorx at the
+// site where they are thrown.
 func handleError(w http.ResponseWriter, r *http.Request, logger log.Logger, err error) {
 	var statusCode int
+	var httpErrString string
 	var errx errorx.Error
 	switch {
-	case errors.Is(err, context.Canceled):
-		statusCode = StatusClientClosedRequest
-		level.Error(logger).Log("msg", "request cancelled", "err", err)
 	case errors.As(err, &errx):
-		switch statusCode = errx.HTTPStatusCode(); statusCode {
-		case http.StatusBadRequest:
-			level.Warn(logger).Log("msg", errx.Message(), "response_code", statusCode, "err", tryUnwrap(errx))
-		default:
-			level.Error(logger).Log("msg", errx.Message(), "response_code", statusCode, "err", tryUnwrap(errx))
-		}
+		httpErrString = errx.Message()
+		statusCode = errx.HTTPStatusCode()
 	case errors.Is(err, context.DeadlineExceeded) || isGRPCTimeout(err):
+		httpErrString = "network timeout"
 		statusCode = http.StatusGatewayTimeout
-		level.Error(logger).Log("msg", "response timeout", "err", err)
+	case errors.Is(err, context.Canceled):
+		// Note: It seems unlikely this can happen other than as a timeout, so we
+		// should call it an internal error.
+		httpErrString = "request cancelled"
+		statusCode = http.StatusInternalServerError
 	case isNetworkTimeout(err):
 		if r.Body != nil {
 			// Try to read 1 byte from the request body. If it fails with the same error
 			// it means the timeout occurred while reading the request body, so it's a 408.
 			if _, readErr := r.Body.Read([]byte{0}); isNetworkTimeout(readErr) {
+				httpErrString = "response timeout"
 				statusCode = http.StatusRequestTimeout
-				level.Error(logger).Log("msg", "response timeout", "err", err)
 				break
 			}
+			httpErrString = "network timeout"
+			statusCode = http.StatusGatewayTimeout
 		}
-
-		statusCode = http.StatusGatewayTimeout
-		level.Error(logger).Log("msg", "network timeout", "err", err)
 	default:
-		level.Warn(logger).Log("msg", "request failed", "err", err)
-		statusCode = http.StatusBadGateway
+		httpErrString = "uncategorized error"
+		statusCode = http.StatusInternalServerError
 	}
-
-	http.Error(w, err.Error(), statusCode)
+	if statusCode < 500 {
+		level.Info(logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(errx))
+	} else if statusCode >= 500 {
+		level.Warn(logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(errx))
+	}
+	http.Error(w, httpErrString, statusCode)
 }
 
 func isNetworkTimeout(err error) bool {
