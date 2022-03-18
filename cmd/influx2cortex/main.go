@@ -42,10 +42,10 @@ func Run() error {
 		return err
 	}
 
-	remoteWriteRecorder := remotewrite.NewRecorder("influx", prometheus.DefaultRegisterer)
+	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", prometheus.DefaultRegisterer)
 	client, err := remotewrite.NewClient(remoteWriteConfig, remoteWriteRecorder, nil)
 	if err != nil {
-		level.Error(logger).Log("msg", "Failed to instantiate remotewrite.API for influx2cortex", "err", err)
+		level.Error(logger).Log("msg", "failed to instantiate remotewrite.API for influx2cortex", "err", err)
 		return err
 	}
 
