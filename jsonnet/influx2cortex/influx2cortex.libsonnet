@@ -23,7 +23,7 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
   },
 
   influx2cortex_args:: {
-    'write.endpoint': $._config.influx2cortex.write_endpoint,
+    'write-endpoint': $._config.influx2cortex.write_endpoint,
     'server.http-listen-port': '8080',
   },
 
