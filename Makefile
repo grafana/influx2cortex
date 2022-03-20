@@ -22,6 +22,7 @@ protobuf: ## Runs protoc command to generate pb files
 
 # CI
 drone:
-	drone jsonnet --source .drone/drone.jsonnet --target .drone/drone.yml --stream --format
-	drone lint .drone/drone.yml
-	drone sign --save grafana/influx2cortex .drone/drone.yml
+	scripts/generate-drone-yml.sh
+
+drone-env:
+	scripts/build-and-push-drone-env.sh
