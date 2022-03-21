@@ -23,7 +23,6 @@ func (_m *MockRecorder) measureMetricsParsed(count int) {
 	_m.Called(count)
 }
 
-<<<<<<< HEAD
 // measureMetricsWritten provides a mock function with given fields: count
 func (_m *MockRecorder) measureMetricsWritten(count int) {
 	_m.Called(count)
@@ -32,18 +31,4 @@ func (_m *MockRecorder) measureMetricsWritten(count int) {
 // measureProxyErrors provides a mock function with given fields: reason
 func (_m *MockRecorder) measureProxyErrors(reason string) {
 	_m.Called(reason)
-||||||| parent of 0c8c9ed (Regenerate recorder mock for updated recorder parameters)
-// measureReceivedPoints provides a mock function with given fields: user, count
-func (_m *MockRecorder) measureReceivedPoints(user string, count int) {
-	_m.Called(user, count)
-}
-
-// measureRejectedPoints provides a mock function with given fields: user, reason
-func (_m *MockRecorder) measureRejectedPoints(user string, reason string) {
-	_m.Called(user, reason)
-=======
-// measureMetricsRejected provides a mock function with given fields: count
-func (_m *MockRecorder) measureMetricsRejected(count int) {
-	_m.Called(count)
->>>>>>> 0c8c9ed (Regenerate recorder mock for updated recorder parameters)
 }

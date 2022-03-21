@@ -34,7 +34,7 @@ func Run() error {
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	serverConfig.Log = logging.GoKit(logger)
 
-	reg := prometheus.DefaultRegisterer
+	recorder := influx.NewRecorder(prometheus.DefaultRegisterer)
 
 	httpAuthMiddleware := fakeauth.SetupAuthMiddleware(&serverConfig, enableAuth, nil)
 
@@ -51,7 +51,7 @@ func Run() error {
 		return err
 	}
 
-	api, err := influx.NewAPI(logger, client, reg)
+	api, err := influx.NewAPI(logger, client, recorder)
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to start API", "err", err)
 		return err

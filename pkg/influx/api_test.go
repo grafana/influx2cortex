@@ -12,6 +12,7 @@ import (
 	"github.com/grafana/influx2cortex/pkg/remotewrite/remotewritemock"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHandleSeriesPush(t *testing.T) {
@@ -151,11 +152,8 @@ func TestHandleSeriesPush(t *testing.T) {
 			req := httptest.NewRequest("POST", tt.url, bytes.NewReader([]byte(tt.data)))
 			rec := httptest.NewRecorder()
 			logger := log.NewNopLogger()
-			api := API{
-				logger:   logger,
-				client:   tt.remoteWriteMock(),
-				recorder: tt.recorderMock(),
-			}
+			api, err := NewAPI(logger, tt.remoteWriteMock(), tt.recorderMock())
+			require.NoError(t, err)
 
 			api.handleSeriesPush(rec, req)
 			assert.Equal(t, tt.expectedCode, rec.Code)

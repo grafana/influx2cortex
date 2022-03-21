@@ -31,10 +31,7 @@ func (a *API) Register(server *server.Server, authMiddleware middleware.Interfac
 	server.HTTP.Handle("/api/v1/push/influx/write", authMiddleware.Wrap(http.HandlerFunc(a.handleSeriesPush)))
 }
 
-func NewAPI(logger log.Logger, client remotewrite.Client, reg prometheus.Registerer) (*API, error) {
-
-	recorder := NewRecorder(reg)
-
+func NewAPI(logger log.Logger, client remotewrite.Client, recorder Recorder) (*API, error) {
 	return &API{
 		logger:   logger,
 		client:   client,
