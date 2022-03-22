@@ -40,7 +40,7 @@ influxdb_proxy_ingester_metrics_parsed_total 3
 				"influxdb_proxy_ingester_proxy_errors_total",
 			},
 			expMetrics: `
-# HELP influxdb_proxy_ingester_proxy_errors_total The total number of errors.
+# HELP influxdb_proxy_ingester_proxy_errors_total The total number of errors, sliced by the go error type returned.
 # TYPE influxdb_proxy_ingester_proxy_errors_total counter
 influxdb_proxy_ingester_proxy_errors_total{reason="reason"} 1
 `,

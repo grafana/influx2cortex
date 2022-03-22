@@ -29,7 +29,7 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 		proxyErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: prefix,
 			Name:      "proxy_errors_total",
-			Help:      "The total number of errors.",
+			Help:      "The total number of errors, sliced by the go error type returned.",
 		}, []string{"reason"}),
 		proxyMetricsWritten: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: prefix,
