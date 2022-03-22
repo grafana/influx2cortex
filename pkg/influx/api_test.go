@@ -51,7 +51,7 @@ func TestHandleSeriesPush(t *testing.T) {
 			recorderMock: func() *MockRecorder {
 				recorderMock := &MockRecorder{}
 				recorderMock.On("measureMetricsParsed", 1).Return(nil)
-				recorderMock.On("measureMetricsRejected", 0).Return(nil)
+				recorderMock.On("measureMetricsWritten", 1).Return(nil)
 				recorderMock.On("measureConversionDuration", mock.Anything).Return(nil)
 				return recorderMock
 			},
@@ -83,7 +83,7 @@ func TestHandleSeriesPush(t *testing.T) {
 			recorderMock: func() *MockRecorder {
 				recorderMock := &MockRecorder{}
 				recorderMock.On("measureMetricsParsed", 1).Return(nil)
-				recorderMock.On("measureMetricsRejected", 0).Return(nil)
+				recorderMock.On("measureMetricsWritten", 1).Return(nil)
 				recorderMock.On("measureConversionDuration", mock.Anything).Return(nil)
 				return recorderMock
 			},
@@ -102,7 +102,8 @@ func TestHandleSeriesPush(t *testing.T) {
 			recorderMock: func() *MockRecorder {
 				recorderMock := &MockRecorder{}
 				recorderMock.On("measureMetricsParsed", 0).Return(nil)
-				recorderMock.On("measureMetricsRejected", 0).Return(nil)
+				recorderMock.On("measureMetricsWritten", 0).Return(nil)
+				recorderMock.On("measureProxyErrors", "errorx.BadRequest").Return(nil)
 				recorderMock.On("measureConversionDuration", mock.Anything).Return(nil)
 				return recorderMock
 			},
@@ -121,7 +122,8 @@ func TestHandleSeriesPush(t *testing.T) {
 			recorderMock: func() *MockRecorder {
 				recorderMock := &MockRecorder{}
 				recorderMock.On("measureMetricsParsed", 1).Return(nil)
-				recorderMock.On("measureMetricsRejected", 0).Return(nil)
+				recorderMock.On("measureMetricsWritten", 0).Return(nil)
+				recorderMock.On("measureProxyErrors", "errorx.BadRequest").Return(nil)
 				recorderMock.On("measureConversionDuration", mock.Anything).Return(nil)
 				return recorderMock
 			},
@@ -140,7 +142,8 @@ func TestHandleSeriesPush(t *testing.T) {
 			recorderMock: func() *MockRecorder {
 				recorderMock := &MockRecorder{}
 				recorderMock.On("measureMetricsParsed", 1).Return(nil)
-				recorderMock.On("measureMetricsRejected", 0).Return(nil)
+				recorderMock.On("measureMetricsWritten", 0).Return(nil)
+				recorderMock.On("measureProxyErrors", "errorx.Internal").Return(nil)
 				recorderMock.On("measureConversionDuration", mock.Anything).Return(nil)
 				return recorderMock
 			},
