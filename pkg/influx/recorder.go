@@ -65,7 +65,7 @@ func (r prometheusRecorder) measureMetricsParsed(count int) {
 
 // measureMetricsParsed measures the total amount of metrics written.
 func (r prometheusRecorder) measureMetricsWritten(count int) {
-	r.proxyMetricsParsed.WithLabelValues().Add(float64(count))
+	r.proxyMetricsWritten.WithLabelValues().Add(float64(count))
 }
 
 // measureProxyErrors measures the total amount of errors encountered.
