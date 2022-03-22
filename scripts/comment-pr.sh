@@ -52,7 +52,12 @@ github_graphql () {
 	PAYLOAD="{\"query\": $(echo $1 | jq -aRs)}"
 	JQ_PROCESSING=$2
 
-echo `curl -H "$AUTH_HEADER" -X POST -s -d "$PAYLOAD" "$ENDPOINT" | jq -r "$JQ_PROCESSING"`
+  echo `curl -H "$AUTH_HEADER" -X POST -s -d "$PAYLOAD" "$ENDPOINT" | jq -r "$JQ_PROCESSING"`
+  if [ "$?" -ne 0 ]; then
+    echo "Problem with previous request"
+    echo "Paylod: $PAYLOAD"
+    exit 1
+  fi
 }
 
 # Get the node ID of the pull request
@@ -62,10 +67,11 @@ PR_NODE_ID=`github_graphql "$PR_QUERY" '.data.repository.pullRequest.id'`
 
 # Add comment
 
-COMMENT_MUTATION="mutation { addComment(input: {subjectId: \"$PR_NODE_ID\", body: \"$COMMENT\"}) { commentEdge { node { id } } } }"
+COMMENT_MUTATION="mutation { addComment(input: {subjectId: \"$PR_NODE_ID\", body: $COMMENT}) { commentEdge { node { id } } } }"
 COMMENT_NODE_ID=`github_graphql "$COMMENT_MUTATION" '.data.addComment.commentEdge.node.id'`
 
 # Minimize comment (optionally)
+
 if [ "$MINIMIZE_COMMENT" -eq 1 ]; then
 	MINIMIZE_MUTATION="mutation { minimizeComment(input: {subjectId: \"$COMMENT_NODE_ID\", classifier: RESOLVED}) { minimizedComment { isMinimized } } } "
 
