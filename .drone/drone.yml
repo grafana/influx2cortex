@@ -10,6 +10,21 @@ steps:
   name: test
   settings: {}
 - commands:
+  - go test -coverprofile=coverage.out ./...
+  - go tool cover -func=coverage.out > coverage_report.raw
+  - echo "Go coverage report:" > coverage_report.out
+  - echo "| Source | Func | % |" >> coverage_report.out
+  - echo "| ------ | ---- | - |" >> coverage_report.out
+  - "cat coverage_report.raw | sed -E 's/\t+/ | /g' | sed -E 's/^/| /g' | sed -E 's/$/
+    |/g' >> coverage_report.out"
+  - bash scripts/comment-pr.sh "`cat coverage_report.out`"
+  environment:
+    GRAFANABOT_PAT:
+      from_secret: gh_token
+  image: us.gcr.io/kubernetes-dev/influx2cortex/drone-env:latest
+  name: test coverage
+  settings: {}
+- commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
   - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
@@ -53,6 +68,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: b06b9cd5c2205aa7738fe68d718aa9639e6655417a7f6d25d9a3e3b09cfd156c
+hmac: 8d54596e10a545adef36f0c38b0b12f8ddc1280203c5af35228bd3c92102b874
 
 ...

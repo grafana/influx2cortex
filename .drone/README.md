@@ -1,20 +1,19 @@
-[Drone CI](https://drone.grafana.net/grafana/influx2cortex)
+# [Drone CI](https://drone.grafana.net/grafana/influx2cortex)
 
-To make changes, edit the `drone.jsonnet` file in this directory and then run the following commands:
+## Drone CI configuration
 
-```
-# This generates a new drone.yml file
-drone jsonnet --stream --format --source .drone/drone.jsonnet --target .drone/drone.yml
+The `drone.yml` file is a generated file; do not edit it directly.
 
-# This lints the newly-generated drone.yml file
-drone lint --trusted .drone/drone.yml
-
-# This signs the new drone.yml file
-drone sign --save grafana/influx2cortex .drone/drone.yml
-```
-
-Alternatively, run the following `make` command from the project root directory:
+To make changes, edit the `drone.jsonnet` file in this directory and then run the following `make` command
 
 ```
 make drone
+```
+
+## Drone CI environment
+
+The [`comment-pr.sh`](https://github.com/grafana/influx2cortex/blob/main/scripts/comment-pr.sh) script that Drone uses expects `jq` to be available. The default `golang:1.17` image does not provide `jq` so we build and push a new image that includes `jq` with the following `make` command:
+
+```
+make drone-env
 ```
