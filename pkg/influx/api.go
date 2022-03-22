@@ -1,6 +1,7 @@
 package influx
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -50,7 +51,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := parseInfluxLineReader(r.Context(), r, maxSize)
 	if err != nil {
-		a.recorder.measureProxyErrors("can't parse body")
+		a.recorder.measureProxyErrors(fmt.Sprintf("%T", err))
 		handleError(w, r, a.logger, err)
 		return
 	}
@@ -69,7 +70,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.client.Write(r.Context(), rwReq); err != nil {
-		a.recorder.measureProxyErrors("error writing data")
+		a.recorder.measureProxyErrors(fmt.Sprintf("%T", err))
 		handleError(w, r, a.logger, err)
 		return
 	}
