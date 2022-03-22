@@ -13,22 +13,22 @@ type MockRecorder struct {
 	mock.Mock
 }
 
-// measureConversionDuration provides a mock function with given fields: user, duration
-func (_m *MockRecorder) measureConversionDuration(user string, duration time.Duration) {
-	_m.Called(user, duration)
+// measureConversionDuration provides a mock function with given fields: duration
+func (_m *MockRecorder) measureConversionDuration(duration time.Duration) {
+	_m.Called(duration)
 }
 
-// measureIncomingPoints provides a mock function with given fields: user, count
-func (_m *MockRecorder) measureIncomingPoints(user string, count int) {
-	_m.Called(user, count)
+// measureMetricsParsed provides a mock function with given fields: count
+func (_m *MockRecorder) measureMetricsParsed(count int) {
+	_m.Called(count)
 }
 
-// measureReceivedPoints provides a mock function with given fields: user, count
-func (_m *MockRecorder) measureReceivedPoints(user string, count int) {
-	_m.Called(user, count)
+// measureMetricsWritten provides a mock function with given fields: count
+func (_m *MockRecorder) measureMetricsWritten(count int) {
+	_m.Called(count)
 }
 
-// measureRejectedPoints provides a mock function with given fields: user, reason
-func (_m *MockRecorder) measureRejectedPoints(user string, reason string) {
-	_m.Called(user, reason)
+// measureProxyErrors provides a mock function with given fields: reason
+func (_m *MockRecorder) measureProxyErrors(reason string) {
+	_m.Called(reason)
 }
