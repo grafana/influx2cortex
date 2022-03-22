@@ -27,7 +27,7 @@ func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([
 	}
 
 	if !models.ValidPrecision(precision) {
-		return nil, errorx.BadRequest{Err: fmt.Errorf("precision supplied is not valid: %s", precision)}
+		return nil, errorx.BadRequest{Msg: fmt.Sprintf("precision supplied is not valid: %s", precision)}
 	}
 
 	encoding := r.Header.Get("Content-Encoding")
@@ -73,7 +73,7 @@ func influxPointToTimeseries(pt models.Point) ([]cortexpb.TimeSeries, error) {
 
 	fields, err := pt.Fields()
 	if err != nil {
-		return nil, fmt.Errorf("error getting fields from point: %w", err)
+		return nil, errorx.Internal{Msg: "error getting fields from point", Err: err}
 	}
 	for field, v := range fields {
 		var value float64
