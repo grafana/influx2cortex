@@ -50,7 +50,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := parseInfluxLineReader(r.Context(), r, maxSize)
 	if err != nil {
-		a.recorder.measureMetricsRejected(len(ts))
+		a.recorder.measureProxyErrors("can't parse body")
 		handleError(w, r, a.logger, err)
 		return
 	}
@@ -69,10 +69,12 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.client.Write(r.Context(), rwReq); err != nil {
+		a.recorder.measureProxyErrors("error writing data")
 		handleError(w, r, a.logger, err)
 		return
 	}
 
+	a.recorder.measureMetricsWritten(len(rwReq.Timeseries))
 	level.Debug(a.logger).Log("msg", "successful series write", "len", len(rwReq.Timeseries))
 
 	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.

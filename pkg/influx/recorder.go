@@ -14,7 +14,8 @@ const (
 //go:generate mockery --inpackage --testonly --case underscore --name Recorder
 type Recorder interface {
 	measureMetricsParsed(count int)
-	measureMetricsRejected(count int)
+	measureMetricsWritten(count int)
+	measureProxyErrors(reason string)
 	measureConversionDuration(duration time.Duration)
 }
 
@@ -25,10 +26,15 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 			Name:      "metrics_parsed_total",
 			Help:      "The total number of metrics that have been parsed.",
 		}, []string{}),
-		proxyMetricsRejected: prometheus.NewCounterVec(prometheus.CounterOpts{
+		proxyErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: prefix,
-			Name:      "metrics_rejected_total",
-			Help:      "The total number of metrics that were rejected.",
+			Name:      "proxy_errors_total",
+			Help:      "The total number of errors.",
+		}, []string{"reason"}),
+		proxyMetricsWritten: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Namespace: prefix,
+			Name:      "metrics_written_total",
+			Help:      "The total number of metrics that have been written.",
 		}, []string{}),
 		conversionDuration: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: prefix,
@@ -38,7 +44,7 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 		}, []string{}),
 	}
 
-	reg.MustRegister(r.proxyMetricsParsed, r.proxyMetricsRejected, r.conversionDuration)
+	reg.MustRegister(r.proxyMetricsParsed, r.proxyMetricsWritten, r.proxyErrors, r.conversionDuration)
 
 	return r
 }
@@ -46,19 +52,25 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 // prometheusRecorder knows the metrics of the ingester and how to measure them for
 // Prometheus.
 type prometheusRecorder struct {
-	proxyMetricsParsed   *prometheus.CounterVec
-	proxyMetricsRejected *prometheus.CounterVec
-	conversionDuration   *prometheus.HistogramVec
+	proxyMetricsParsed  *prometheus.CounterVec
+	proxyMetricsWritten *prometheus.CounterVec
+	proxyErrors         *prometheus.CounterVec
+	conversionDuration  *prometheus.HistogramVec
 }
 
-// measureMetricsParsed measures the total amount of received points on Prometheus.
+// measureMetricsParsed measures the total amount of metrics parsed by the proxy.
 func (r prometheusRecorder) measureMetricsParsed(count int) {
 	r.proxyMetricsParsed.WithLabelValues().Add(float64(count))
 }
 
-// measureRejectedmetrics measures the total amount of rejected points on Prometheus.
-func (r prometheusRecorder) measureMetricsRejected(count int) {
-	r.proxyMetricsRejected.WithLabelValues().Add(float64(count))
+// measureMetricsParsed measures the total amount of metrics written.
+func (r prometheusRecorder) measureMetricsWritten(count int) {
+	r.proxyMetricsParsed.WithLabelValues().Add(float64(count))
+}
+
+// measureProxyErrors measures the total amount of errors encountered.
+func (r prometheusRecorder) measureProxyErrors(reason string) {
+	r.proxyErrors.WithLabelValues(reason).Add(1)
 }
 
 // measureConversionDuration measures the total time spent translating points to Prometheus format

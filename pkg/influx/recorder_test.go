@@ -34,15 +34,28 @@ influxdb_proxy_ingester_metrics_parsed_total 3
 		},
 		"Measure rejected samples": {
 			measure: func(r Recorder) {
-				r.measureMetricsRejected(3)
+				r.measureProxyErrors("reason")
 			},
 			expMetricNames: []string{
-				"influxdb_proxy_ingester_metrics_rejected_total",
+				"influxdb_proxy_ingester_proxy_errors_total",
 			},
 			expMetrics: `
-# HELP influxdb_proxy_ingester_metrics_rejected_total The total number of metrics that were rejected.
-# TYPE influxdb_proxy_ingester_metrics_rejected_total counter
-influxdb_proxy_ingester_metrics_rejected_total 3
+# HELP influxdb_proxy_ingester_proxy_errors_total The total number of errors.
+# TYPE influxdb_proxy_ingester_proxy_errors_total counter
+influxdb_proxy_ingester_proxy_errors_total{reason="reason"} 1
+`,
+		},
+		"Measure written samples": {
+			measure: func(r Recorder) {
+				r.measureMetricsWritten(3)
+			},
+			expMetricNames: []string{
+				"influxdb_proxy_ingester_metrics_written_total",
+			},
+			expMetrics: `
+# HELP influxdb_proxy_ingester_metrics_written_total The total number of metrics that have been written.
+# TYPE influxdb_proxy_ingester_metrics_written_total counter
+influxdb_proxy_ingester_metrics_written_total 3
 `,
 		},
 		"Measure conversion duration": {
