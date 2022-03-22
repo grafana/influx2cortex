@@ -10,14 +10,8 @@ steps:
   name: test
   settings: {}
 - commands:
-  - go test -coverprofile=coverage.out ./...
-  - go tool cover -func=coverage.out > coverage_report.raw
-  - echo "Go coverage report:" > coverage_report.out
-  - echo "| Source | Func | % |" >> coverage_report.out
-  - echo "| ------ | ---- | - |" >> coverage_report.out
-  - "cat coverage_report.raw | sed -E 's/\t+/ | /g' | sed -E 's/^/| /g' | sed -E 's/$/
-    |/g' >> coverage_report.out"
-  - bash scripts/comment-pr.sh -mc "`cat coverage_report.out`"
+  - bash scripts/generate-code-coverage-report.sh
+  - bash scripts/comment-pr.sh -mc "`cat coverage_report.out | jq -aRs`"
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
@@ -99,6 +93,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: 24793292de8315941676d8e6734894552cd698ce29871a4ba73cb914f715dc67
+hmac: 813eefad7a3bf6e06f39855ab44442517f329817cb2ae359d46d5fae91a53a21
 
 ...
