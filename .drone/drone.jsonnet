@@ -35,7 +35,7 @@ local commentTestCoverage = [
   //  - Append `|` to each line
   "cat coverage_report.raw | sed -E 's/\t+/ | /g' | sed -E 's/^/| /g' | sed -E 's/$/ |/g' >> coverage_report.out",
   // Comment the output of the coverage report on the PR.
-  'bash scripts/comment-pr.sh "`cat coverage_report.out`"',
+  'bash scripts/comment-pr.sh -mc "`cat coverage_report.out`"',
 ];
 
 [

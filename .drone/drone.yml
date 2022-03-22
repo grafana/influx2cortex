@@ -17,7 +17,7 @@ steps:
   - echo "| ------ | ---- | - |" >> coverage_report.out
   - "cat coverage_report.raw | sed -E 's/\t+/ | /g' | sed -E 's/^/| /g' | sed -E 's/$/
     |/g' >> coverage_report.out"
-  - bash scripts/comment-pr.sh "`cat coverage_report.out`"
+  - bash scripts/comment-pr.sh -mc "`cat coverage_report.out`"
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
@@ -99,6 +99,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: 9bf350953b46e3afef86444ae92494031efa09f27c1801c02a72b3f6487daa62
+hmac: 24793292de8315941676d8e6734894552cd698ce29871a4ba73cb914f715dc67
 
 ...
