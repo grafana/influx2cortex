@@ -99,14 +99,18 @@ func influxPointToTimeseries(pt models.Point) ([]cortexpb.TimeSeries, error) {
 		replaceInvalidChars(&name)
 
 		tags := pt.Tags()
-		lbls := make([]cortexpb.LabelAdapter, 0, len(tags)+1) // The additional 1 for __name__.
+		lbls := make([]cortexpb.LabelAdapter, 0, len(tags)+2) // An additional one for __name__, and one for internal label.
 		lbls = append(lbls, cortexpb.LabelAdapter{
 			Name:  labels.MetricName,
 			Value: name,
 		})
+		lbls = append(lbls, cortexpb.LabelAdapter{
+			Name:  "_original_format",
+			Value: "influx",
+		})
 		for _, tag := range tags {
 			key := string(tag.Key)
-			if key == "__name__" {
+			if key == "__name__" || key == "_original_format" {
 				continue
 			}
 			replaceInvalidChars(&key)

@@ -28,7 +28,11 @@ func TestParseInfluxLineReader(t *testing.T) {
 			data: "measurement,t1=v1 f1=\"v2\" 1465839830100400200",
 			expectedResult: []cortexpb.TimeSeries{
 				{
-					Labels:  []cortexpb.LabelAdapter{{Name: "__name__", Value: "measurement_f1"}, {Name: "t1", Value: "v1"}},
+					Labels: []cortexpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f1"},
+						{Name: "_original_format", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
 					Samples: []cortexpb.Sample{{Value: 2, TimestampMs: 1465839830100}},
 				},
 			},
@@ -39,7 +43,13 @@ func TestParseInfluxLineReader(t *testing.T) {
 			data: "measurement,t1=v1,t2=v2,t3=v3 f1=36 1465839830100400200",
 			expectedResult: []cortexpb.TimeSeries{
 				{
-					Labels:  []cortexpb.LabelAdapter{{Name: "__name__", Value: "measurement_f1"}, {Name: "t1", Value: "v1"}, {Name: "t2", Value: "v2"}, {Name: "t3", Value: "v3"}},
+					Labels: []cortexpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f1"},
+						{Name: "_original_format", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+						{Name: "t2", Value: "v2"},
+						{Name: "t3", Value: "v3"},
+					},
 					Samples: []cortexpb.Sample{{Value: 36, TimestampMs: 1465839830100}},
 				},
 			},
@@ -50,15 +60,27 @@ func TestParseInfluxLineReader(t *testing.T) {
 			data: "measurement,t1=v1 f1=3.0,f2=365,f3=0 1465839830100400200",
 			expectedResult: []cortexpb.TimeSeries{
 				{
-					Labels:  []cortexpb.LabelAdapter{{Name: "__name__", Value: "measurement_f1"}, {Name: "t1", Value: "v1"}},
+					Labels: []cortexpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f1"},
+						{Name: "_original_format", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
 					Samples: []cortexpb.Sample{{Value: 3, TimestampMs: 1465839830100}},
 				},
 				{
-					Labels:  []cortexpb.LabelAdapter{{Name: "__name__", Value: "measurement_f2"}, {Name: "t1", Value: "v1"}},
+					Labels: []cortexpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f2"},
+						{Name: "_original_format", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
 					Samples: []cortexpb.Sample{{Value: 365, TimestampMs: 1465839830100}},
 				},
 				{
-					Labels:  []cortexpb.LabelAdapter{{Name: "__name__", Value: "measurement_f3"}, {Name: "t1", Value: "v1"}},
+					Labels: []cortexpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f3"},
+						{Name: "_original_format", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
 					Samples: []cortexpb.Sample{{Value: 0, TimestampMs: 1465839830100}},
 				},
 			},
@@ -69,7 +91,11 @@ func TestParseInfluxLineReader(t *testing.T) {
 			data: "*measurement,#t1?=v1 f1=0 1465839830100400200",
 			expectedResult: []cortexpb.TimeSeries{
 				{
-					Labels:  []cortexpb.LabelAdapter{{Name: "__name__", Value: "_measurement_f1"}, {Name: "_t1_", Value: "v1"}},
+					Labels: []cortexpb.LabelAdapter{
+						{Name: "__name__", Value: "_measurement_f1"},
+						{Name: "_original_format", Value: "influx"},
+						{Name: "_t1_", Value: "v1"},
+					},
 					Samples: []cortexpb.Sample{{Value: 0, TimestampMs: 1465839830100}},
 				},
 			},
