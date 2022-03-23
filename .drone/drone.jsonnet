@@ -39,7 +39,7 @@ local commentTestCoverage = [
 ];
 
 [
-  pipeline('build')
+  pipeline('pr')
   + withInlineStep('test', ['go test ./...'])
   + withInlineStep('test coverage', commentTestCoverage, image=images._images.goWithJq, environment={
     environment: {
@@ -49,7 +49,13 @@ local commentTestCoverage = [
   + withInlineStep('generate tags', generateTags)
   + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + { image_pull_secrets: ['dockerconfigjson'] }
-  + triggers.pr
+  + triggers.pr,
+
+  pipeline('main')
+  + withInlineStep('test', ['go test ./...'])
+  + withInlineStep('generate tags', generateTags)
+  + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
+  + { image_pull_secrets: ['dockerconfigjson'] }
   + triggers.main,
 ]
 + [
