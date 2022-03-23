@@ -12,6 +12,8 @@ steps:
 - commands:
   - bash scripts/generate-code-coverage-report.sh
   - bash scripts/comment-pr.sh -mc "`cat coverage_report.out | jq -aRs`"
+  - bash scripts/generate-lint-report.sh
+  - bash scripts/comment-pr.sh -mc "`cat lint.out | jq -aRs`"
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
@@ -62,6 +64,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: d50ddd8d6e1934bba23ec1282fa514b1a6e95e429182734111df5f3ad6b63c13
+hmac: 8443cc6d6abfe65f412dce7fafdf4c01b9cbcca9ad561f68e0cbc3e033585457
 
 ...

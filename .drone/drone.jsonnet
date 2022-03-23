@@ -21,21 +21,30 @@ local generateTags = [
   'tail -n +1 .tags',
 ];
 
-local commentTestCoverage = [
+local commentTestCoverageAndLint = [
   // Generate a code coverage report.
   'bash scripts/generate-code-coverage-report.sh',
   // Comment the output of the coverage report on the PR.
   'bash scripts/comment-pr.sh -mc "`cat coverage_report.out | jq -aRs`"',
+  // Run linter
+  'bash scripts/generate-lint-report.sh',
+  // Comment the output of the linter on the PR.
+  'bash scripts/comment-pr.sh -mc "`cat lint.out | jq -aRs`"',
 ];
 
 [
   pipeline('build')
   + withInlineStep('test', ['go test ./...'])
-  + withInlineStep('test coverage', commentTestCoverage, image=images._images.goWithJq, environment={
-    environment: {
-      GRAFANABOT_PAT: { from_secret: 'gh_token' },
-    },
-  })
+  + withInlineStep(
+    'test coverage',
+    commentTestCoverageAndLint,
+    image=images._images.testCoverageAndLintEnv,
+    environment={
+      environment: {
+        GRAFANABOT_PAT: { from_secret: 'gh_token' },
+      },
+    }
+  )
   + withInlineStep('generate tags', generateTags)
   + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + { image_pull_secrets: ['dockerconfigjson'] }
