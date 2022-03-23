@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/go-kit/log"
@@ -52,7 +53,7 @@ func TestHandleSeriesPush(t *testing.T) {
 				recorderMock := &MockRecorder{}
 				recorderMock.On("measureMetricsParsed", 1).Return(nil)
 				recorderMock.On("measureMetricsWritten", 1).Return(nil)
-				recorderMock.On("measureConversionDuration", mock.Anything).Return(nil)
+				recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
 				return recorderMock
 			},
 		},
@@ -84,7 +85,7 @@ func TestHandleSeriesPush(t *testing.T) {
 				recorderMock := &MockRecorder{}
 				recorderMock.On("measureMetricsParsed", 1).Return(nil)
 				recorderMock.On("measureMetricsWritten", 1).Return(nil)
-				recorderMock.On("measureConversionDuration", mock.Anything).Return(nil)
+				recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
 				return recorderMock
 			},
 		},
@@ -104,13 +105,13 @@ func TestHandleSeriesPush(t *testing.T) {
 				recorderMock.On("measureMetricsParsed", 0).Return(nil)
 				recorderMock.On("measureMetricsWritten", 0).Return(nil)
 				recorderMock.On("measureProxyErrors", "errorx.BadRequest").Return(nil)
-				recorderMock.On("measureConversionDuration", mock.Anything).Return(nil)
+				recorderMock.On("measureConversionDuration", 0).Return(nil)
 				return recorderMock
 			},
 		},
 		{
 			name:         "invalid query params",
-			url:          "/write?precision=",
+			url:          "/write?precision=?",
 			data:         "measurement,t1=v1 f1=2 1465839830100400200",
 			expectedCode: http.StatusBadRequest,
 			remoteWriteMock: func() *remotewritemock.Client {
@@ -121,10 +122,10 @@ func TestHandleSeriesPush(t *testing.T) {
 			},
 			recorderMock: func() *MockRecorder {
 				recorderMock := &MockRecorder{}
-				recorderMock.On("measureMetricsParsed", 1).Return(nil)
+				recorderMock.On("measureMetricsParsed", 0).Return(nil)
 				recorderMock.On("measureMetricsWritten", 0).Return(nil)
 				recorderMock.On("measureProxyErrors", "errorx.BadRequest").Return(nil)
-				recorderMock.On("measureConversionDuration", mock.Anything).Return(nil)
+				recorderMock.On("measureConversionDuration", 0).Return(nil)
 				return recorderMock
 			},
 		},
@@ -144,7 +145,7 @@ func TestHandleSeriesPush(t *testing.T) {
 				recorderMock.On("measureMetricsParsed", 1).Return(nil)
 				recorderMock.On("measureMetricsWritten", 0).Return(nil)
 				recorderMock.On("measureProxyErrors", "errorx.Internal").Return(nil)
-				recorderMock.On("measureConversionDuration", mock.Anything).Return(nil)
+				recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
 				return recorderMock
 			},
 		},
