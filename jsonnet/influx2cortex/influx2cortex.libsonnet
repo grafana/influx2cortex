@@ -13,7 +13,7 @@ local k = import 'github.com/grafana/jsonnet-libs/ksonnet-util/kausal.libsonnet'
   _config+:: {
     influx2cortex: {
       replicas: 3,
-      write_endpoint: 'dns://cortex-gw-internal.svc/api/prom/push',
+      write_endpoint: 'http://cortex-gw-internal.%(namespace)s.svc.cluster.local:80/api/prom/push' % $._config,
     },
   },
 
