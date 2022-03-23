@@ -15,8 +15,17 @@ steps:
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
-  image: us.gcr.io/kubernetes-dev/influx2cortex/drone-env:latest
+  image: us.gcr.io/kubernetes-dev/influx2cortex/coverage:latest
   name: test coverage
+  settings: {}
+- commands:
+  - scripts/generate-lint-report.sh
+  - scripts/comment-pr.sh -mc "`cat lint.out | jq -aRs`"
+  environment:
+    GRAFANABOT_PAT:
+      from_secret: gh_token
+  image: us.gcr.io/kubernetes-dev/influx2cortex/lint:latest
+  name: lint
   settings: {}
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
@@ -62,6 +71,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: d50ddd8d6e1934bba23ec1282fa514b1a6e95e429182734111df5f3ad6b63c13
+hmac: 73c64750421d27ae5767ed82a783d5accc711539022c33b79154b77c29089c02
 
 ...

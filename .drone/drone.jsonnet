@@ -28,14 +28,36 @@ local commentTestCoverage = [
   'bash scripts/comment-pr.sh -mc "`cat coverage_report.out | jq -aRs`"',
 ];
 
+local commentLint = [
+  // Generate lint report
+  'scripts/generate-lint-report.sh',
+  // Comment the output of the linter on the PR.
+  'scripts/comment-pr.sh -mc "`cat lint.out | jq -aRs`"',
+];
+
 [
   pipeline('build')
   + withInlineStep('test', ['go test ./...'])
-  + withInlineStep('test coverage', commentTestCoverage, image=images._images.goWithJq, environment={
-    environment: {
-      GRAFANABOT_PAT: { from_secret: 'gh_token' },
-    },
-  })
+  + withInlineStep(
+    'test coverage',
+    commentTestCoverage,
+    image=images._images.testCoverageEnv,
+    environment={
+      environment: {
+        GRAFANABOT_PAT: { from_secret: 'gh_token' },
+      },
+    }
+  )
+  + withInlineStep(
+    'lint',
+    commentLint,
+    image=images._images.lintEnv,
+    environment={
+      environment: {
+        GRAFANABOT_PAT: { from_secret: 'gh_token' },
+      },
+    }
+  )
   + withInlineStep('generate tags', generateTags)
   + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + { image_pull_secrets: ['dockerconfigjson'] }

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 set -eufo pipefail
 
 if [ -z "$GRAFANABOT_PAT" ]

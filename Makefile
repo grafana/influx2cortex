@@ -21,5 +21,5 @@ coverage-show-func:
 drone:
 	scripts/generate-drone-yml.sh
 
-drone-env:
-	scripts/build-and-push-drone-env.sh
+drone-envs:
+	scripts/build-and-push-drone-envs.sh
