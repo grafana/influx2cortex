@@ -33,7 +33,6 @@ require (
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/gogo/googleapis v1.4.0 // indirect
 	github.com/gogo/status v1.1.0 // indirect
-	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
@@ -61,7 +60,6 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gotest.tools v2.2.0+incompatible // indirect
 )
 
 exclude (
