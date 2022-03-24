@@ -17,14 +17,12 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/prometheus v1.8.2-0.20211217191541-41f1a8125e66
-	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/weaveworks/common v0.0.0-20211222122857-933588f98737
 	go.uber.org/atomic v1.9.0
 	google.golang.org/grpc v1.44.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
-	gotest.tools v2.2.0+incompatible
 )
 
 require (
@@ -50,6 +48,7 @@ require (
 	github.com/prometheus/exporter-toolkit v0.7.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/sercand/kuberesolver v2.4.0+incompatible // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/uber/jaeger-client-go v2.29.1+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
@@ -62,6 +61,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+	gotest.tools v2.2.0+incompatible // indirect
 )
 
 exclude (
