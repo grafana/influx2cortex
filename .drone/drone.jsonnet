@@ -21,35 +21,27 @@ local generateTags = [
   'tail -n +1 .tags',
 ];
 
-local commentTestCoverage = [
-  // Build drone utilities.
-  'scripts/build-drone-utilities.sh',
-  // Generate the raw coverage report.
-  'go test -coverprofile=coverage.out ./...',
-  // Process the raw coverage report.
-  '.drone/coverage > coverage_report.out',
-  // Submit the comment to GitHub.
-  '.drone/ghcomment -i "Go coverage report:" -b coverage_report.out',
-];
-
-local commentLintReport = [
+local commentCoverageLintReport = [
     // Build drone utilities.
     'scripts/build-drone-utilities.sh',
+    // Generate the raw coverage report.
+    'go test -coverprofile=coverage.out ./...',
+    // Process the raw coverage report.
+    '.drone/coverage > coverage_report.out',
     // Generate the lint report.
     'scripts/generate-lint-report.sh',
+    // Combine the reports.
+    'cat coverage_report.out > report.out',
+    'echo "" >> report.out',
+    'cat lint.out >> report.out',
     // Submit the comment to GitHub.
-    '.drone/ghcomment -i "Go lint report:" -b lint.out',
+    '.drone/ghcomment -i "Go coverage report:" -b report.out',
 ];
 
 [
   pipeline('pr')
   + withInlineStep('test', ['go test ./...'])
-  + withInlineStep('test coverage', commentTestCoverage, environment={
-    environment: {
-      GRAFANABOT_PAT: { from_secret: 'gh_token' },
-    },
-  })
-  + withInlineStep('lint', commentLintReport, image=images._images.goLint, environment={
+  + withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
       environment: {
         GRAFANABOT_PAT: { from_secret: 'gh_token' },
       },

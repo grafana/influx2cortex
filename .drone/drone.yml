@@ -13,22 +13,16 @@ steps:
   - scripts/build-drone-utilities.sh
   - go test -coverprofile=coverage.out ./...
   - .drone/coverage > coverage_report.out
-  - .drone/ghcomment -i "Go coverage report:" -b coverage_report.out
-  environment:
-    GRAFANABOT_PAT:
-      from_secret: gh_token
-  image: golang:1.17
-  name: test coverage
-  settings: {}
-- commands:
-  - scripts/build-drone-utilities.sh
   - scripts/generate-lint-report.sh
-  - .drone/ghcomment -i "Go lint report:" -b lint.out
+  - cat coverage_report.out > report.out
+  - echo "" >> report.out
+  - cat lint.out >> report.out
+  - .drone/ghcomment -i "Go coverage report:" -b report.out
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
   image: golangci/golangci-lint:v1.45
-  name: lint
+  name: coverage + lint
   settings: {}
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
@@ -105,6 +99,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: f6d2eada22b3d82b79843028eafe4a206d9a3fbd2d2be4152b2b63aa65092dac
+hmac: 91b958d45616383e56cc63b6dd6a628db6dd9f6e8c2bca6fbe6ac63dc3d9b4cf
 
 ...

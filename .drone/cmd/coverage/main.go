@@ -76,6 +76,9 @@ func main() {
 	sort.Strings(keys)
 
 	fmt.Println("Go coverage report:")
+	fmt.Println("<details>")
+	fmt.Println("<summary>Click to expand.</summary>")
+	fmt.Println("")
 	fmt.Println("| File | % |")
 	fmt.Println("| ---- | - |")
 
@@ -90,5 +93,6 @@ func main() {
 		totalCoveredStmts += a.NumCoveredStmts
 	}
 
-	fmt.Printf("| total | %.1f%% |", (float64(totalCoveredStmts)/float64(totalStmts))*100)
+	fmt.Printf("| total | %.1f%% |\n", (float64(totalCoveredStmts)/float64(totalStmts))*100)
+	fmt.Println("</details>")
 }
