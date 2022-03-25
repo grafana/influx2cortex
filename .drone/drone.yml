@@ -6,7 +6,7 @@ name: pr
 steps:
 - commands:
   - go test ./...
-  image: golang:1.17-bullseye
+  image: golang:1.17
   name: test
   settings: {}
 - commands:
@@ -17,15 +17,25 @@ steps:
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
-  image: golang:1.17-bullseye
+  image: golang:1.17
   name: test coverage
+  settings: {}
+- commands:
+  - scripts/build-drone-utilities.sh
+  - scripts/generate-lint-report.sh
+  - .drone/ghcomment -i "Go lint report:" -b lint.out
+  environment:
+    GRAFANABOT_PAT:
+      from_secret: gh_token
+  image: golangci/golangci-lint:v1.45
+  name: lint
   settings: {}
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
   - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
-  image: golang:1.17-bullseye
+  image: golang:1.17
   name: generate tags
   settings: {}
 - commands: []
@@ -49,7 +59,7 @@ name: main
 steps:
 - commands:
   - go test ./...
-  image: golang:1.17-bullseye
+  image: golang:1.17
   name: test
   settings: {}
 - commands:
@@ -57,7 +67,7 @@ steps:
   - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
-  image: golang:1.17-bullseye
+  image: golang:1.17
   name: generate tags
   settings: {}
 - commands: []
@@ -95,6 +105,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: fcec6005b8be7e229644cb4b6ef3ca705b3216b0cb0ca10d917d58442c422370
+hmac: f6d2eada22b3d82b79843028eafe4a206d9a3fbd2d2be4152b2b63aa65092dac
 
 ...

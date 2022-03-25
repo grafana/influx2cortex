@@ -28,8 +28,17 @@ local commentTestCoverage = [
   'go test -coverprofile=coverage.out ./...',
   // Process the raw coverage report.
   '.drone/coverage > coverage_report.out',
-  // Submit the comment to Github.
+  // Submit the comment to GitHub.
   '.drone/ghcomment -i "Go coverage report:" -b coverage_report.out',
+];
+
+local commentLintReport = [
+    // Build drone utilities.
+    'scripts/build-drone-utilities.sh',
+    // Generate the lint report.
+    'scripts/generate-lint-report.sh',
+    // Submit the comment to GitHub.
+    '.drone/ghcomment -i "Go lint report:" -b lint.out',
 ];
 
 [
@@ -40,6 +49,11 @@ local commentTestCoverage = [
       GRAFANABOT_PAT: { from_secret: 'gh_token' },
     },
   })
+  + withInlineStep('lint', commentLintReport, image=images._images.goLint, environment={
+      environment: {
+        GRAFANABOT_PAT: { from_secret: 'gh_token' },
+      },
+    })
   + withInlineStep('generate tags', generateTags)
   + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + { image_pull_secrets: ['dockerconfigjson'] }
