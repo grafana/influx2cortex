@@ -6,22 +6,18 @@ name: pr
 steps:
 - commands:
   - go test ./...
-  image: golang:1.17
+  image: golang:1.17-bullseye
   name: test
   settings: {}
 - commands:
+  - scripts/build-drone-utilities.sh
   - go test -coverprofile=coverage.out ./...
-  - go tool cover -func=coverage.out > coverage_report.raw
-  - echo "Go coverage report:" > coverage_report.out
-  - echo "| Source | Func | % |" >> coverage_report.out
-  - echo "| ------ | ---- | - |" >> coverage_report.out
-  - "cat coverage_report.raw | sed -E 's/\t+/ | /g' | sed -E 's/^/| /g' | sed -E 's/$/
-    |/g' >> coverage_report.out"
-  - bash scripts/comment-pr.sh "`cat coverage_report.out`"
+  - .drone/coverage > coverage_report.out
+  - .drone/ghcomment -i "Go coverage report:" -b coverage_report.out
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
-  image: us.gcr.io/kubernetes-dev/influx2cortex/drone-env:latest
+  image: golang:1.17-bullseye
   name: test coverage
   settings: {}
 - commands:
@@ -29,7 +25,7 @@ steps:
   - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
-  image: golang:1.17
+  image: golang:1.17-bullseye
   name: generate tags
   settings: {}
 - commands: []
@@ -53,7 +49,7 @@ name: main
 steps:
 - commands:
   - go test ./...
-  image: golang:1.17
+  image: golang:1.17-bullseye
   name: test
   settings: {}
 - commands:
@@ -61,7 +57,7 @@ steps:
   - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
-  image: golang:1.17
+  image: golang:1.17-bullseye
   name: generate tags
   settings: {}
 - commands: []
@@ -99,6 +95,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: 9bf350953b46e3afef86444ae92494031efa09f27c1801c02a72b3f6487daa62
+hmac: fcec6005b8be7e229644cb4b6ef3ca705b3216b0cb0ca10d917d58442c422370
 
 ...
