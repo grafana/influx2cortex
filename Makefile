@@ -23,6 +23,3 @@ protobuf: ## Runs protoc command to generate pb files
 # CI
 drone:
 	scripts/generate-drone-yml.sh
-
-drone-utilities:
-	scripts/build-drone-utilities.sh
