@@ -17,7 +17,7 @@ steps:
   - cat coverage_report.out > report.out
   - echo "" >> report.out
   - cat lint.out >> report.out
-  - .drone/ghcomment -i "Go coverage report:" -b report.out
+  - .drone/ghcomment -id "Go coverage report:" -bodyfile report.out
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
@@ -99,6 +99,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: 91b958d45616383e56cc63b6dd6a628db6dd9f6e8c2bca6fbe6ac63dc3d9b4cf
+hmac: 20038b15cee2c681538b5839b211fde638b969abe4d2f7d74d11e8e6e360c623
 
 ...

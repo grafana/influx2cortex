@@ -26,8 +26,8 @@ func main() {
 		panic(err)
 	}
 
-	commentTypeIdentifier := flag.String("i", "", "String that identifies the comment type being submitted")
-	commentBodyFilename := flag.String("b", "", "A file containing the comment body")
+	commentTypeIdentifier := flag.String("id", "", "String that identifies the comment type being submitted")
+	commentBodyFilename := flag.String("bodyfile", "", "A file containing the comment body")
 	flag.Parse()
 
 	if *commentTypeIdentifier == "" {
@@ -64,22 +64,14 @@ func getRequiredEnv(k string) string {
 	return v
 }
 
-func minimizeOutdatedComments(
-	api *github.API,
-	repoOwner string,
-	repoName string,
-	pullRequestNo int,
-	commentTypeIdentifier string,
-) error {
+func minimizeOutdatedComments(api *github.API, repoOwner string, repoName string, pullRequestNo int, commentTypeIdentifier string) error {
 	prComments, err := api.ListPullRequestComments(repoOwner, repoName, pullRequestNo)
 	if err != nil {
 		return err
 	}
 
 	for _, comment := range prComments {
-		if comment.Author.Login == CommenterLogin &&
-			strings.Contains(comment.Body, commentTypeIdentifier) &&
-			!comment.IsMinimized {
+		if comment.Author.Login == CommenterLogin && strings.Contains(comment.Body, commentTypeIdentifier) && !comment.IsMinimized {
 			err := api.MinimizeComment(comment.ID, githubv4.ReportedContentClassifiersOutdated)
 			if err != nil {
 				return err
@@ -90,13 +82,7 @@ func minimizeOutdatedComments(
 	return nil
 }
 
-func addComment(
-	api *github.API,
-	repoOwner string,
-	repoName string,
-	pullRequestNo int,
-	commentBody string,
-) error {
+func addComment(api *github.API, repoOwner string, repoName string, pullRequestNo int, commentBody string) error {
 	pullRequestNodeID, err := api.GetPullRequestNodeID(repoOwner, repoName, pullRequestNo)
 	if err != nil {
 		return err

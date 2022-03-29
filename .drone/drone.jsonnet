@@ -35,7 +35,7 @@ local commentCoverageLintReport = [
     'echo "" >> report.out',
     'cat lint.out >> report.out',
     // Submit the comment to GitHub.
-    '.drone/ghcomment -i "Go coverage report:" -b report.out',
+    '.drone/ghcomment -id "Go coverage report:" -bodyfile report.out',
 ];
 
 [
