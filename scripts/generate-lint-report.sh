@@ -5,14 +5,24 @@
 
 command -v golangci-lint >/dev/null 2>&1 || { echo "golangci-lint is not installed"; exit 1; }
 
-echo 'Go lint report:' > lint.out
-{
-  echo '<details>'
-  echo '<summary>Click to expand.</summary>'
-  echo ''
-  echo '```'
-  golangci-lint run --issues-exit-code 0
-  echo '```'
-  echo ''
-  echo '</details>'
-} >> lint.out
+golangci-lint run --issues-exit-code 0 > lint.raw
+
+if [ -s lint.raw ]; then
+  echo 'Go lint report:' > lint.out
+  {
+    echo '<details>'
+    echo '<summary>Click to expand.</summary>'
+    echo ''
+    echo '```'
+    cat lint.raw
+    echo '```'
+    echo ''
+    echo '</details>'
+  } >> lint.out
+else
+  echo 'Go lint report:' > lint.out
+  {
+    echo ''
+    echo 'No issues found. :sunglasses:'
+  } >> lint.out
+fi
