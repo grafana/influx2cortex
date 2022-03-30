@@ -18,6 +18,8 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 )
 
+const internalLabel = "__proxy_source__"
+
 // parseInfluxLineReader parses a Influx Line Protocol request from an io.Reader.
 func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([]cortexpb.TimeSeries, error) {
 	qp := r.URL.Query()
@@ -99,14 +101,18 @@ func influxPointToTimeseries(pt models.Point) ([]cortexpb.TimeSeries, error) {
 		replaceInvalidChars(&name)
 
 		tags := pt.Tags()
-		lbls := make([]cortexpb.LabelAdapter, 0, len(tags)+1) // The additional 1 for __name__.
+		lbls := make([]cortexpb.LabelAdapter, 0, len(tags)+2) // An additional one for __name__, and one for internal label
 		lbls = append(lbls, cortexpb.LabelAdapter{
 			Name:  labels.MetricName,
 			Value: name,
 		})
+		lbls = append(lbls, cortexpb.LabelAdapter{
+			Name:  internalLabel, // An internal label for tracking active series
+			Value: "influx",
+		})
 		for _, tag := range tags {
 			key := string(tag.Key)
-			if key == "__name__" {
+			if key == "__name__" || key == internalLabel {
 				continue
 			}
 			replaceInvalidChars(&key)
