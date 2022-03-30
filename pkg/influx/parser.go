@@ -18,7 +18,7 @@ import (
 	"github.com/prometheus/prometheus/model/labels"
 )
 
-const internalLabel = "__original_source__"
+const internalLabel = "__proxy_source__"
 
 // parseInfluxLineReader parses a Influx Line Protocol request from an io.Reader.
 func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([]cortexpb.TimeSeries, error) {

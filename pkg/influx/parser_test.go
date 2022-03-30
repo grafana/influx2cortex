@@ -30,7 +30,7 @@ func TestParseInfluxLineReader(t *testing.T) {
 				{
 					Labels: []cortexpb.LabelAdapter{
 						{Name: "__name__", Value: "measurement_f1"},
-						{Name: "__original_source__", Value: "influx"},
+						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "t1", Value: "v1"},
 					},
 					Samples: []cortexpb.Sample{{Value: 2, TimestampMs: 1465839830100}},
@@ -45,7 +45,7 @@ func TestParseInfluxLineReader(t *testing.T) {
 				{
 					Labels: []cortexpb.LabelAdapter{
 						{Name: "__name__", Value: "measurement_f1"},
-						{Name: "__original_source__", Value: "influx"},
+						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "t1", Value: "v1"},
 						{Name: "t2", Value: "v2"},
 						{Name: "t3", Value: "v3"},
@@ -62,7 +62,7 @@ func TestParseInfluxLineReader(t *testing.T) {
 				{
 					Labels: []cortexpb.LabelAdapter{
 						{Name: "__name__", Value: "measurement_f1"},
-						{Name: "__original_source__", Value: "influx"},
+						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "t1", Value: "v1"},
 					},
 					Samples: []cortexpb.Sample{{Value: 3, TimestampMs: 1465839830100}},
@@ -70,7 +70,7 @@ func TestParseInfluxLineReader(t *testing.T) {
 				{
 					Labels: []cortexpb.LabelAdapter{
 						{Name: "__name__", Value: "measurement_f2"},
-						{Name: "__original_source__", Value: "influx"},
+						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "t1", Value: "v1"},
 					},
 					Samples: []cortexpb.Sample{{Value: 365, TimestampMs: 1465839830100}},
@@ -78,7 +78,7 @@ func TestParseInfluxLineReader(t *testing.T) {
 				{
 					Labels: []cortexpb.LabelAdapter{
 						{Name: "__name__", Value: "measurement_f3"},
-						{Name: "__original_source__", Value: "influx"},
+						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "t1", Value: "v1"},
 					},
 					Samples: []cortexpb.Sample{{Value: 0, TimestampMs: 1465839830100}},
@@ -93,7 +93,7 @@ func TestParseInfluxLineReader(t *testing.T) {
 				{
 					Labels: []cortexpb.LabelAdapter{
 						{Name: "__name__", Value: "_measurement_f1"},
-						{Name: "__original_source__", Value: "influx"},
+						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "_t1_", Value: "v1"},
 					},
 					Samples: []cortexpb.Sample{{Value: 0, TimestampMs: 1465839830100}},

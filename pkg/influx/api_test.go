@@ -38,7 +38,7 @@ func TestHandleSeriesPush(t *testing.T) {
 							TimeSeries: &cortexpb.TimeSeries{
 								Labels: []cortexpb.LabelAdapter{
 									{Name: "__name__", Value: "measurement_f1"},
-									{Name: "__original_source__", Value: "influx"},
+									{Name: "__proxy_source__", Value: "influx"},
 									{Name: "t1", Value: "v1"},
 								},
 								Samples: []cortexpb.Sample{
@@ -71,7 +71,7 @@ func TestHandleSeriesPush(t *testing.T) {
 							TimeSeries: &cortexpb.TimeSeries{
 								Labels: []cortexpb.LabelAdapter{
 									{Name: "__name__", Value: "measurement_f1"},
-									{Name: "__original_source__", Value: "influx"},
+									{Name: "__proxy_source__", Value: "influx"},
 									{Name: "t1", Value: "v1"},
 								},
 								Samples: []cortexpb.Sample{
