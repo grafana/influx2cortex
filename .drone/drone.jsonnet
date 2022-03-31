@@ -83,6 +83,11 @@ local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
     image=images._images.argoCli,
   ))
   + imagePullSecrets
+  + triggers.excludeModifiedPaths([
+    '.drone/**',
+    '.gitignore',
+    'README.md',
+  ])
   + triggers.main,
 ]
 + [

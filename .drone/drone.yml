@@ -122,6 +122,11 @@ trigger:
   event:
     include:
     - push
+  paths:
+    exclude:
+    - .drone/**
+    - .gitignore
+    - README.md
 type: docker
 ---
 get:
@@ -149,6 +154,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 45080ad6ead386211b68bfb5db7363cb020c12a2021791467a9c6be9ba8a054b
+hmac: 25e7453b8115e3cfae685f879dbfa0140f8b4038e780d2e5439c7cdbbb05a77d
 
 ...
