@@ -1,4 +1,5 @@
 ---
+depends_on: null
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
@@ -26,6 +27,7 @@ steps:
   settings: {}
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - echo -n "$${DOCKER_TAG}" > .tag
   - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
@@ -46,6 +48,7 @@ trigger:
     - pull_request
 type: docker
 ---
+depends_on: null
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
@@ -58,6 +61,7 @@ steps:
   settings: {}
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - echo -n "$${DOCKER_TAG}" > .tag
   - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
@@ -72,6 +76,46 @@ steps:
       from_secret: gcr_admin
     registry: us.gcr.io
     repo: kubernetes-dev/influx2cortex
+trigger:
+  branch:
+  - main
+  event:
+    include:
+    - push
+type: docker
+---
+depends_on:
+- main
+image_pull_secrets:
+- dockerconfigjson
+kind: pipeline
+name: launch influx argo workflow
+steps:
+- commands:
+  - '[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/master) ]'
+  image: golang:1.17
+  name: check is latest commit
+  settings: {}
+- commands:
+  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - echo -n "$${DOCKER_TAG}" > .tag
+  - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
+    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
+  - tail -n +1 .tags
+  image: golang:1.17
+  name: generate tags
+  settings: {}
+- commands: []
+  image: us.gcr.io/kubernetes-dev/drone/plugins/argo-cli
+  name: launch argo workflow
+  settings:
+    add_ci_labels: true
+    command: 'submit --from workflowtemplate/influx-deploy --name influx-deploy-$(cat
+      .tag) --parameter dockertag=$(cat .tag) --parameter commit=${DRONE_COMMIT} --parameter
+      commit_author=${DRONE_COMMIT_AUTHOR} --parameter commit_link=${DRONE_COMMIT_LINK} '
+    namespace: influx-cd
+    token:
+      from_secret: argo_token
 trigger:
   branch:
   - main
@@ -98,7 +142,13 @@ get:
 kind: secret
 name: gcr_admin
 ---
+get:
+  name: token
+  path: infra/data/ci/argo-workflows/trigger-service-account
+kind: secret
+name: argo_token
+---
 kind: signature
-hmac: 20038b15cee2c681538b5839b211fde638b969abe4d2f7d74d11e8e6e360c623
+hmac: 45080ad6ead386211b68bfb5db7363cb020c12a2021791467a9c6be9ba8a054b
 
 ...
