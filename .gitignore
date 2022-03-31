@@ -3,3 +3,5 @@ jsonnet/influx2cortex/vendor
 .idea/
 cmd/influx2cortex/influx2cortex
 vendor/
+.drone/coverage
+.drone/ghcomment

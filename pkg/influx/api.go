@@ -5,21 +5,12 @@ import (
 	"time"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/weaveworks/common/middleware"
 	"github.com/weaveworks/common/server"
 )
-
-var ingesterClientRequestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Namespace: "influx2cortex",
-	Name:      "distributor_client_request_duration_seconds",
-	Help:      "Time spent doing Distributor requests.",
-	Buckets:   prometheus.ExponentialBuckets(0.001, 4, 6),
-}, []string{"operation", "status_code"})
 
 type API struct {
 	logger   log.Logger
@@ -70,7 +61,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.recorder.measureMetricsWritten(len(rwReq.Timeseries))
-	level.Debug(a.logger).Log("msg", "successful series write", "len", len(rwReq.Timeseries))
+	_ = level.Debug(a.logger).Log("msg", "successful series write", "len", len(rwReq.Timeseries))
 
 	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
 }

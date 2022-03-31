@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 )
 
 const (
@@ -24,18 +24,18 @@ func LogAndSetHTTPError(ctx context.Context, w http.ResponseWriter, log log.Logg
 	var errx Error
 	if errors.Is(err, context.Canceled) {
 		code = httpStatusCanceled
-		level.Error(log).Log("msg", "canceled", "response_code", code, "err", err)
+		_ = level.Error(log).Log("msg", "canceled", "response_code", code, "err", err)
 		message = "request canceled"
 	} else if errors.As(err, &errx) {
 		switch code = errx.HTTPStatusCode(); code {
 		case http.StatusBadRequest:
-			level.Warn(log).Log("msg", errx.Message(), "response_code", code, "err", tryUnwrap(errx))
+			_ = level.Warn(log).Log("msg", errx.Message(), "response_code", code, "err", tryUnwrap(errx))
 		default:
-			level.Error(log).Log("msg", errx.Message(), "response_code", code, "err", tryUnwrap(errx))
+			_ = level.Error(log).Log("msg", errx.Message(), "response_code", code, "err", tryUnwrap(errx))
 		}
 		message = errx.Message()
 	} else {
-		level.Error(log).Log("msg", "unknown error", "response_code", code, "err", err)
+		_ = level.Error(log).Log("msg", "unknown error", "response_code", code, "err", err)
 	}
 
 	http.Error(w, message, code)

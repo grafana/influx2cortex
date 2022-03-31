@@ -10,19 +10,19 @@ steps:
   name: test
   settings: {}
 - commands:
+  - scripts/build-drone-utilities.sh
   - go test -coverprofile=coverage.out ./...
-  - go tool cover -func=coverage.out > coverage_report.raw
-  - echo "Go coverage report:" > coverage_report.out
-  - echo "| Source | Func | % |" >> coverage_report.out
-  - echo "| ------ | ---- | - |" >> coverage_report.out
-  - "cat coverage_report.raw | sed -E 's/\t+/ | /g' | sed -E 's/^/| /g' | sed -E 's/$/
-    |/g' >> coverage_report.out"
-  - bash scripts/comment-pr.sh "`cat coverage_report.out`"
+  - .drone/coverage > coverage_report.out
+  - scripts/generate-lint-report.sh
+  - cat coverage_report.out > report.out
+  - echo "" >> report.out
+  - cat lint.out >> report.out
+  - .drone/ghcomment -id "Go coverage report:" -bodyfile report.out
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
-  image: us.gcr.io/kubernetes-dev/influx2cortex/drone-env:latest
-  name: test coverage
+  image: golangci/golangci-lint:v1.45
+  name: coverage + lint
   settings: {}
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
@@ -99,6 +99,6 @@ kind: secret
 name: gcr_admin
 ---
 kind: signature
-hmac: 9bf350953b46e3afef86444ae92494031efa09f27c1801c02a72b3f6487daa62
+hmac: 20038b15cee2c681538b5839b211fde638b969abe4d2f7d74d11e8e6e360c623
 
 ...

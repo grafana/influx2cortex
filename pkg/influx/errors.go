@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log/level"
 	"github.com/grafana/influx2cortex/pkg/errorx"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
@@ -60,9 +60,9 @@ func (a *API) handleError(w http.ResponseWriter, r *http.Request, err error) {
 		statusCode = http.StatusInternalServerError
 	}
 	if statusCode < 500 {
-		level.Info(a.logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(err))
+		_ = level.Info(a.logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(err))
 	} else if statusCode >= 500 {
-		level.Warn(a.logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(err))
+		_ = level.Warn(a.logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(err))
 	}
 	a.recorder.measureProxyErrors(fmt.Sprintf("%T", err))
 	http.Error(w, httpErrString, statusCode)

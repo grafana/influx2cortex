@@ -61,7 +61,7 @@ func WriteJSONResponse(w http.ResponseWriter, v interface{}) {
 
 	// We ignore errors here, because we cannot do anything about them.
 	// Write will trigger sending Status code, so we cannot send a different status code afterwards.
-	// Also this isn't internal error, but error communicating with client.
+	// This isn't internal error, but error communicating with client.
 	_, _ = w.Write(data)
 }
 
@@ -83,7 +83,7 @@ func WriteYAMLResponse(w http.ResponseWriter, v interface{}) {
 	_, _ = w.Write(data)
 }
 
-// Sends message as text/plain response with 200 status code.
+// WriteTextResponse sends message as text/plain response with 200 status code.
 func WriteTextResponse(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "text/plain")
 
@@ -91,7 +91,7 @@ func WriteTextResponse(w http.ResponseWriter, message string) {
 	_, _ = w.Write([]byte(message))
 }
 
-// Sends message as text/html response with 200 status code.
+// WriteHTMLResponse sends message as text/html response with 200 status code.
 func WriteHTMLResponse(w http.ResponseWriter, message string) {
 	w.Header().Set("Content-Type", "text/html")
 
@@ -120,12 +120,12 @@ func StreamWriteYAMLResponse(w http.ResponseWriter, iter chan interface{}, logge
 	for v := range iter {
 		data, err := yaml.Marshal(v)
 		if err != nil {
-			level.Error(logger).Log("msg", "yaml marshal failed", "err", err)
+			_ = level.Error(logger).Log("msg", "yaml marshal failed", "err", err)
 			continue
 		}
 		_, err = w.Write(data)
 		if err != nil {
-			level.Error(logger).Log("msg", "write http response failed", "err", err)
+			_ = level.Error(logger).Log("msg", "write http response failed", "err", err)
 			return
 		}
 	}

@@ -54,7 +54,7 @@ func Handler(
 		var req cortexpb.PreallocWriteRequest
 		buf, err := util.ParseProtoReader(ctx, r.Body, int(r.ContentLength), maxRecvMsgSize, bufHolder.buf, &req, util.RawSnappy)
 		if err != nil {
-			level.Error(logger).Log("err", err.Error())
+			_ = level.Error(logger).Log("err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			bufferPool.Put(bufHolder)
 			return
@@ -86,7 +86,7 @@ func Handler(
 				return
 			}
 			if resp.GetCode() != 202 {
-				level.Error(logger).Log("msg", "push error", "err", err)
+				_ = level.Error(logger).Log("msg", "push error", "err", err)
 			}
 			http.Error(w, string(resp.Body), int(resp.Code))
 		}

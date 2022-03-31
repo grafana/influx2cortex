@@ -21,6 +21,6 @@ var experimentalFeaturesInUse = promauto.NewCounterVec(
 
 // WarnExperimentalUse logs a warning and increments the experimental features metric.
 func WarnExperimentalUse(feature string) {
-	level.Warn(Logger).Log("msg", "experimental feature in use", "feature", feature)
+	_ = level.Warn(Logger).Log("msg", "experimental feature in use", "feature", feature)
 	experimentalFeaturesInUse.WithLabelValues(feature).Inc()
 }

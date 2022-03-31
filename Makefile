@@ -24,5 +24,5 @@ protobuf: ## Runs protoc command to generate pb files
 drone:
 	scripts/generate-drone-yml.sh
 
-drone-env:
-	scripts/build-and-push-drone-env.sh
+drone-utilities:
+	scripts/build-drone-utilities.sh

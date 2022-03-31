@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/cortexproject/cortex/pkg/util/fakeauth"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/grafana/dskit/flagext"
 	"github.com/grafana/influx2cortex/pkg/influx"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
@@ -38,34 +38,34 @@ func Run() error {
 
 	httpAuthMiddleware := fakeauth.SetupAuthMiddleware(&serverConfig, enableAuth, nil)
 
-	server, err := server.New(serverConfig)
+	srv, err := server.New(serverConfig)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to start server", "err", err)
+		_ = level.Error(logger).Log("msg", "failed to start server", "err", err)
 		return err
 	}
 
 	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", prometheus.DefaultRegisterer)
 	client, err := remotewrite.NewClient(remoteWriteConfig, remoteWriteRecorder, nil)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to instantiate remotewrite.API for influx2cortex", "err", err)
+		_ = level.Error(logger).Log("msg", "failed to instantiate remotewrite.API for influx2cortex", "err", err)
 		return err
 	}
 
 	api, err := influx.NewAPI(logger, client, recorder)
 	if err != nil {
-		level.Error(logger).Log("msg", "failed to start API", "err", err)
+		_ = level.Error(logger).Log("msg", "failed to start API", "err", err)
 		return err
 	}
 
-	api.Register(server, httpAuthMiddleware)
+	api.Register(srv, httpAuthMiddleware)
 
-	return server.Run()
+	return srv.Run()
 }
 
 func main() {
 	err := Run()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error running influx2cortex: %s", err)
+		_, _ = fmt.Fprintf(os.Stderr, "error running influx2cortex: %s", err)
 		os.Exit(1)
 	}
 	os.Exit(0)
