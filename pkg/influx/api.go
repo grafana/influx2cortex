@@ -44,6 +44,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 		a.handleError(w, r, err)
 		return
 	}
+
 	a.recorder.measureMetricsParsed(len(ts))
 	a.recorder.measureConversionDuration(time.Since(beforeConversion))
 
