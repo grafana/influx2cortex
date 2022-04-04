@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cortexproject/cortex/pkg/util/fakeauth"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
+	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/flagext"
 	"github.com/grafana/influx2cortex/pkg/influx"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
+	"github.com/grafana/influx2cortex/pkg/server"
+	"github.com/grafana/influx2cortex/pkg/server/middleware"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/weaveworks/common/logging"
-	"github.com/weaveworks/common/server"
 )
 
 func Run() error {
@@ -32,44 +32,47 @@ func Run() error {
 	flag.Parse()
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
-	serverConfig.Log = logging.GoKit(logger)
-
 	recorder := influx.NewRecorder(prometheus.DefaultRegisterer)
 
-	httpAuthMiddleware := fakeauth.SetupAuthMiddleware(&serverConfig, enableAuth, nil)
+	var authMiddleware middleware.Interface
+	if enableAuth {
+		authMiddleware = middleware.NewHTTPAuth(logger)
+	} else {
+		authMiddleware = middleware.HTTPFakeAuth{}
+	}
 
-	srv, err := server.New(serverConfig)
+	server, err := server.NewServer(logger, serverConfig, mux.NewRouter(), []middleware.Interface{authMiddleware})
 	if err != nil {
-		_ = level.Error(logger).Log("msg", "failed to start server", "err", err)
+		level.Error(logger).Log("msg", "failed to start server", "err", err)
 		return err
 	}
 
 	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", prometheus.DefaultRegisterer)
 	client, err := remotewrite.NewClient(remoteWriteConfig, remoteWriteRecorder, nil)
 	if err != nil {
-		_ = level.Error(logger).Log("msg", "failed to instantiate remotewrite.API for influx2cortex", "err", err)
+		level.Error(logger).Log("msg", "failed to instantiate remotewrite.API for influx2cortex", "err", err)
 		return err
 	}
 
 	api, err := influx.NewAPI(logger, client, recorder)
 	if err != nil {
-		_ = level.Error(logger).Log("msg", "failed to start API", "err", err)
+		level.Error(logger).Log("msg", "failed to start API", "err", err)
 		return err
 	}
 
-	api.Register(srv, httpAuthMiddleware)
+	api.Register(server.Router)
 	err = recorder.RegisterVersionBuildTimestamp()
 	if err != nil {
 		return fmt.Errorf("could not register version build timestamp: %w", err)
 	}
 
-	return srv.Run()
+	return server.Run()
 }
 
 func main() {
 	err := Run()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "error running influx2cortex: %s", err)
+		fmt.Fprintf(os.Stderr, "error running influx2cortex: %s", err)
 		os.Exit(1)
 	}
 	os.Exit(0)
