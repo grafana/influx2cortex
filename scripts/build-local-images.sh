@@ -15,7 +15,7 @@ echo "# Building docker images"
 # If this gets too slow, we should allow users to only build the images for one proxy
 for cmd in influx2cortex
 do
-  DOCKER_BUILDKIT=0 docker build \
+  docker build \
     -f ./cmd/Dockerfile \
     -t "us.gcr.io/kubernetes-dev/${cmd}:local" \
     --build-arg "cmd=${cmd}" \

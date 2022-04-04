@@ -54,6 +54,7 @@ type Suite struct {
 
 	cortexResource      *dockertest.Resource
 	influxProxyResource *dockertest.Resource
+	telegrafResource    *dockertest.Resource
 
 	api struct {
 		influx_client influxdb.Client
@@ -77,6 +78,7 @@ func (s *Suite) SetupSuite() {
 	s.network = s.createNetwork()
 	s.cortexResource = s.startCortex()
 	s.influxProxyResource = s.startInfluxProxy()
+	s.telegrafResource = s.startTelegraf()
 
 	influx_client := influxdb.NewClient("http://localhost:8086", "my-token")
 	write_api := influx_client.WriteAPIBlocking("my-org", "my-bucket")
@@ -84,7 +86,7 @@ func (s *Suite) SetupSuite() {
 	s.api.writeAPI = write_api
 
 	s.api.proxy_client = httpClient{
-		endpoint:    fmt.Sprintf("http://%s:%s/api/prom/push", s.cfg.Docker.Host, s.influxProxyResource.GetPort("8080/tcp")),
+		endpoint:    fmt.Sprintf("http://%s:%s/", "0.0.0.0", s.influxProxyResource.GetPort("8080/tcp")),
 		http_client: &http.Client{},
 	}
 
@@ -173,7 +175,6 @@ func (s *Suite) startInfluxProxy() *dockertest.Resource {
 		repo = "us.gcr.io/kubernetes-dev/influx2cortex"
 	)
 
-	fmt.Println("Port bindings: ", map[docker.Port][]docker.PortBinding{"8080/tcp": {}, "8081/tcp": {}})
 	return s.startContainer(&dockertest.RunOptions{
 		Name:       name,
 		Repository: repo,
@@ -183,7 +184,33 @@ func (s *Suite) startInfluxProxy() *dockertest.Resource {
 			"-server.http-listen-address=0.0.0.0",
 			"-server.http-listen-port=8080",
 			"-auth.enable=false",
-			"-write-endpoint=http://localhost:9009/api/prom/push",
+			"-write-endpoint=http://cortex:9009/api/prom/push",
+		},
+		ExposedPorts: []string{"8080", "9095"},
+		Networks:     []*dockertest.Network{s.network},
+		PortBindings: map[docker.Port][]docker.PortBinding{"8080/tcp": {}, "9095/tcp": {}},
+		Privileged:   false,
+		Auth:         s.cfg.Docker.Auth,
+		Labels:       suiteContainerLabels,
+	}, "healthz", "8080/tcp")
+}
+
+func (s *Suite) startTelegraf() *dockertest.Resource {
+	const (
+		name = "telegraf"
+		repo = "us.gcr.io/kubernetes-dev/influx2cortex"
+	)
+
+	return s.startContainer(&dockertest.RunOptions{
+		Name:       name,
+		Repository: repo,
+		Tag:        s.cfg.Docker.Tag,
+		Cmd: []string{
+			"/app/influx2cortex",
+			"-server.http-listen-address=0.0.0.0",
+			"-server.http-listen-port=8080",
+			"-auth.enable=false",
+			"-write-endpoint=http://cortex:9009/api/prom/push",
 		},
 		ExposedPorts: []string{"8080", "9095"},
 		Networks:     []*dockertest.Network{s.network},
@@ -195,7 +222,6 @@ func (s *Suite) startInfluxProxy() *dockertest.Resource {
 }
 
 func (s *Suite) waitForReady(template string, args ...interface{}) {
-	fmt.Println("in waitForReady")
 	s.Require().NoError(
 		s.pool.Retry(
 			healthCheck(template, args...),
@@ -214,16 +240,11 @@ func (s *Suite) testFilePath() string {
 // the template provided will be formatted-f with the args
 func healthCheck(template string, args ...interface{}) func() error {
 	url := fmt.Sprintf(template, args...)
-	fmt.Println("in healthcheck")
-	fmt.Println("url: ", url)
 	return func() error {
 		resp, err := http.Get(url)
-		fmt.Println("Resp from get: ", resp)
-		fmt.Println("Err from get: ", err)
 		if err != nil {
 			return err
 		}
-		fmt.Println("response code: ", resp.StatusCode)
 		if resp.StatusCode != http.StatusOK {
 			return fmt.Errorf("status code isn't 200 OK, is %s", resp.Status)
 		}
@@ -270,12 +291,16 @@ type httpClient struct {
 }
 
 func (pc httpClient) post(ctx context.Context, path string, orgId string, body io.Reader) (statusCode int, respBody []byte, err error) {
+	fmt.Println("path: ", pc.endpoint+path)
 	req, err := http.NewRequestWithContext(ctx, "POST", pc.endpoint+path, body)
+	fmt.Println("Req err: ", err)
 	req.Header.Set("X-Scope-OrgID", orgId)
 	if err != nil {
 		return 0, nil, err
 	}
 	resp, err := pc.http_client.Do(req)
+	fmt.Println("client response: ", resp)
+	fmt.Println("Error: ", err)
 	if err != nil {
 		return 0, nil, err
 	}
