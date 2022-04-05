@@ -52,10 +52,7 @@ func logRequest(logger log.Logger, r *http.Request, statusCode int) {
 	if traceID != "" { // we want to log the IDs for traces even if they aren't sampled
 		logger = log.With(logger, "traceID", traceID, "sampled", ok)
 
-		// Setting JaegerDebugHeader forces a trace to be sampled and tags it with the provided debug id, see:
-		// https://github.com/grafana/deployment_tools/blob/master/docs/infrastructure/tracing.md#special-tags
-		// We are logging the debug id if it's present to allow us to search for it in logs, as Tempo doesn't support
-		// searching by tag yet.
+		// Setting JaegerDebugHeader forces a trace to be sampled and tags it with the provided debug id.
 		// The debug id is present in the Jaeger span struct, but is package-private, therefore we have to extract it
 		// from the request headers instead.
 		if dh := r.Header.Get(jaeger.JaegerDebugHeader); dh != "" {

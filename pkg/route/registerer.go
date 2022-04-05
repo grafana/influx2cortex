@@ -7,7 +7,7 @@ import (
 )
 
 // Registerer provides a set of methods for registering API routes. An interface is defined as route registration
-// differs depending on if the proxy is running in Cloud or GEM.
+// differs depending on where the proxy is running.
 type Registerer interface {
 	RegisterRoute(path string, handler http.Handler, methods ...string)
 	RegisterRoutesWithPrefix(prefix string, handler http.Handler, methods ...string)
@@ -30,7 +30,7 @@ func (r *MuxRegisterer) RegisterRoutesWithPrefix(prefix string, handler http.Han
 	r.router.NewRoute().PathPrefix(prefix).Handler(handler).Methods(methods...)
 }
 
-// FuncRegisterer allows a registerer to be defined by passing in functions. This is used for proxies in GEM.
+// FuncRegisterer allows a registerer to be defined by passing in functions. This is used for proxies.
 type FuncRegisterer struct {
 	route            RegisterRouteFunc
 	routesWithPrefix RegisterRoutesWithPrefixFunc

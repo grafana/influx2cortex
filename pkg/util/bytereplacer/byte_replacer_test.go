@@ -17,7 +17,7 @@ func TestByteReplacer(t *testing.T) {
 // BenchmarkByteReplacer results:
 // goos: darwin
 // goarch: amd64
-// pkg: github.com/grafana/transmog/pkg/util/bytereplacer
+// pkg: github.com/grafana/influx2cortex/pkg/util/bytereplacer
 // cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
 // BenchmarkByteReplacer
 // BenchmarkByteReplacer/byte_replacer
