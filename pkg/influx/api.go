@@ -27,15 +27,6 @@ type API struct {
 	recorder Recorder
 }
 
-//func (a *API) Register(server *server.Server, enableAuth bool) {
-//	handler := http.Handler(http.HandlerFunc(a.handleSeriesPush))
-
-//	if enableAuth {
-//		handler = middleware.AuthenticateUser.Wrap(handler)
-//	}
-//	server.HTTP.Handle("/api/v1/push/influx/write", handler)
-//}
-
 func (a *API) Register(router *mux.Router) {
 	registerer := route.NewMuxRegisterer(router)
 	registerer.RegisterRoute("/api/v1/push/influx/write", http.HandlerFunc(a.handleSeriesPush), http.MethodPost)
