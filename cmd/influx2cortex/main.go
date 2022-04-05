@@ -58,6 +58,10 @@ func Run() error {
 	}
 
 	api.Register(srv, httpAuthMiddleware)
+	err = recorder.RegisterVersionBuildTimestamp()
+	if err != nil {
+		return fmt.Errorf("could not register version build timestamp: %w", err)
+	}
 
 	return srv.Run()
 }

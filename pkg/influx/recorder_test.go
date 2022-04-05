@@ -11,6 +11,9 @@ import (
 )
 
 func TestRecorder(t *testing.T) {
+	CommitUnixTimestamp = "1649113429"
+	DockerTag = "docker:tag"
+
 	reg := prometheus.NewRegistry()
 	rec := NewRecorder(reg)
 
@@ -85,6 +88,19 @@ influxdb_proxy_ingester_data_conversion_seconds_bucket{le="100"} 1
 influxdb_proxy_ingester_data_conversion_seconds_bucket{le="+Inf"} 1
 influxdb_proxy_ingester_data_conversion_seconds_sum 15
 influxdb_proxy_ingester_data_conversion_seconds_count 1
+`,
+		},
+		"Register version build timestamp": {
+			measure: func(r Recorder) {
+				_ = r.RegisterVersionBuildTimestamp()
+			},
+			expMetricNames: []string{
+				"influxdb_proxy_ingester_build_unix_timestamp",
+			},
+			expMetrics: `
+# HELP influxdb_proxy_ingester_build_unix_timestamp A constant build date value reported by each instance as a Unix epoch timestamp
+# TYPE influxdb_proxy_ingester_build_unix_timestamp gauge
+influxdb_proxy_ingester_build_unix_timestamp{docker_tag="docker:tag"} 1.649113429e+09
 `,
 		},
 	}
