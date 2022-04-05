@@ -68,6 +68,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
 }
 
+// Config holds objects needed to start running an influx2cortex server.
 type Config struct {
 	ServerConfig      server.Config
 	EnableAuth        bool
@@ -75,7 +76,8 @@ type Config struct {
 	Logger            log.Logger
 }
 
-// Run starts the influx API server with the given config and options.
+// Run starts the influx API server with the given config options. It runs until
+// error or until SIGTERM is received.
 func Run(conf Config) error {
 	recorder := NewRecorder(prometheus.DefaultRegisterer)
 

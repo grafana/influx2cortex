@@ -19,7 +19,7 @@ import (
 
 func main() {
 	conf := influx.Config{}
-	flag.BoolVar(&conf.EnableAuth, "auth.enable", true, "enable X-Scope-OrgId header")
+	flag.BoolVar(&conf.EnableAuth, "auth.enable", true, "require X-Scope-OrgId header")
 	flagext.RegisterFlags(
 		&conf.ServerConfig,
 		&conf.RemoteWriteConfig,
