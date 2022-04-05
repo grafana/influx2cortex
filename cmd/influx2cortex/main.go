@@ -14,6 +14,7 @@ import (
 	"github.com/grafana/influx2cortex/pkg/server"
 	"github.com/grafana/influx2cortex/pkg/server/middleware"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/weaveworks/common/signals"
 )
 
 func Run() error {
@@ -65,6 +66,13 @@ func Run() error {
 	if err != nil {
 		return fmt.Errorf("could not register version build timestamp: %w", err)
 	}
+
+	// Look for SIGTEM and stop the server if we get it
+	handler := signals.NewHandler(serverConfig.Log)
+	go func() {
+		handler.Loop()
+		srv.Stop()
+	}()
 
 	return server.Run()
 }
