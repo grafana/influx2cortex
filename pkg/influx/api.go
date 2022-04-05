@@ -1,14 +1,18 @@
 package influx
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
+	"github.com/cortexproject/cortex/pkg/util/fakeauth"
 	"github.com/go-kit/log"
 	"github.com/gorilla/mux"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/grafana/influx2cortex/pkg/route"
+	"github.com/weaveworks/common/signals"
 )
 
 type API struct {
@@ -62,4 +66,52 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	a.recorder.measureMetricsWritten(len(rwReq.Timeseries))
 
 	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
+}
+
+type Config struct {
+	ServerConfig      server.Config
+	EnableAuth        bool
+	RemoteWriteConfig remotewrite.Config
+	Logger            log.Logger
+}
+
+// Run starts the influx API server with the given config and options.
+func Run(conf Config) error {
+	recorder := NewRecorder(prometheus.DefaultRegisterer)
+
+	httpAuthMiddleware := fakeauth.SetupAuthMiddleware(&conf.ServerConfig, conf.EnableAuth, nil)
+
+	srv, err := server.New(conf.ServerConfig)
+	if err != nil {
+		_ = level.Error(conf.Logger).Log("msg", "failed to start server", "err", err)
+		return err
+	}
+
+	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", prometheus.DefaultRegisterer)
+	client, err := remotewrite.NewClient(conf.RemoteWriteConfig, remoteWriteRecorder, nil)
+	if err != nil {
+		_ = level.Error(conf.Logger).Log("msg", "failed to instantiate remotewrite.API for influx2cortex", "err", err)
+		return err
+	}
+
+	api, err := NewAPI(conf.Logger, client, recorder)
+	if err != nil {
+		_ = level.Error(conf.Logger).Log("msg", "failed to start API", "err", err)
+		return err
+	}
+
+	api.Register(srv, httpAuthMiddleware)
+	err = recorder.RegisterVersionBuildTimestamp()
+	if err != nil {
+		return fmt.Errorf("could not register version build timestamp: %w", err)
+	}
+
+	// Look for SIGTEM and stop the server if we get it
+	handler := signals.NewHandler(conf.ServerConfig.Log)
+	go func() {
+		handler.Loop()
+		srv.Stop()
+	}()
+
+	return srv.Run()
 }
