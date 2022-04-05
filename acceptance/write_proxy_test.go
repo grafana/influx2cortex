@@ -4,19 +4,21 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"time"
 )
 
 func (s *Suite) Test_WriteLineProtocol() {
-	s.waitUntilElapsedAfterSuiteSetup(30 * time.Second)
+	//s.waitUntilElapsedAfterSuiteSetup(30 * time.Second)
 
-	orgId := "unknown"
-	body := bytes.NewReader([]byte("measurement,tag1=val1 field1=2 1465839830100400200"))
+	//orgId := "unknown"
+	//body := bytes.NewReader([]byte("measurement,tag1=val1 field1=2 1465839830100400200"))
 
-	code, resp, err := s.api.proxy_client.post(context.Background(), "api/v1/push/influx/write", orgId, body)
-	s.Require().NoError(err)
-	s.Require().Equal(204, code)
-	fmt.Println("Resp: ", resp)
+	line := fmt.Sprintf("stat,unit=temperature avg=%f,max=%f", 23.5, 45.0)
+	err := s.api.writeAPI.WriteRecord(context.Background(), line)
+	fmt.Println("Err: ", err)
+	//code, resp, err := s.api.proxy_client.post(context.Background(), "api/v1/push/influx/write", orgId, body)
+	//s.Require().NoError(err)
+	//s.Require().Equal(204, code)
+	//fmt.Println("Resp: ", resp)
 }
 
 func (s *Suite) Test_WriteLineProtocolInvalidCharConversion() {
