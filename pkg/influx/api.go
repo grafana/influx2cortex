@@ -108,7 +108,7 @@ func Run(conf Config) error {
 		return fmt.Errorf("could not register version build timestamp: %w", err)
 	}
 
-	// Look for SIGTEM and stop the server if we get it
+	// Look for SIGTERM and stop the server if we get it
 	handler := signals.NewHandler(conf.ServerConfig.Log)
 	go func() {
 		handler.Loop()
