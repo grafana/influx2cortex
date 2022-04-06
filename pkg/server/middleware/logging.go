@@ -9,8 +9,9 @@ import (
 	"github.com/uber/jaeger-client-go"
 
 	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/weaveworks/common/user"
+
+	logHelper "github.com/grafana/influx2cortex/pkg/util/log"
 )
 
 type Log struct {
@@ -74,13 +75,13 @@ func logRequest(logger log.Logger, r *http.Request, statusCode int) {
 	if http.StatusContinue <= statusCode && statusCode < http.StatusInternalServerError ||
 		statusCode == http.StatusBadGateway ||
 		statusCode == http.StatusServiceUnavailable {
-		level.Info(logger).Log(
+		logHelper.Info(logger,
 			"method", r.Method,
 			"uri", redactAPIKey(r.URL).RequestURI(),
 			"status", statusCode,
 		)
 	} else {
-		level.Warn(logger).Log(
+		logHelper.Warn(logger,
 			"method", r.Method,
 			"uri", redactAPIKey(r.URL).RequestURI(),
 			"status", statusCode,
