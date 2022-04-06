@@ -73,3 +73,8 @@ func Error(logger log.Logger, keyvals ...interface{}) {
 func Warn(logger log.Logger, keyvals ...interface{}) {
 	_ = level.Warn(logger).Log(keyvals)
 }
+
+// Info logs an info and does nothing if the log call itself had an error.
+func Info(logger log.Logger, keyvals ...interface{}) {
+	_ = level.Info(logger).Log(keyvals)
+}
