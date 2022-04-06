@@ -79,9 +79,8 @@ type ProxyConfig struct {
 	Logger            log.Logger
 }
 
-// NewProxy starts the influx API server with the given config options. It runs
-// until error or until SIGTERM is received. It returns the HTTP server that
-// is ready to Run.
+// NewProxy creates the influx API server with the given config options. It
+// returns the HTTP server that is ready to Run.
 func NewProxy(conf ProxyConfig) (*server.Server, error) {
 	recorder := NewRecorder(prometheus.DefaultRegisterer)
 
