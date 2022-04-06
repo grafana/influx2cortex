@@ -30,7 +30,10 @@ func TestServerRun(t *testing.T) {
 		w.WriteHeader(204)
 	})
 
-	go server.Run()
+	go func() {
+		require.NoError(t, server.Run())
+	}()
+
 	defer server.Shutdown(nil)
 
 	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s/test", server.Addr()), http.NoBody)
