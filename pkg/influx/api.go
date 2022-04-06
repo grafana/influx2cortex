@@ -9,16 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/route"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 )
-
-var ingesterClientRequestDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-	Namespace: "influx2cortex",
-	Name:      "distributor_client_request_duration_seconds",
-	Help:      "Time spent doing Distributor requests.",
-	Buckets:   prometheus.ExponentialBuckets(0.001, 4, 6),
-}, []string{"operation", "status_code"})
 
 type API struct {
 	logger   log.Logger
