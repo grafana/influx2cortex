@@ -61,3 +61,10 @@ func CheckFatal(location string, err error) {
 		os.Exit(1)
 	}
 }
+
+// Error logs an error and panics if the log call itself had an error.
+func Error(logger log.Logger, keyvals ...interface{}) {
+	if err := level.Error(logger).Log(keyvals); err != nil {
+		panic(fmt.Sprintf("error writing to log: %v", err))
+	}
+}
