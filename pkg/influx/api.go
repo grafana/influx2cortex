@@ -1,6 +1,7 @@
 package influx
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -35,15 +36,20 @@ func NewAPI(logger log.Logger, client remotewrite.Client, recorder Recorder) (*A
 
 // HandlerForInfluxLine is a http.Handler which accepts Influx Line protocol and converts it to WriteRequests.
 func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("in handleSeriesPush")
 	maxSize := 100 << 10 // TODO: Make this a CLI flag. 100KB for now.
 
 	beforeConversion := time.Now()
+
+	fmt.Println("calling parseInfluxLineReader")
 
 	ts, err := parseInfluxLineReader(r.Context(), r, maxSize)
 	if err != nil {
 		a.handleError(w, r, err)
 		return
 	}
+	fmt.Println("timeseries: ", ts)
+
 	a.recorder.measureMetricsParsed(len(ts))
 	a.recorder.measureConversionDuration(time.Since(beforeConversion))
 
@@ -58,10 +64,14 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 		Timeseries: pts,
 	}
 
+	fmt.Println("calling write")
+
 	if err := a.client.Write(r.Context(), rwReq); err != nil {
+		fmt.Println("err from write: ", err)
 		a.handleError(w, r, err)
 		return
 	}
+	fmt.Println("successful write")
 	a.recorder.measureMetricsWritten(len(rwReq.Timeseries))
 
 	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
