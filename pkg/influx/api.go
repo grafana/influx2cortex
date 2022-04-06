@@ -15,8 +15,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/weaveworks/common/logging"
 	"github.com/weaveworks/common/signals"
-
-	logHelper "github.com/grafana/influx2cortex/pkg/util/log"
 )
 
 type API struct {
@@ -72,17 +70,18 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
 }
 
-// Config holds objects needed to start running an influx2cortex server.
-type Config struct {
-	ServerConfig      server.Config
+// ProxyConfig holds objects needed to start running an influx2cortex proxy
+// server.
+type ProxyConfig struct {
+	HTTPConfig        server.Config
 	EnableAuth        bool
 	RemoteWriteConfig remotewrite.Config
 	Logger            log.Logger
 }
 
-// Run starts the influx API server with the given config options. It runs until
-// error or until SIGTERM is received.
-func Run(conf Config) error {
+// NewProxy creates the influx API server with the given config options. It
+// returns the HTTP server that is ready to Run.
+func NewProxy(conf ProxyConfig) (*server.Server, error) {
 	recorder := NewRecorder(prometheus.DefaultRegisterer)
 
 	var authMiddleware middleware.Interface
@@ -92,29 +91,26 @@ func Run(conf Config) error {
 		authMiddleware = middleware.HTTPFakeAuth{}
 	}
 
-	server, err := server.NewServer(conf.Logger, conf.ServerConfig, mux.NewRouter(), []middleware.Interface{authMiddleware})
+	server, err := server.NewServer(conf.Logger, conf.HTTPConfig, mux.NewRouter(), []middleware.Interface{authMiddleware})
 	if err != nil {
-		logHelper.Error(conf.Logger, "msg", "failed to start server", "err", err)
-		return err
+		return nil, fmt.Errorf("failed to create http server: %w", err)
 	}
 
 	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", prometheus.DefaultRegisterer)
 	client, err := remotewrite.NewClient(conf.RemoteWriteConfig, remoteWriteRecorder, nil)
 	if err != nil {
-		logHelper.Error(conf.Logger, "msg", "failed to instantiate remotewrite.API for influx2cortex", "err", err)
-		return err
+		return nil, fmt.Errorf("failed to create remotewrite.API: %w", err)
 	}
 
 	api, err := NewAPI(conf.Logger, client, recorder)
 	if err != nil {
-		logHelper.Error(conf.Logger, "msg", "failed to start API", "err", err)
-		return err
+		return nil, fmt.Errorf("failed to create influx API: %w", err)
 	}
 
 	api.Register(server.Router)
 	err = recorder.RegisterVersionBuildTimestamp()
 	if err != nil {
-		return fmt.Errorf("could not register version build timestamp: %w", err)
+		return nil, fmt.Errorf("could not register version build timestamp: %w", err)
 	}
 
 	// Look for SIGTERM and stop the server if we get it
@@ -124,5 +120,5 @@ func Run(conf Config) error {
 		server.Shutdown(nil)
 	}()
 
-	return server.Run()
+	return server, nil
 }
