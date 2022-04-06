@@ -16,7 +16,7 @@ import (
 	"github.com/weaveworks/common/logging"
 	"github.com/weaveworks/common/signals"
 
-	influxLog "github.com/grafana/influx2cortex/pkg/util/log"
+	logHelper "github.com/grafana/influx2cortex/pkg/util/log"
 )
 
 type API struct {
@@ -94,20 +94,20 @@ func Run(conf Config) error {
 
 	server, err := server.NewServer(conf.Logger, conf.ServerConfig, mux.NewRouter(), []middleware.Interface{authMiddleware})
 	if err != nil {
-		influxLog.Error(conf.Logger, "msg", "failed to start server", "err", err)
+		logHelper.Error(conf.Logger, "msg", "failed to start server", "err", err)
 		return err
 	}
 
 	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", prometheus.DefaultRegisterer)
 	client, err := remotewrite.NewClient(conf.RemoteWriteConfig, remoteWriteRecorder, nil)
 	if err != nil {
-		influxLog.Error(conf.Logger, "msg", "failed to instantiate remotewrite.API for influx2cortex", "err", err)
+		logHelper.Error(conf.Logger, "msg", "failed to instantiate remotewrite.API for influx2cortex", "err", err)
 		return err
 	}
 
 	api, err := NewAPI(conf.Logger, client, recorder)
 	if err != nil {
-		influxLog.Error(conf.Logger, "msg", "failed to start API", "err", err)
+		logHelper.Error(conf.Logger, "msg", "failed to start API", "err", err)
 		return err
 	}
 

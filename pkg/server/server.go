@@ -16,7 +16,7 @@ import (
 	"golang.org/x/net/netutil"
 	"google.golang.org/grpc"
 
-	influxLog "github.com/grafana/influx2cortex/pkg/util/log"
+	logHelper "github.com/grafana/influx2cortex/pkg/util/log"
 )
 
 const (
@@ -102,7 +102,7 @@ func NewServer(log log.Logger, cfg Config, router *mux.Router, middlewares []mid
 		httpListener = netutil.LimitListener(httpListener, cfg.HTTPConnLimit)
 	}
 
-	influxLog.Info(log, "msg", "server listening on address", "addr", httpListener.Addr().String())
+	logHelper.Info(log, "msg", "server listening on address", "addr", httpListener.Addr().String())
 
 	if cfg.PathPrefix != "" {
 		router = router.PathPrefix(cfg.PathPrefix).Subrouter()
@@ -122,7 +122,7 @@ func NewServer(log log.Logger, cfg Config, router *mux.Router, middlewares []mid
 		return nil, err
 	}
 
-	influxLog.Info(log, "msg", "GRPC server listening on address", "addr", grpcListener.Addr().String())
+	logHelper.Info(log, "msg", "GRPC server listening on address", "addr", grpcListener.Addr().String())
 
 	return &Server{
 		cfg:          cfg,
@@ -150,7 +150,7 @@ func (s *Server) Run() error {
 	errChan := make(chan error, 1)
 
 	go func() {
-		influxLog.Info(s.log, "msg", "Starting http server", "addr", s.httpListener.Addr().String())
+		logHelper.Info(s.log, "msg", "Starting http server", "addr", s.httpListener.Addr().String())
 
 		err := s.HTTPServer.Serve(s.httpListener)
 		if err == http.ErrServerClosed {
@@ -161,7 +161,7 @@ func (s *Server) Run() error {
 	}()
 
 	go func() {
-		influxLog.Info(s.log, "msg", "Starting grpc server", "addr", s.grpcListener.Addr().String())
+		logHelper.Info(s.log, "msg", "Starting grpc server", "addr", s.grpcListener.Addr().String())
 
 		err := s.GRPCServer.Serve(s.grpcListener)
 		if err == grpc.ErrServerStopped {
@@ -178,12 +178,12 @@ func (s *Server) Shutdown(_ error) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.cfg.ServerGracefulShutdownTimeout)
 	defer cancel()
 
-	influxLog.Info(s.log, "msg", "Shutting down http server")
+	logHelper.Info(s.log, "msg", "Shutting down http server")
 	if err := s.HTTPServer.Shutdown(ctx); err != nil {
 		_ = level.Error(s.log).Log("msg", "Server shutdown error", "err", err)
 	}
-	influxLog.Info(s.log, "msg", "Server shut down correctly")
+	logHelper.Info(s.log, "msg", "Server shut down correctly")
 
-	influxLog.Info(s.log, "msg", "Shutting down grpc server")
+	logHelper.Info(s.log, "msg", "Shutting down grpc server")
 	s.GRPCServer.GracefulStop()
 }

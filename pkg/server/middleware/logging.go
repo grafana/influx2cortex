@@ -11,7 +11,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/weaveworks/common/user"
 
-	influxLog "github.com/grafana/influx2cortex/pkg/util/log"
+	logHelper "github.com/grafana/influx2cortex/pkg/util/log"
 )
 
 type Log struct {
@@ -75,13 +75,13 @@ func logRequest(logger log.Logger, r *http.Request, statusCode int) {
 	if http.StatusContinue <= statusCode && statusCode < http.StatusInternalServerError ||
 		statusCode == http.StatusBadGateway ||
 		statusCode == http.StatusServiceUnavailable {
-		influxLog.Info(logger,
+		logHelper.Info(logger,
 			"method", r.Method,
 			"uri", redactAPIKey(r.URL).RequestURI(),
 			"status", statusCode,
 		)
 	} else {
-		influxLog.Warn(logger,
+		logHelper.Warn(logger,
 			"method", r.Method,
 			"uri", redactAPIKey(r.URL).RequestURI(),
 			"status", statusCode,
