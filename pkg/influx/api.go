@@ -6,10 +6,9 @@ import (
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
+	"github.com/gorilla/mux"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
-	"github.com/weaveworks/common/middleware"
-	"github.com/weaveworks/common/server"
+	"github.com/grafana/influx2cortex/pkg/route"
 )
 
 type API struct {
@@ -18,8 +17,9 @@ type API struct {
 	recorder Recorder
 }
 
-func (a *API) Register(server *server.Server, authMiddleware middleware.Interface) {
-	server.HTTP.Handle("/api/v1/push/influx/write", authMiddleware.Wrap(http.HandlerFunc(a.handleSeriesPush)))
+func (a *API) Register(router *mux.Router) {
+	registerer := route.NewMuxRegisterer(router)
+	registerer.RegisterRoute("/api/v1/push/influx/write", http.HandlerFunc(a.handleSeriesPush), http.MethodPost)
 }
 
 func NewAPI(logger log.Logger, client remotewrite.Client, recorder Recorder) (*API, error) {
@@ -59,9 +59,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 		a.handleError(w, r, err)
 		return
 	}
-
 	a.recorder.measureMetricsWritten(len(rwReq.Timeseries))
-	_ = level.Debug(a.logger).Log("msg", "successful series write", "len", len(rwReq.Timeseries))
 
 	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
 }
