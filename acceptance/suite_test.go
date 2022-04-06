@@ -54,7 +54,6 @@ type Suite struct {
 
 	cortexResource      *dockertest.Resource
 	influxProxyResource *dockertest.Resource
-	telegrafResource    *dockertest.Resource
 
 	api struct {
 		influx_client influxdb.Client
@@ -78,9 +77,9 @@ func (s *Suite) SetupSuite() {
 	s.network = s.createNetwork()
 	s.cortexResource = s.startCortex()
 	s.influxProxyResource = s.startInfluxProxy()
-	s.telegrafResource = s.startTelegraf()
 
-	influx_client := influxdb.NewClient("http://localhost:8086", "my-token")
+	influx_write_endpoint := fmt.Sprintf("http://%s:%s/", "0.0.0.0", s.influxProxyResource.GetPort("8080/tcp"))
+	influx_client := influxdb.NewClient(influx_write_endpoint, "my-token")
 	write_api := influx_client.WriteAPIBlocking("my-org", "my-bucket")
 	s.api.influx_client = influx_client
 	s.api.writeAPI = write_api
@@ -195,32 +194,6 @@ func (s *Suite) startInfluxProxy() *dockertest.Resource {
 	}, "healthz", "8080/tcp")
 }
 
-func (s *Suite) startTelegraf() *dockertest.Resource {
-	const (
-		name = "telegraf"
-		repo = "us.gcr.io/kubernetes-dev/influx2cortex"
-	)
-
-	return s.startContainer(&dockertest.RunOptions{
-		Name:       name,
-		Repository: repo,
-		Tag:        s.cfg.Docker.Tag,
-		Cmd: []string{
-			"/app/influx2cortex",
-			"-server.http-listen-address=0.0.0.0",
-			"-server.http-listen-port=8080",
-			"-auth.enable=false",
-			"-write-endpoint=http://cortex:9009/api/prom/push",
-		},
-		ExposedPorts: []string{"8080", "9095"},
-		Networks:     []*dockertest.Network{s.network},
-		PortBindings: map[docker.Port][]docker.PortBinding{"8080/tcp": {}, "9095/tcp": {}},
-		Privileged:   false,
-		Auth:         s.cfg.Docker.Auth,
-		Labels:       suiteContainerLabels,
-	}, "healthz", "8080/tcp")
-}
-
 func (s *Suite) waitForReady(template string, args ...interface{}) {
 	s.Require().NoError(
 		s.pool.Retry(
@@ -240,8 +213,11 @@ func (s *Suite) testFilePath() string {
 // the template provided will be formatted-f with the args
 func healthCheck(template string, args ...interface{}) func() error {
 	url := fmt.Sprintf(template, args...)
+	fmt.Println("in healthcheck. url: ", url)
 	return func() error {
 		resp, err := http.Get(url)
+		fmt.Println("Resp: ", resp)
+		fmt.Println("Err: ", err)
 		if err != nil {
 			return err
 		}
