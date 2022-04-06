@@ -68,3 +68,8 @@ func Error(logger log.Logger, keyvals ...interface{}) {
 		panic(fmt.Sprintf("error writing to log: %v", err))
 	}
 }
+
+// Warn logs a warning and does nothing if the log call itself had an error.
+func Warn(logger log.Logger, keyvals ...interface{}) {
+	_ = level.Warn(logger).Log(keyvals)
+}
