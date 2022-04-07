@@ -7,8 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/go-kit/log"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
+	"github.com/grafana/influx2cortex/pkg/remotewrite/remotewritemock"
 	"github.com/grafana/influx2cortex/pkg/server"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -51,7 +53,6 @@ func TestAuthentication(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			serverConfig := server.Config{
 				HTTPListenAddress: "127.0.0.1",
 				HTTPListenPort:    0, // Request system available port
@@ -63,7 +64,7 @@ func TestAuthentication(t *testing.T) {
 				Logger:            log.NewNopLogger(),
 			}
 
-			server, err := NewProxy(apiConfig)
+			server, err := newProxyWithClient(apiConfig, NewRemoteWriteClient())
 			require.NoError(t, err)
 
 			go func() {
@@ -93,4 +94,25 @@ func NewMockRecorder() *MockRecorder {
 	recorderMock.On("measureMetricsWritten", 1).Return(nil)
 	recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
 	return recorderMock
+}
+
+func NewRemoteWriteClient() *remotewritemock.Client {
+	remoteWriteMock := &remotewritemock.Client{}
+	remoteWriteMock.On("Write", mock.Anything, &cortexpb.WriteRequest{
+		Timeseries: []cortexpb.PreallocTimeseries{
+			{
+				TimeSeries: &cortexpb.TimeSeries{
+					Labels: []cortexpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f1"},
+						{Name: "__proxy_source__", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
+					Samples: []cortexpb.Sample{
+						{Value: 2, TimestampMs: 1465839830100},
+					},
+				},
+			},
+		},
+	}).Return(nil)
+	return remoteWriteMock
 }
