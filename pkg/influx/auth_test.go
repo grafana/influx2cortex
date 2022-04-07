@@ -20,40 +20,44 @@ import (
 
 func TestAuthentication(t *testing.T) {
 	tests := []struct {
-		name         string
-		url          string
-		data         string
-		enableAuth   bool
-		orgID        string
-		expectedCode int
-		expectedErr  error
+		name          string
+		url           string
+		data          string
+		enableAuth    bool
+		orgID         string
+		expectedOrgID string
+		expectedCode  int
+		expectedErr   error
 	}{
 		{
-			name:         "test auth enabled valid org ID",
-			url:          "/write",
-			data:         "measurement,t1=v1 f1=2 1465839830100400200",
-			enableAuth:   true,
-			orgID:        "valid",
-			expectedCode: http.StatusNoContent,
-			expectedErr:  nil,
+			name:          "test auth enabled valid org ID",
+			url:           "/write",
+			data:          "measurement,t1=v1 f1=2 1465839830100400200",
+			enableAuth:    true,
+			orgID:         "valid",
+			expectedOrgID: "valid",
+			expectedCode:  http.StatusNoContent,
+			expectedErr:   nil,
 		},
 		{
-			name:         "test auth enabled invalid org ID",
-			url:          "/write",
-			data:         "measurement,t1=v1 f1=2 1465839830100400200",
-			enableAuth:   true,
-			orgID:        "",
-			expectedCode: http.StatusUnauthorized,
-			expectedErr:  errorx.BadRequest{},
+			name:          "test auth enabled invalid org ID",
+			url:           "/write",
+			data:          "measurement,t1=v1 f1=2 1465839830100400200",
+			enableAuth:    true,
+			orgID:         "",
+			expectedOrgID: "",
+			expectedCode:  http.StatusUnauthorized,
+			expectedErr:   errorx.BadRequest{},
 		},
 		{
-			name:         "test auth disabled",
-			url:          "/write",
-			data:         "measurement,t1=v1 f1=2 1465839830100400200",
-			enableAuth:   false,
-			orgID:        "fake",
-			expectedCode: http.StatusNoContent,
-			expectedErr:  nil,
+			name:          "test auth disabled",
+			url:           "/write",
+			data:          "measurement,t1=v1 f1=2 1465839830100400200",
+			enableAuth:    false,
+			orgID:         "",
+			expectedOrgID: "fake",
+			expectedCode:  http.StatusNoContent,
+			expectedErr:   nil,
 		},
 	}
 	for _, tt := range tests {
@@ -76,7 +80,7 @@ func TestAuthentication(t *testing.T) {
 				ctx := args.Get(0).(context.Context)
 				orgID, err := user.ExtractOrgID(ctx)
 				require.NoError(t, err)
-				require.Equal(t, orgID, tt.orgID)
+				require.Equal(t, orgID, tt.expectedOrgID)
 			})
 
 			server, err := newProxyWithClient(apiConfig, remoteWriteMock)
@@ -91,11 +95,9 @@ func TestAuthentication(t *testing.T) {
 			url := fmt.Sprintf("http://%s/api/v1/push/influx/write", server.Addr())
 			req, err := http.NewRequest("POST", url, bytes.NewReader([]byte("measurement,t1=v1 f1=2 1465839830100400200")))
 			require.NoError(t, err)
-			if tt.enableAuth {
-				req = req.WithContext(user.InjectOrgID(req.Context(), tt.orgID))
-				err = user.InjectOrgIDIntoHTTPRequest(req.Context(), req)
-				require.NoError(t, err)
-			}
+			req = req.WithContext(user.InjectOrgID(req.Context(), tt.orgID))
+			err = user.InjectOrgIDIntoHTTPRequest(req.Context(), req)
+			require.NoError(t, err)
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
