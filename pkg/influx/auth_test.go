@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/go-kit/log"
+	"github.com/grafana/influx2cortex/pkg/errorx"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/remotewrite/remotewritemock"
 	"github.com/grafana/influx2cortex/pkg/server"
@@ -25,6 +26,7 @@ func TestAuthentication(t *testing.T) {
 		enableAuth   bool
 		orgID        string
 		expectedCode int
+		expectedErr  error
 	}{
 		{
 			name:         "test auth enabled valid org ID",
@@ -33,6 +35,7 @@ func TestAuthentication(t *testing.T) {
 			enableAuth:   true,
 			orgID:        "valid",
 			expectedCode: http.StatusNoContent,
+			expectedErr:  nil,
 		},
 		{
 			name:         "test auth enabled invalid org ID",
@@ -41,6 +44,7 @@ func TestAuthentication(t *testing.T) {
 			enableAuth:   true,
 			orgID:        "",
 			expectedCode: http.StatusUnauthorized,
+			expectedErr:  errorx.BadRequest{},
 		},
 		{
 			name:         "test auth disabled",
@@ -49,6 +53,7 @@ func TestAuthentication(t *testing.T) {
 			enableAuth:   false,
 			orgID:        "fake",
 			expectedCode: http.StatusNoContent,
+			expectedErr:  nil,
 		},
 	}
 	for _, tt := range tests {
@@ -67,7 +72,7 @@ func TestAuthentication(t *testing.T) {
 
 			remoteWriteMock := &remotewritemock.Client{}
 			remoteWriteMock.On("Write", mock.Anything, mock.Anything).
-				Return(nil).Run(func(args mock.Arguments) {
+				Return(tt.expectedErr).Run(func(args mock.Arguments) {
 				ctx := args.Get(0).(context.Context)
 				orgID, err := user.ExtractOrgID(ctx)
 				require.NoError(t, err)
