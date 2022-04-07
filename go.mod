@@ -60,6 +60,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+	gotest.tools v2.2.0+incompatible // indirect
 )
 
 exclude (
