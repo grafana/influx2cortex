@@ -120,7 +120,6 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*server.Se
 
 // NewProxy creates a new remotewrite client
 func NewProxy(conf ProxyConfig) (*server.Server, error) {
-
 	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", conf.Registerer)
 	client, err := remotewrite.NewClient(conf.RemoteWriteConfig, remoteWriteRecorder, nil)
 	if err != nil {

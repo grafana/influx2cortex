@@ -19,13 +19,12 @@ import (
 
 func TestAuthentication(t *testing.T) {
 	tests := []struct {
-		name            string
-		url             string
-		data            string
-		enableAuth      bool
-		orgID           string
-		expectedCode    int
-		remoteWriteMock func() *remotewritemock.Client
+		name         string
+		url          string
+		data         string
+		enableAuth   bool
+		orgID        string
+		expectedCode int
 	}{
 		{
 			name:         "test auth enabled valid org ID",
@@ -34,17 +33,6 @@ func TestAuthentication(t *testing.T) {
 			enableAuth:   true,
 			orgID:        "valid",
 			expectedCode: http.StatusNoContent,
-			remoteWriteMock: func() *remotewritemock.Client {
-				remoteWriteMock := &remotewritemock.Client{}
-				remoteWriteMock.On("Write", mock.Anything, mock.Anything).
-					Return(nil).Run(func(args mock.Arguments) {
-					ctx := args.Get(0).(context.Context)
-					orgID, err := user.ExtractOrgID(ctx)
-					require.NoError(t, err)
-					require.Equal(t, orgID, "valid")
-				})
-				return remoteWriteMock
-			},
 		},
 		{
 			name:         "test auth enabled invalid org ID",
@@ -53,11 +41,6 @@ func TestAuthentication(t *testing.T) {
 			enableAuth:   true,
 			orgID:        "",
 			expectedCode: http.StatusUnauthorized,
-			remoteWriteMock: func() *remotewritemock.Client {
-				remoteWriteMock := &remotewritemock.Client{}
-				remoteWriteMock.On("Write", mock.Anything, mock.Anything).Return(nil)
-				return remoteWriteMock
-			},
 		},
 		{
 			name:         "test auth disabled",
@@ -66,17 +49,6 @@ func TestAuthentication(t *testing.T) {
 			enableAuth:   false,
 			orgID:        "fake",
 			expectedCode: http.StatusNoContent,
-			remoteWriteMock: func() *remotewritemock.Client {
-				remoteWriteMock := &remotewritemock.Client{}
-				remoteWriteMock.On("Write", mock.Anything, mock.Anything).
-					Return(nil).Run(func(args mock.Arguments) {
-					ctx := args.Get(0).(context.Context)
-					orgID, err := user.ExtractOrgID(ctx)
-					require.NoError(t, err)
-					require.Equal(t, orgID, "fake")
-				})
-				return remoteWriteMock
-			},
 		},
 	}
 	for _, tt := range tests {
@@ -93,7 +65,16 @@ func TestAuthentication(t *testing.T) {
 				Registerer:        prometheus.NewRegistry(),
 			}
 
-			server, err := newProxyWithClient(apiConfig, tt.remoteWriteMock())
+			remoteWriteMock := &remotewritemock.Client{}
+			remoteWriteMock.On("Write", mock.Anything, mock.Anything).
+				Return(nil).Run(func(args mock.Arguments) {
+				ctx := args.Get(0).(context.Context)
+				orgID, err := user.ExtractOrgID(ctx)
+				require.NoError(t, err)
+				require.Equal(t, orgID, tt.orgID)
+			})
+
+			server, err := newProxyWithClient(apiConfig, remoteWriteMock)
 			require.NoError(t, err)
 
 			go func() {
