@@ -77,10 +77,10 @@ type ProxyConfig struct {
 	EnableAuth        bool
 	RemoteWriteConfig remotewrite.Config
 	Logger            log.Logger
+	Registerer        prometheus.Registerer
 }
 
 func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*server.Server, error) {
-	fmt.Println("in newProxyWithClient. New Recorder being made")
 	recorder := NewRecorder(prometheus.DefaultRegisterer)
 
 	var authMiddleware middleware.Interface
@@ -120,7 +120,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*server.Se
 // returns the HTTP server that is ready to Run.
 func NewProxy(conf ProxyConfig) (*server.Server, error) {
 
-	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", prometheus.DefaultRegisterer)
+	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", conf.Registerer)
 	client, err := remotewrite.NewClient(conf.RemoteWriteConfig, remoteWriteRecorder, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create remotewrite.API: %w", err)
