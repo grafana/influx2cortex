@@ -80,6 +80,8 @@ type ProxyConfig struct {
 	Registerer        prometheus.Registerer
 }
 
+// newProxyWithClient creates the influx API server with the given config options and
+// the specified remotewrite client. It returns the HTTP server that is ready to Run.
 func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*server.Server, error) {
 	recorder := NewRecorder(conf.Registerer)
 
@@ -116,8 +118,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*server.Se
 	return server, nil
 }
 
-// NewProxy creates the influx API server with the given config options. It
-// returns the HTTP server that is ready to Run.
+// NewProxy creates a new remotewrite client
 func NewProxy(conf ProxyConfig) (*server.Server, error) {
 
 	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", conf.Registerer)

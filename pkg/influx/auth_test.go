@@ -2,12 +2,11 @@ package influx
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
-	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/go-kit/log"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/remotewrite/remotewritemock"
@@ -20,12 +19,13 @@ import (
 
 func TestAuthentication(t *testing.T) {
 	tests := []struct {
-		name         string
-		url          string
-		data         string
-		enableAuth   bool
-		orgID        string
-		expectedCode int
+		name            string
+		url             string
+		data            string
+		enableAuth      bool
+		orgID           string
+		expectedCode    int
+		remoteWriteMock func() *remotewritemock.Client
 	}{
 		{
 			name:         "test auth enabled valid org ID",
@@ -34,6 +34,17 @@ func TestAuthentication(t *testing.T) {
 			enableAuth:   true,
 			orgID:        "valid",
 			expectedCode: http.StatusNoContent,
+			remoteWriteMock: func() *remotewritemock.Client {
+				remoteWriteMock := &remotewritemock.Client{}
+				remoteWriteMock.On("Write", mock.Anything, mock.Anything).
+					Return(nil).Run(func(args mock.Arguments) {
+					ctx := args.Get(0).(context.Context)
+					orgID, err := user.ExtractOrgID(ctx)
+					require.NoError(t, err)
+					require.Equal(t, orgID, "valid")
+				})
+				return remoteWriteMock
+			},
 		},
 		{
 			name:         "test auth enabled invalid org ID",
@@ -42,6 +53,11 @@ func TestAuthentication(t *testing.T) {
 			enableAuth:   true,
 			orgID:        "",
 			expectedCode: http.StatusUnauthorized,
+			remoteWriteMock: func() *remotewritemock.Client {
+				remoteWriteMock := &remotewritemock.Client{}
+				remoteWriteMock.On("Write", mock.Anything, mock.Anything).Return(nil)
+				return remoteWriteMock
+			},
 		},
 		{
 			name:         "test auth disabled",
@@ -50,6 +66,17 @@ func TestAuthentication(t *testing.T) {
 			enableAuth:   false,
 			orgID:        "fake",
 			expectedCode: http.StatusNoContent,
+			remoteWriteMock: func() *remotewritemock.Client {
+				remoteWriteMock := &remotewritemock.Client{}
+				remoteWriteMock.On("Write", mock.Anything, mock.Anything).
+					Return(nil).Run(func(args mock.Arguments) {
+					ctx := args.Get(0).(context.Context)
+					orgID, err := user.ExtractOrgID(ctx)
+					require.NoError(t, err)
+					require.Equal(t, orgID, "fake")
+				})
+				return remoteWriteMock
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -66,7 +93,7 @@ func TestAuthentication(t *testing.T) {
 				Registerer:        prometheus.NewRegistry(),
 			}
 
-			server, err := newProxyWithClient(apiConfig, NewRemoteWriteClient())
+			server, err := newProxyWithClient(apiConfig, tt.remoteWriteMock())
 			require.NoError(t, err)
 
 			go func() {
@@ -78,43 +105,15 @@ func TestAuthentication(t *testing.T) {
 			url := fmt.Sprintf("http://%s/api/v1/push/influx/write", server.Addr())
 			req, err := http.NewRequest("POST", url, bytes.NewReader([]byte("measurement,t1=v1 f1=2 1465839830100400200")))
 			require.NoError(t, err)
-			req = req.WithContext(user.InjectOrgID(req.Context(), tt.orgID))
-			err = user.InjectOrgIDIntoHTTPRequest(req.Context(), req)
-			require.NoError(t, err)
-			require.Equal(t, req.Header.Get(user.OrgIDHeaderName), tt.orgID)
+			if tt.enableAuth {
+				req = req.WithContext(user.InjectOrgID(req.Context(), tt.orgID))
+				err = user.InjectOrgIDIntoHTTPRequest(req.Context(), req)
+				require.NoError(t, err)
+			}
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
 			require.Equal(t, tt.expectedCode, resp.StatusCode)
 		})
 	}
-}
-
-func NewMockRecorder() *MockRecorder {
-	recorderMock := &MockRecorder{}
-	recorderMock.On("measureMetricsParsed", 1).Return(nil)
-	recorderMock.On("measureMetricsWritten", 1).Return(nil)
-	recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
-	return recorderMock
-}
-
-func NewRemoteWriteClient() *remotewritemock.Client {
-	remoteWriteMock := &remotewritemock.Client{}
-	remoteWriteMock.On("Write", mock.Anything, &cortexpb.WriteRequest{
-		Timeseries: []cortexpb.PreallocTimeseries{
-			{
-				TimeSeries: &cortexpb.TimeSeries{
-					Labels: []cortexpb.LabelAdapter{
-						{Name: "__name__", Value: "measurement_f1"},
-						{Name: "__proxy_source__", Value: "influx"},
-						{Name: "t1", Value: "v1"},
-					},
-					Samples: []cortexpb.Sample{
-						{Value: 2, TimestampMs: 1465839830100},
-					},
-				},
-			},
-		},
-	}).Return(nil)
-	return remoteWriteMock
 }
