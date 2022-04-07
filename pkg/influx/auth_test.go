@@ -10,6 +10,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/server"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/weaveworks/common/user"
@@ -61,6 +62,7 @@ func TestAuthentication(t *testing.T) {
 				EnableAuth:        tt.enableAuth,
 				RemoteWriteConfig: remotewrite.Config{},
 				Logger:            log.NewNopLogger(),
+				Registerer:        prometheus.NewRegistry(),
 			}
 
 			server, err := NewProxy(apiConfig)
