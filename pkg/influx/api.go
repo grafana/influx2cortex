@@ -81,7 +81,7 @@ type ProxyConfig struct {
 }
 
 func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*server.Server, error) {
-	recorder := NewRecorder(prometheus.DefaultRegisterer)
+	recorder := NewRecorder(conf.Registerer)
 
 	var authMiddleware middleware.Interface
 	if conf.EnableAuth {
