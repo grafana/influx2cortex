@@ -213,11 +213,8 @@ func (s *Suite) testFilePath() string {
 // the template provided will be formatted-f with the args
 func healthCheck(template string, args ...interface{}) func() error {
 	url := fmt.Sprintf(template, args...)
-	fmt.Println("in healthcheck. url: ", url)
 	return func() error {
 		resp, err := http.Get(url)
-		fmt.Println("Resp: ", resp)
-		fmt.Println("Err: ", err)
 		if err != nil {
 			return err
 		}
@@ -232,7 +229,6 @@ func healthCheck(template string, args ...interface{}) func() error {
 // this allows dynamic wait periods depending on the amount of tests running,
 // avoiding double waits when more than one test is running which in the end makes waiting period more deterministic.
 func (s *Suite) waitUntilElapsedAfterSuiteSetup(duration time.Duration) {
-	fmt.Println("in waitUntilElapsedAfterSuiteSetup")
 	wait := time.Until(s.suiteReady.Add(duration))
 	s.T().Logf("Waiting %s", wait)
 	time.Sleep(wait)
@@ -267,7 +263,6 @@ type httpClient struct {
 }
 
 func (pc httpClient) post(ctx context.Context, path string, orgId string, body io.Reader) (statusCode int, respBody []byte, err error) {
-	fmt.Println("path: ", pc.endpoint+path)
 	req, err := http.NewRequestWithContext(ctx, "POST", pc.endpoint+path, body)
 	fmt.Println("Req err: ", err)
 	req.Header.Set("X-Scope-OrgID", orgId)
