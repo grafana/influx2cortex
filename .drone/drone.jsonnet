@@ -17,7 +17,7 @@ local generateTags = [
   // `.tag` is the file consumed by the `deploy-image` plugin.
   'echo -n "$${DOCKER_TAG}" > .tag',
   // `.tags` is the file consumed by the Docker (GCR inluded) plugins to tag the built Docker image accordingly.
-  'if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest" > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi',
+  'if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest" > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi',
   // Print the contents of .tags for debugging purposes.
   'tail -n +1 .tags',
 ];
@@ -62,7 +62,7 @@ local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
   + triggers.main,
 
   drone.pipeline('launch influx argo workflow', depends_on=['main'])
-  + drone.withInlineStep('check is latest commit', ['[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/master) ]'])
+  + drone.withInlineStep('check is latest commit', ['[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'])
   + drone.withInlineStep('generate tags', generateTags)
   + drone.withStep(drone.step(
     'launch argo workflow',

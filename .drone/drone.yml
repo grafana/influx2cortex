@@ -28,7 +28,7 @@ steps:
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
   - echo -n "$${DOCKER_TAG}" > .tag
-  - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
+  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
   image: golang:1.17
@@ -62,7 +62,7 @@ steps:
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
   - echo -n "$${DOCKER_TAG}" > .tag
-  - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
+  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
   image: golang:1.17
@@ -92,14 +92,14 @@ kind: pipeline
 name: launch influx argo workflow
 steps:
 - commands:
-  - '[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/master) ]'
+  - '[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'
   image: golang:1.17
   name: check is latest commit
   settings: {}
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
   - echo -n "$${DOCKER_TAG}" > .tag
-  - if test "${DRONE_SOURCE_BRANCH}" = "master"; then echo -n "$${DOCKER_TAG},latest"
+  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
   image: golang:1.17
@@ -154,6 +154,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 25e7453b8115e3cfae685f879dbfa0140f8b4038e780d2e5439c7cdbbb05a77d
+hmac: 5decf4444fd44ab9286dbdd01dc4241bd5817d63aae97b12b6999e99fcef095f
 
 ...
