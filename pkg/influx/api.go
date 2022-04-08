@@ -83,6 +83,10 @@ type ProxyConfig struct {
 // newProxyWithClient creates the influx API server with the given config options and
 // the specified remotewrite client. It returns the HTTP server that is ready to Run.
 func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*server.Server, error) {
+	if conf.Registerer == nil {
+		return nil, fmt.Errorf("must specify a Registerer, perhaps prometheus.DefaultRegisterer")
+	}
+
 	recorder := NewRecorder(conf.Registerer)
 
 	var authMiddleware middleware.Interface
