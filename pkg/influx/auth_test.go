@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/go-kit/log"
+	"github.com/grafana/dskit/services"
 	"github.com/grafana/influx2cortex/pkg/errorx"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/remotewrite/remotewritemock"
@@ -85,9 +86,7 @@ func TestAuthentication(t *testing.T) {
 
 			service, err := newProxyWithClient(apiConfig, remoteWriteMock)
 			require.NoError(t, err)
-			require.NoError(t, service.StartAsync(context.Background()))
-			require.NoError(t, service.AwaitRunning(context.Background()))
-
+			require.NoError(t, services.StartAndAwaitRunning(context.Background(), service))
 			defer service.StopAsync()
 
 			url := fmt.Sprintf("http://%s/api/v1/push/influx/write", service.Addr())

@@ -39,9 +39,10 @@ type ProxyConfig struct {
 type ProxyService struct {
 	services.Service
 
+	Logger log.Logger
+
 	config     ProxyConfig
 	httpServer *server.Server
-	logger     log.Logger
 }
 
 // NewProxy creates a new remotewrite client
@@ -91,14 +92,16 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 	}
 
 	p := &ProxyService{
+		Logger:     conf.Logger,
 		config:     conf,
 		httpServer: server,
-		logger:     conf.Logger,
 	}
 	p.Service = services.NewBasicService(p.start, p.run, p.stop)
 	return p, nil
 }
 
+// Addr returns the net.Addr for the configured server. This is useful in case
+// it was started with port auto-selection so the port number can be retrieved.
 func (p *ProxyService) Addr() net.Addr {
 	return p.httpServer.Addr()
 }
@@ -112,9 +115,10 @@ func (p *ProxyService) stop(_ error) error {
 	return nil
 }
 
-func (p *ProxyService) run(_ context.Context) error {
+func (p *ProxyService) run(servCtx context.Context) error {
 	go func() {
 		p.httpServer.Run()
 	}()
-	return nil
+	<-servCtx.Done()
+	return servCtx.Err()
 }
