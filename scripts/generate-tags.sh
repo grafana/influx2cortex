@@ -32,7 +32,7 @@ fi
 
 # date -u --rfc-3339=seconds requires GNU date
 # when running this on alpine, run `apk add coreutils` to get it
-if [[ "$OSTYPE" == "darwin"* ]]; then
+if [[ ${OSTYPE:-notdarwin} == "darwin"* ]]; then
   # For MacOS, we need to use `gdate` for GNU `date`; run `brew install coreutils` to get it
   ISO_TIMESTAMP=$(gdate -u --rfc-3339=seconds "-d@${UNIX_TIMESTAMP}" | sed "s/+.*$//g" | sed "s/[^0-9]*//g")
 else
