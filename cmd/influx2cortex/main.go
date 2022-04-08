@@ -48,7 +48,7 @@ func main() {
 
 	err = service.AwaitTerminated(context.Background())
 	if err != nil && !errors.Is(err, context.Canceled) {
-		_, _ = fmt.Fprintf(os.Stderr, "error running influx2cortex????: %s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "error running influx2cortex: %s\n", err)
 		os.Exit(1)
 	}
 
