@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"os"
 
 	"github.com/go-kit/log"
@@ -11,7 +12,10 @@ import (
 )
 
 func main() {
-	conf := influx.ProxyConfig{}
+	conf := influx.ProxyConfig{
+		Registerer: prometheus.DefaultRegisterer,
+	}
+
 	flag.BoolVar(&conf.EnableAuth, "auth.enable", true, "require X-Scope-OrgId header")
 	flagext.RegisterFlags(
 		&conf.HTTPConfig,

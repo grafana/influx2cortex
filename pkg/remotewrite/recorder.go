@@ -28,8 +28,7 @@ func NewRecorder(prefix string, reg prometheus.Registerer) Recorder {
 		}, []string{"operation", "result"}),
 	}
 
-	reg.MustRegister(r.outOfOrderWrites)
-	reg.MustRegister(r.requestDuration)
+	reg.MustRegister(r.outOfOrderWrites, r.requestDuration)
 
 	return r
 }
