@@ -83,16 +83,14 @@ func TestAuthentication(t *testing.T) {
 				require.Equal(t, orgID, tt.expectedOrgID)
 			})
 
-			server, err := newProxyWithClient(apiConfig, remoteWriteMock)
+			service, err := newProxyWithClient(apiConfig, remoteWriteMock)
 			require.NoError(t, err)
+			require.NoError(t, service.StartAsync(context.Background()))
+			require.NoError(t, service.AwaitRunning(context.Background()))
 
-			go func() {
-				require.NoError(t, server.Run())
-			}()
+			defer service.StopAsync()
 
-			defer server.Shutdown(nil)
-
-			url := fmt.Sprintf("http://%s/api/v1/push/influx/write", server.Addr())
+			url := fmt.Sprintf("http://%s/api/v1/push/influx/write", service.Addr())
 			req, err := http.NewRequest("POST", url, bytes.NewReader([]byte("measurement,t1=v1 f1=2 1465839830100400200")))
 			require.NoError(t, err)
 			req = req.WithContext(user.InjectOrgID(req.Context(), tt.orgID))
