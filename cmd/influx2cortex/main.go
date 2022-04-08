@@ -43,7 +43,7 @@ func main() {
 	handler := signals.NewHandler(logging.GoKit(service.Logger))
 	go func() {
 		handler.Loop()
-		services.StopAndAwaitTerminated(context.Background(), service)
+		service.StopAsync()
 	}()
 
 	err = service.AwaitTerminated(context.Background())
