@@ -41,8 +41,8 @@ type ProxyService struct {
 
 	Logger log.Logger
 
-	config     ProxyConfig
-	httpServer *server.Server
+	config ProxyConfig
+	server *server.Server
 }
 
 // NewProxy creates a new remotewrite client
@@ -92,9 +92,9 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 	}
 
 	p := &ProxyService{
-		Logger:     conf.Logger,
-		config:     conf,
-		httpServer: server,
+		Logger: conf.Logger,
+		config: conf,
+		server: server,
 	}
 	p.Service = services.NewBasicService(p.start, p.run, p.stop)
 	return p, nil
@@ -103,7 +103,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 // Addr returns the net.Addr for the configured server. This is useful in case
 // it was started with port auto-selection so the port number can be retrieved.
 func (p *ProxyService) Addr() net.Addr {
-	return p.httpServer.Addr()
+	return p.server.Addr()
 }
 
 func (p *ProxyService) start(_ context.Context) error {
@@ -111,14 +111,26 @@ func (p *ProxyService) start(_ context.Context) error {
 }
 
 func (p *ProxyService) stop(_ error) error {
-	p.httpServer.Shutdown(nil)
+	p.server.Shutdown(nil)
 	return nil
 }
 
 func (p *ProxyService) run(servCtx context.Context) error {
+	errChan := make(chan error, 1)
+
+	// the server does not listen for context canceling, so we have to start it
+	// in a goroutine so we can listen for both.
 	go func() {
-		p.httpServer.Run()
+		err := p.server.Run()
+		errChan <- err
 	}()
-	<-servCtx.Done()
-	return servCtx.Err()
+
+	for {
+		select {
+		case <-servCtx.Done():
+			return servCtx.Err()
+		case err := <-errChan:
+			return err
+		}
+	}
 }
