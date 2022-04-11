@@ -2,6 +2,7 @@ package influx
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -21,18 +22,25 @@ type ProxyConfig struct {
 	// HTTPConfig is the configuration for the underlying http server. Usually
 	// initialized by flag values via flagext.RegisterFlags.
 	HTTPConfig server.Config
+	// RemoteWriteConfig is the configuration for the underlying remote write client. Usually
+	// initialized by flag values via flagext.RegisterFlags.
+	RemoteWriteConfig remotewrite.Config
 	// EnableAuth determines if the server will reject incoming requests that do
 	// not have X-Scope-OrgID set.
 	EnableAuth bool
-	// RemoteWriteConfig is the configuration for the underlying http server. Usually
-	// initialized by flag values via flagext.RegisterFlags.
-	RemoteWriteConfig remotewrite.Config
 	// Logger is the object that will do the logging for the server. If nil, will
 	// use a LogfmtLogger on stdout.
 	Logger log.Logger
 	// Registerer registers metrics Collectors. If left nil, will use
 	// prometheus.DefaultRegisterer.
 	Registerer prometheus.Registerer
+}
+
+func (c *ProxyConfig) RegisterFlags(flags *flag.FlagSet) {
+	c.HTTPConfig.RegisterFlags(flags)
+	c.RemoteWriteConfig.RegisterFlags(flags)
+
+	flags.BoolVar(&c.EnableAuth, "auth.enable", true, "require X-Scope-OrgId header")
 }
 
 // ProxyService is the actual Influx Proxy dskit service.
@@ -75,7 +83,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 		authMiddleware = middleware.HTTPFakeAuth{}
 	}
 
-	server, err := server.NewServer(conf.Logger, conf.HTTPConfig, mux.NewRouter(), []middleware.Interface{})
+	server, err := server.NewServer(conf.Logger, conf.HTTPConfig, mux.NewRouter(), []middleware.Interface{authMiddleware})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http server: %w", err)
 	}
@@ -85,7 +93,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 		return nil, fmt.Errorf("failed to create influx API: %w", err)
 	}
 
-	api.Register(server.Router, authMiddleware)
+	api.Register(server.Router)
 	err = recorder.RegisterVersionBuildTimestamp()
 	if err != nil {
 		return nil, fmt.Errorf("could not register version build timestamp: %w", err)
