@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/go-kit/log"
+	"github.com/grafana/dskit/services"
 	"github.com/grafana/influx2cortex/pkg/errorx"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/remotewrite/remotewritemock"
@@ -83,16 +84,12 @@ func TestAuthentication(t *testing.T) {
 				require.Equal(t, orgID, tt.expectedOrgID)
 			})
 
-			server, err := newProxyWithClient(apiConfig, remoteWriteMock)
+			service, err := newProxyWithClient(apiConfig, remoteWriteMock)
 			require.NoError(t, err)
+			require.NoError(t, services.StartAndAwaitRunning(context.Background(), service))
+			defer service.StopAsync()
 
-			go func() {
-				require.NoError(t, server.Run())
-			}()
-
-			defer server.Shutdown(nil)
-
-			url := fmt.Sprintf("http://%s/api/v1/push/influx/write", server.Addr())
+			url := fmt.Sprintf("http://%s/api/v1/push/influx/write", service.Addr())
 			req, err := http.NewRequest("POST", url, bytes.NewReader([]byte("measurement,t1=v1 f1=2 1465839830100400200")))
 			require.NoError(t, err)
 			req = req.WithContext(user.InjectOrgID(req.Context(), tt.orgID))

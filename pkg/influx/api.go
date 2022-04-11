@@ -1,7 +1,6 @@
 package influx
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -10,11 +9,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/route"
-	"github.com/grafana/influx2cortex/pkg/server"
-	"github.com/grafana/influx2cortex/pkg/server/middleware"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/weaveworks/common/logging"
-	"github.com/weaveworks/common/signals"
 )
 
 type API struct {
@@ -68,63 +62,4 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	a.recorder.measureMetricsWritten(len(rwReq.Timeseries))
 
 	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
-}
-
-// ProxyConfig holds objects needed to start running an influx2cortex proxy
-// server.
-type ProxyConfig struct {
-	HTTPConfig        server.Config
-	EnableAuth        bool
-	RemoteWriteConfig remotewrite.Config
-	Logger            log.Logger
-	Registerer        prometheus.Registerer
-}
-
-// newProxyWithClient creates the influx API server with the given config options and
-// the specified remotewrite client. It returns the HTTP server that is ready to Run.
-func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*server.Server, error) {
-	recorder := NewRecorder(conf.Registerer)
-
-	var authMiddleware middleware.Interface
-	if conf.EnableAuth {
-		authMiddleware = middleware.NewHTTPAuth(conf.Logger)
-	} else {
-		authMiddleware = middleware.HTTPFakeAuth{}
-	}
-
-	server, err := server.NewServer(conf.Logger, conf.HTTPConfig, mux.NewRouter(), []middleware.Interface{authMiddleware})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create http server: %w", err)
-	}
-
-	api, err := NewAPI(conf.Logger, client, recorder)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create influx API: %w", err)
-	}
-
-	api.Register(server.Router)
-	err = recorder.RegisterVersionBuildTimestamp()
-	if err != nil {
-		return nil, fmt.Errorf("could not register version build timestamp: %w", err)
-	}
-
-	// Look for SIGTERM and stop the server if we get it
-	handler := signals.NewHandler(logging.GoKit(conf.Logger))
-	go func() {
-		handler.Loop()
-		server.Shutdown(nil)
-	}()
-
-	return server, nil
-}
-
-// NewProxy creates a new remotewrite client
-func NewProxy(conf ProxyConfig) (*server.Server, error) {
-	remoteWriteRecorder := remotewrite.NewRecorder("influx_proxy", conf.Registerer)
-	client, err := remotewrite.NewClient(conf.RemoteWriteConfig, remoteWriteRecorder, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create remotewrite.API: %w", err)
-	}
-
-	return newProxyWithClient(conf, client)
 }
