@@ -75,7 +75,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 		authMiddleware = middleware.HTTPFakeAuth{}
 	}
 
-	server, err := server.NewServer(conf.Logger, conf.HTTPConfig, mux.NewRouter(), []middleware.Interface{authMiddleware})
+	server, err := server.NewServer(conf.Logger, conf.HTTPConfig, mux.NewRouter(), []middleware.Interface{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http server: %w", err)
 	}
@@ -85,7 +85,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 		return nil, fmt.Errorf("failed to create influx API: %w", err)
 	}
 
-	api.Register(server.Router)
+	api.Register(server.Router, authMiddleware)
 	err = recorder.RegisterVersionBuildTimestamp()
 	if err != nil {
 		return nil, fmt.Errorf("could not register version build timestamp: %w", err)

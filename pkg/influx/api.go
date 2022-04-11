@@ -9,6 +9,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/route"
+
+	"github.com/grafana/influx2cortex/pkg/server/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type API struct {
@@ -17,9 +20,11 @@ type API struct {
 	recorder Recorder
 }
 
-func (a *API) Register(router *mux.Router) {
+func (a *API) Register(router *mux.Router, authMiddleware middleware.Interface) {
 	registerer := route.NewMuxRegisterer(router)
-	registerer.RegisterRoute("/api/v1/push/influx/write", http.HandlerFunc(a.handleSeriesPush), http.MethodPost)
+
+	registerer.RegisterRoute("/api/v1/push/influx/write", authMiddleware.Wrap(http.HandlerFunc(a.handleSeriesPush)), http.MethodPost)
+	registerer.RegisterRoute("/metrics", promhttp.Handler(), http.MethodGet)
 }
 
 func NewAPI(logger log.Logger, client remotewrite.Client, recorder Recorder) (*API, error) {
