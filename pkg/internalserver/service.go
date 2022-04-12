@@ -35,7 +35,7 @@ func (c *ServiceConfig) RegisterFlags(flags *flag.FlagSet) {
 type Service struct {
 	services.Service
 
-	Logger gokitlog.Logger
+	logger gokitlog.Logger
 
 	config  ServiceConfig
 	server  *http.Server
@@ -50,9 +50,9 @@ func NewService(config ServiceConfig, logger gokitlog.Logger) (*Service, error) 
 	mux := http.NewServeMux()
 
 	mux.Handle("/metrics", promhttp.Handler())
-	mux.Handle("/healthz", http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.WriteHeader(http.StatusOK)
-		_, _ = rw.Write([]byte("ok"))
+	mux.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
 	}))
 
 	httpServer := &http.Server{
@@ -61,7 +61,7 @@ func NewService(config ServiceConfig, logger gokitlog.Logger) (*Service, error) 
 	}
 
 	s := &Service{
-		Logger:  logger,
+		logger:  logger,
 		config:  config,
 		server:  httpServer,
 		errChan: make(chan error, 1),
@@ -72,7 +72,7 @@ func NewService(config ServiceConfig, logger gokitlog.Logger) (*Service, error) 
 }
 
 func (s *Service) start(_ context.Context) error {
-	log.Info(s.Logger, "msg", "Starting internal http server", "addr", s.server.Addr)
+	log.Info(s.logger, "msg", "Starting internal http server", "addr", s.server.Addr)
 
 	go func() {
 		err := s.server.ListenAndServe()
@@ -98,9 +98,9 @@ func (s *Service) stop(failureCase error) error {
 	defer cancel()
 
 	if failureCase != nil && !errors.Is(failureCase, context.Canceled) {
-		log.Warn(s.Logger, "msg", "shutting down internal http server due to failure", "failure", failureCase)
+		log.Warn(s.logger, "msg", "shutting down internal http server due to failure", "failure", failureCase)
 	} else {
-		log.Info(s.Logger, "msg", "shutting down internal http server")
+		log.Info(s.logger, "msg", "shutting down internal http server")
 	}
 
 	err := s.server.Shutdown(ctx)

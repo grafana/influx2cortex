@@ -42,7 +42,7 @@ func main() {
 	}
 	appServices = append(appServices, proxyService)
 
-	internalService, err := internalserver.NewService(internalServerConfig, proxyService.Logger)
+	internalService, err := internalserver.NewService(internalServerConfig, logger)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error instantiating internal server: %s\n", err)
 		os.Exit(1)
@@ -61,7 +61,7 @@ func main() {
 	}
 
 	// Look for SIGTERM and stop the server if we get it
-	handler := signals.NewHandler(logging.GoKit(proxyService.Logger))
+	handler := signals.NewHandler(logging.GoKit(logger))
 	go func() {
 		handler.Loop()
 		for _, service := range appServices {

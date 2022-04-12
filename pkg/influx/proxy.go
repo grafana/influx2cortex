@@ -47,7 +47,7 @@ func (c *ProxyConfig) RegisterFlags(flags *flag.FlagSet) {
 type ProxyService struct {
 	services.Service
 
-	Logger log.Logger
+	logger log.Logger
 
 	config  ProxyConfig
 	server  *server.Server
@@ -101,7 +101,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 	}
 
 	p := &ProxyService{
-		Logger:  conf.Logger,
+		logger:  conf.Logger,
 		config:  conf,
 		server:  server,
 		errChan: make(chan error, 1),
