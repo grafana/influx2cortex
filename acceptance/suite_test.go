@@ -266,11 +266,13 @@ type httpClient struct {
 
 func (pc httpClient) query(path string, orgID string) (statusCode int, respBody []byte, err error) {
 	req, err := http.NewRequest("GET", pc.endpoint+path, nil)
+	fmt.Println("path: ", path)
 	req.Header.Set("X-Scope-OrgID", orgID)
 	if err != nil {
 		return 0, nil, err
 	}
 	resp, err := pc.http_client.Do(req)
+	fmt.Println("Do response: ", resp)
 	if err != nil {
 		return 0, nil, err
 	}
