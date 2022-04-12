@@ -49,8 +49,9 @@ type ProxyService struct {
 
 	Logger log.Logger
 
-	config ProxyConfig
-	server *server.Server
+	config  ProxyConfig
+	server  *server.Server
+	errChan chan error
 }
 
 // NewProxy creates a new remotewrite client
@@ -100,9 +101,10 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 	}
 
 	p := &ProxyService{
-		Logger: conf.Logger,
-		config: conf,
-		server: server,
+		Logger:  conf.Logger,
+		config:  conf,
+		server:  server,
+		errChan: make(chan error, 1),
 	}
 	p.Service = services.NewBasicService(p.start, p.run, p.stop)
 	return p, nil
@@ -115,30 +117,28 @@ func (p *ProxyService) Addr() net.Addr {
 }
 
 func (p *ProxyService) start(_ context.Context) error {
+	// the server does not listen for context canceling, so we have to start it
+	// in a goroutine so we can listen for both.
+	go func() {
+		err := p.server.Run()
+		p.errChan <- err
+	}()
+
 	return nil
+}
+
+func (p *ProxyService) run(servCtx context.Context) error {
+	for {
+		select {
+		case <-servCtx.Done():
+			return servCtx.Err()
+		case err := <-p.errChan:
+			return err
+		}
+	}
 }
 
 func (p *ProxyService) stop(_ error) error {
 	p.server.Shutdown(nil)
 	return nil
-}
-
-func (p *ProxyService) run(servCtx context.Context) error {
-	errChan := make(chan error, 1)
-
-	// the server does not listen for context canceling, so we have to start it
-	// in a goroutine so we can listen for both.
-	go func() {
-		err := p.server.Run()
-		errChan <- err
-	}()
-
-	for {
-		select {
-		case <-servCtx.Done():
-			return servCtx.Err()
-		case err := <-errChan:
-			return err
-		}
-	}
 }
