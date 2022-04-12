@@ -4,52 +4,80 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"os"
 
+	"github.com/go-kit/log"
 	"github.com/grafana/dskit/flagext"
 	"github.com/grafana/dskit/services"
 	"github.com/grafana/influx2cortex/pkg/influx"
+	"github.com/grafana/influx2cortex/pkg/internalserver"
+	loghelp "github.com/grafana/influx2cortex/pkg/util/log"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/weaveworks/common/logging"
 	"github.com/weaveworks/common/signals"
 )
 
 func main() {
-	conf := influx.ProxyConfig{}
+	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
+	promRegisterer := prometheus.DefaultRegisterer
 
-	flag.BoolVar(&conf.EnableAuth, "auth.enable", true, "require X-Scope-OrgId header")
+	proxyConfig := influx.ProxyConfig{
+		Logger:     logger,
+		Registerer: promRegisterer,
+	}
+	internalServerConfig := internalserver.ServiceConfig{}
+
 	flagext.RegisterFlags(
-		&conf.HTTPConfig,
-		&conf.RemoteWriteConfig,
+		&proxyConfig,
+		&internalServerConfig,
 	)
 	flag.Parse()
 
-	service, err := influx.NewProxy(conf)
+	appServices := make([]services.Service, 0)
+
+	proxyService, err := influx.NewProxy(proxyConfig)
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "error instantiating influx2cortex proxy: %s\n", err)
+		loghelp.Error(logger, "msg", "error instantiating influx2cortex proxy", "error", err)
 		os.Exit(1)
 	}
+	appServices = append(appServices, proxyService)
 
-	servCtx, cancelFn := context.WithCancel(context.Background())
+	internalService, err := internalserver.NewService(internalServerConfig, logger)
+	if err != nil {
+		loghelp.Error(logger, "msg", "error instantiating internal server", "error", err)
+		os.Exit(1)
+	}
+	appServices = append(appServices, internalService)
+
+	ctx, cancelFn := context.WithCancel(context.Background())
 	defer cancelFn()
 
-	err = services.StartAndAwaitRunning(servCtx, service)
-	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "error running influx2cortex: %s\n", err)
-		os.Exit(1)
+	for _, service := range appServices {
+		err = services.StartAndAwaitRunning(ctx, service)
+		if err != nil {
+			loghelp.Error(logger,
+				"msg", "error starting service",
+				"service", services.DescribeService(service),
+				"error", err)
+			os.Exit(1)
+		}
 	}
 
 	// Look for SIGTERM and stop the server if we get it
-	handler := signals.NewHandler(logging.GoKit(service.Logger))
+	handler := signals.NewHandler(logging.GoKit(logger))
 	go func() {
 		handler.Loop()
-		service.StopAsync()
+		for _, service := range appServices {
+			service.StopAsync()
+		}
 	}()
 
-	err = service.AwaitTerminated(context.Background())
-	if err != nil && !errors.Is(err, context.Canceled) {
-		_, _ = fmt.Fprintf(os.Stderr, "error running influx2cortex: %s\n", err)
-		os.Exit(1)
+	for _, service := range appServices {
+		err = service.AwaitTerminated(context.Background())
+		if err != nil && !errors.Is(err, context.Canceled) {
+			loghelp.Error(logger, "msg", "error in service", "error", err)
+			os.Exit(1)
+		}
 	}
 
 	os.Exit(0)

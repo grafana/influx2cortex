@@ -2,6 +2,7 @@ package influx
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -21,12 +22,12 @@ type ProxyConfig struct {
 	// HTTPConfig is the configuration for the underlying http server. Usually
 	// initialized by flag values via flagext.RegisterFlags.
 	HTTPConfig server.Config
+	// RemoteWriteConfig is the configuration for the underlying remote write client. Usually
+	// initialized by flag values via flagext.RegisterFlags.
+	RemoteWriteConfig remotewrite.Config
 	// EnableAuth determines if the server will reject incoming requests that do
 	// not have X-Scope-OrgID set.
 	EnableAuth bool
-	// RemoteWriteConfig is the configuration for the underlying http server. Usually
-	// initialized by flag values via flagext.RegisterFlags.
-	RemoteWriteConfig remotewrite.Config
 	// Logger is the object that will do the logging for the server. If nil, will
 	// use a LogfmtLogger on stdout.
 	Logger log.Logger
@@ -35,14 +36,22 @@ type ProxyConfig struct {
 	Registerer prometheus.Registerer
 }
 
+func (c *ProxyConfig) RegisterFlags(flags *flag.FlagSet) {
+	c.HTTPConfig.RegisterFlags(flags)
+	c.RemoteWriteConfig.RegisterFlags(flags)
+
+	flags.BoolVar(&c.EnableAuth, "auth.enable", true, "require X-Scope-OrgId header")
+}
+
 // ProxyService is the actual Influx Proxy dskit service.
 type ProxyService struct {
 	services.Service
 
-	Logger log.Logger
+	logger log.Logger
 
-	config ProxyConfig
-	server *server.Server
+	config  ProxyConfig
+	server  *server.Server
+	errChan chan error
 }
 
 // NewProxy creates a new remotewrite client
@@ -92,11 +101,12 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 	}
 
 	p := &ProxyService{
-		Logger: conf.Logger,
-		config: conf,
-		server: server,
+		logger:  conf.Logger,
+		config:  conf,
+		server:  server,
+		errChan: make(chan error, 1),
 	}
-	p.Service = services.NewBasicService(p.start, p.run, p.stop)
+	p.Service = services.NewBasicService(p.start, p.run, p.stop).WithName("influx-write-proxy")
 	return p, nil
 }
 
@@ -107,30 +117,28 @@ func (p *ProxyService) Addr() net.Addr {
 }
 
 func (p *ProxyService) start(_ context.Context) error {
+	// the server does not listen for context canceling, so we have to start it
+	// in a goroutine so we can listen for both.
+	go func() {
+		err := p.server.Run()
+		p.errChan <- err
+	}()
+
 	return nil
+}
+
+func (p *ProxyService) run(servCtx context.Context) error {
+	for {
+		select {
+		case <-servCtx.Done():
+			return servCtx.Err()
+		case err := <-p.errChan:
+			return err
+		}
+	}
 }
 
 func (p *ProxyService) stop(_ error) error {
 	p.server.Shutdown(nil)
 	return nil
-}
-
-func (p *ProxyService) run(servCtx context.Context) error {
-	errChan := make(chan error, 1)
-
-	// the server does not listen for context canceling, so we have to start it
-	// in a goroutine so we can listen for both.
-	go func() {
-		err := p.server.Run()
-		errChan <- err
-	}()
-
-	for {
-		select {
-		case <-servCtx.Done():
-			return servCtx.Err()
-		case err := <-errChan:
-			return err
-		}
-	}
 }
