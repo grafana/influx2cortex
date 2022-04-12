@@ -106,7 +106,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 		server:  server,
 		errChan: make(chan error, 1),
 	}
-	p.Service = services.NewBasicService(p.start, p.run, p.stop)
+	p.Service = services.NewBasicService(p.start, p.run, p.stop).WithName("influx-write-proxy")
 	return p, nil
 }
 
