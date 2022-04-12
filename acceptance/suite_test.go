@@ -85,7 +85,7 @@ func (s *Suite) SetupSuite() {
 	s.api.writeAPI = write_api
 
 	s.api.proxy_client = httpClient{
-		endpoint:    fmt.Sprintf("http://%s:%s/", "0.0.0.0", s.influxProxyResource.GetPort("8080/tcp")),
+		endpoint:    fmt.Sprintf("http://%s:%s/", s.cfg.Docker.Host, s.cortexResource.GetPort("9009/tcp")),
 		http_client: &http.Client{},
 	}
 
@@ -154,7 +154,7 @@ func (s *Suite) startCortex() *dockertest.Resource {
 		tag  = "master-3018a54"
 	)
 
-	return s.startContainer(&dockertest.RunOptions{
+	container := s.startContainer(&dockertest.RunOptions{
 		Name:         name,
 		Repository:   repo,
 		Tag:          tag,
@@ -166,6 +166,8 @@ func (s *Suite) startCortex() *dockertest.Resource {
 		Networks:     []*dockertest.Network{s.network},
 		Labels:       suiteContainerLabels,
 	}, "ready", "9009/tcp")
+
+	return container
 }
 
 func (s *Suite) startInfluxProxy() *dockertest.Resource {
@@ -262,21 +264,19 @@ type httpClient struct {
 	http_client *http.Client
 }
 
-func (pc httpClient) post(ctx context.Context, path string, orgId string, body io.Reader) (statusCode int, respBody []byte, err error) {
-	req, err := http.NewRequestWithContext(ctx, "POST", pc.endpoint+path, body)
-	fmt.Println("Req err: ", err)
-	req.Header.Set("X-Scope-OrgID", orgId)
+func (pc httpClient) query(path string, orgID string) (statusCode int, respBody []byte, err error) {
+	req, err := http.NewRequest("GET", pc.endpoint+path, nil)
+	req.Header.Set("X-Scope-OrgID", orgID)
 	if err != nil {
 		return 0, nil, err
 	}
 	resp, err := pc.http_client.Do(req)
-	fmt.Println("client response: ", resp)
-	fmt.Println("Error: ", err)
 	if err != nil {
 		return 0, nil, err
 	}
 	defer resp.Body.Close()
 
 	respBody, _ = io.ReadAll(resp.Body)
+
 	return resp.StatusCode, respBody, nil
 }
