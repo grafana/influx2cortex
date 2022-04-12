@@ -12,7 +12,7 @@ import (
 type Response struct {
 	Status string `json:"status"`
 	Data   struct {
-		ResultType string `json:"metric"`
+		ResultType string `json:"resulttype"`
 		Result     []struct {
 			Metric model.Metric  `json:"metric"`
 			Value  []interface{} `json:"value"`
@@ -23,7 +23,7 @@ type Response struct {
 func (s *Suite) Test_WriteLineProtocol() {
 	s.waitUntilElapsedAfterSuiteSetup(5 * time.Second)
 
-	line := fmt.Sprintf("stat,unit=temperature avg=%f,max=%f", 23.5, 45.0)
+	line := fmt.Sprintf("stat,unit=temperature avg=%f", 23.5)
 	err := s.api.writeAPI.WriteRecord(context.Background(), line)
 	s.Require().NoError(err)
 
@@ -36,10 +36,14 @@ func (s *Suite) Test_WriteLineProtocol() {
 		model.LabelName("__proxy_source__"): "influx",
 		model.LabelName("unit"):             "temperature",
 	}
+	expectedVal := 23.5
 
 	var writeResponse Response
 	err = json.Unmarshal(resp, &writeResponse)
 	s.Require().NoError(err)
 
+	value := writeResponse.Data.Result[0].Value
+	metricVal := value[1]
 	s.Require().Equal(expectedMetric.Equal(writeResponse.Data.Result[0].Metric), true)
+	s.Require().Equal(metricVal, expectedVal)
 }
