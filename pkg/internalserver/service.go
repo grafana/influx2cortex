@@ -29,7 +29,7 @@ type ServiceConfig struct {
 func (c *ServiceConfig) RegisterFlags(flags *flag.FlagSet) {
 	flags.StringVar(&c.HTTPListenAddress, "internalserver.http-listen-address", DefaultListenAddress, "Sets the listen address for the internal http server")
 	flags.IntVar(&c.HTTPListenPort, "internalserver.http-listen-port", DefaultListenPort, "Sets listen address port for the internal http server")
-	flags.DurationVar(&c.GracefulShutdownTimeout, "internalserver.graceful-shutdown-timeout", DefaultGracefulShutdownTimeout, "Graceful shutdown period; defaults to 5 seconds")
+	flags.DurationVar(&c.GracefulShutdownTimeout, "internalserver.graceful-shutdown-timeout", DefaultGracefulShutdownTimeout, "Graceful shutdown period")
 }
 
 type Service struct {
