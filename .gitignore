@@ -5,3 +5,5 @@ cmd/influx2cortex/influx2cortex
 vendor/
 .drone/coverage
 .drone/ghcomment
+.tag
+.tags
