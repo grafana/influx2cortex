@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"runtime"
 	"strings"
@@ -18,6 +17,8 @@ import (
 	influxdb_api "github.com/influxdata/influxdb-client-go/v2/api"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	promapi "github.com/prometheus/client_golang/api"
+	promv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -58,7 +59,8 @@ type Suite struct {
 	api struct {
 		influx_client influxdb.Client
 		writeAPI      influxdb_api.WriteAPIBlocking
-		proxy_client  httpClient
+		promClient    promapi.Client
+		querierClient promv1.API
 	}
 
 	suiteReady time.Time
@@ -84,10 +86,13 @@ func (s *Suite) SetupSuite() {
 	s.api.influx_client = influx_client
 	s.api.writeAPI = write_api
 
-	s.api.proxy_client = httpClient{
-		endpoint:    fmt.Sprintf("http://%s:%s/", s.cfg.Docker.Host, s.cortexResource.GetPort("9009/tcp")),
-		http_client: &http.Client{},
+	s.api.promClient, err = promapi.NewClient(promapi.Config{
+		Address: fmt.Sprintf("http://%s:%s/api/prom", s.cfg.Docker.Host, s.cortexResource.GetPort("9009/tcp")),
+	})
+	if err != nil {
+		fmt.Println("err: ", err)
 	}
+	s.api.querierClient = promv1.NewAPI(s.api.promClient)
 
 	s.suiteReady = time.Now()
 	s.T().Logf("Setup complete, took %s", time.Since(t0))
@@ -216,7 +221,10 @@ func (s *Suite) testFilePath() string {
 func healthCheck(template string, args ...interface{}) func() error {
 	url := fmt.Sprintf(template, args...)
 	return func() error {
+		fmt.Println("health check url: ", url)
 		resp, err := http.Get(url)
+		fmt.Println("health check resp: ", resp)
+		fmt.Println("health check err: ")
 		if err != nil {
 			return err
 		}
@@ -257,28 +265,4 @@ func (s *Suite) startContainer(runOptions *dockertest.RunOptions, healthEndpoint
 	s.waitForReady("http://%s:%s/"+healthEndpoint, s.cfg.Docker.Host, resource.GetPort(healthPort))
 	fmt.Println("done with wait for ready")
 	return resource
-}
-
-type httpClient struct {
-	endpoint    string
-	http_client *http.Client
-}
-
-func (pc httpClient) query(path string, orgID string) (statusCode int, respBody []byte, err error) {
-	req, err := http.NewRequest("GET", pc.endpoint+path, nil)
-	fmt.Println("path: ", path)
-	req.Header.Set("X-Scope-OrgID", orgID)
-	if err != nil {
-		return 0, nil, err
-	}
-	resp, err := pc.http_client.Do(req)
-	fmt.Println("Do response: ", resp)
-	if err != nil {
-		return 0, nil, err
-	}
-	defer resp.Body.Close()
-
-	respBody, _ = io.ReadAll(resp.Body)
-
-	return resp.StatusCode, respBody, nil
 }
