@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"runtime"
 	"strings"
@@ -18,12 +17,22 @@ import (
 	influxdb_api "github.com/influxdata/influxdb-client-go/v2/api"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
+	promapi "github.com/prometheus/client_golang/api"
+	promv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/stretchr/testify/suite"
 )
 
 var (
 	suiteContainerLabels = map[string]string{"acceptance-suite": "influx-proxy"}
 )
+
+// These tests verify that the Influx proxy is able to take in InfluxDB line protocol,
+// correctly parse it and convert it into a timeseries, and write the timeseries to
+// Cortex. Several services are run to execute the tests. The InfluxDB client is used to
+// send line protocol to the proxy. The proxy service accepts the line protocol, parses it,
+// and writes it to the Cortex service. The Prometheus client and API are used to query
+// Prometheus to verify that the line protocol was parsed and converted into the expected
+// timeseries, and that the timeseries was successfully written.
 
 func TestSuite(t *testing.T) {
 	suite.Run(t, new(Suite))
@@ -58,12 +67,15 @@ type Suite struct {
 	api struct {
 		influx_client influxdb.Client
 		writeAPI      influxdb_api.WriteAPIBlocking
-		proxy_client  httpClient
+		promClient    promapi.Client
+		querierClient promv1.API
 	}
 
 	suiteReady time.Time
 }
 
+// This method sets up the services that are used for these tests: cortex, the influx proxy,
+// the InfluxDB client, and the Prometheus client and API.
 func (s *Suite) SetupSuite() {
 	t0 := time.Now()
 	s.Require().NoError(envconfig.Process("ACCEPTANCE", &s.cfg))
@@ -84,10 +96,11 @@ func (s *Suite) SetupSuite() {
 	s.api.influx_client = influx_client
 	s.api.writeAPI = write_api
 
-	s.api.proxy_client = httpClient{
-		endpoint:    fmt.Sprintf("http://%s:%s/", s.cfg.Docker.Host, s.cortexResource.GetPort("9009/tcp")),
-		http_client: &http.Client{},
-	}
+	// Prometheus client and API for verifying that writes occurred as expected
+	s.api.promClient, _ = promapi.NewClient(promapi.Config{
+		Address: fmt.Sprintf("http://%s:%s/api/prom", s.cfg.Docker.Host, s.cortexResource.GetPort("9009/tcp")),
+	})
+	s.api.querierClient = promv1.NewAPI(s.api.promClient)
 
 	s.suiteReady = time.Now()
 	s.T().Logf("Setup complete, took %s", time.Since(t0))
@@ -160,7 +173,7 @@ func (s *Suite) startCortex() *dockertest.Resource {
 		Tag:          tag,
 		Env:          nil,
 		Cmd:          []string{"cortex", "-config.file=/etc/config/cortex-config.yaml"},
-		Mounts:       []string{s.testFilePath() + "/../operations/jsonnet/lib/cortex/cortex.yaml:/etc/config/cortex-config.yaml"},
+		Mounts:       []string{s.testFilePath() + "/config/cortex.yaml:/etc/config/cortex-config.yaml"},
 		ExposedPorts: []string{"9009"},
 		PortBindings: map[docker.Port][]docker.PortBinding{"9009/tcp": {}},
 		Networks:     []*dockertest.Network{s.network},
@@ -253,32 +266,6 @@ func (s *Suite) startContainer(runOptions *dockertest.RunOptions, healthEndpoint
 
 	resource, err := s.pool.RunWithOptions(runOptions)
 	s.Require().NoError(err)
-	fmt.Println("starting wait for ready")
 	s.waitForReady("http://%s:%s/"+healthEndpoint, s.cfg.Docker.Host, resource.GetPort(healthPort))
-	fmt.Println("done with wait for ready")
 	return resource
-}
-
-type httpClient struct {
-	endpoint    string
-	http_client *http.Client
-}
-
-func (pc httpClient) query(path string, orgID string) (statusCode int, respBody []byte, err error) {
-	req, err := http.NewRequest("GET", pc.endpoint+path, nil)
-	fmt.Println("path: ", path)
-	req.Header.Set("X-Scope-OrgID", orgID)
-	if err != nil {
-		return 0, nil, err
-	}
-	resp, err := pc.http_client.Do(req)
-	fmt.Println("Do response: ", resp)
-	if err != nil {
-		return 0, nil, err
-	}
-	defer resp.Body.Close()
-
-	respBody, _ = io.ReadAll(resp.Body)
-
-	return resp.StatusCode, respBody, nil
 }

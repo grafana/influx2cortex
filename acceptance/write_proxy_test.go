@@ -2,24 +2,14 @@ package influxtest
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"time"
 
+	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	"github.com/prometheus/common/model"
 )
 
-type Response struct {
-	Status string `json:"status"`
-	Data   struct {
-		ResultType string `json:"resulttype"`
-		Result     []struct {
-			Metric model.Metric     `json:"metric"`
-			Sample model.SamplePair `json:"value"`
-		} `json:"result"`
-	} `json:"data"`
-}
-
-func (s *Suite) Test_WriteLineProtocol() {
+func (s *Suite) Test_WriteLineProtocol_SingleMetric() {
 	line := fmt.Sprintf("stat,unit=temperature,status=measured avg=%f", 23.5)
 	err := s.api.writeAPI.WriteRecord(context.Background(), line)
 	s.Require().NoError(err)
@@ -34,15 +24,21 @@ func (s *Suite) Test_WriteLineProtocol() {
 		Value: 23.5,
 	}
 
-	s.verifyCortexWrite("prometheus/api/v1/query?query=stat_avg", expectedResult)
+	result, _, err := s.api.querierClient.Query(context.Background(), "stat_avg", time.Now())
+	s.Require().NoError(err)
+
+	resultVector := result.(model.Vector)
+	s.Require().Len(resultVector, 1)
+
+	s.Require().Equal(expectedResult.Metric, resultVector[0].Metric)
+	s.Require().Equal(expectedResult.Value, resultVector[0].Value)
 }
 
 func (s *Suite) Test_WriteLineProtocol_MultipleFields() {
-	line := fmt.Sprintf("measurement,t1=v1 f1=2,f2=3")
-	err := s.api.writeAPI.WriteRecord(context.Background(), line)
+	err := s.api.writeAPI.WriteRecord(context.Background(), "measurement,t1=v1 f1=2,f2=3")
 	s.Require().NoError(err)
 
-	expectedResultLine1 := model.Sample{
+	expectedResult1 := model.Sample{
 		Metric: model.Metric{
 			model.MetricNameLabel:               "measurement_f1",
 			model.LabelName("__proxy_source__"): "influx",
@@ -50,7 +46,7 @@ func (s *Suite) Test_WriteLineProtocol_MultipleFields() {
 		},
 		Value: 2,
 	}
-	expectedResultLine2 := model.Sample{
+	expectedResult2 := model.Sample{
 		Metric: model.Metric{
 			model.MetricNameLabel:               "measurement_f2",
 			model.LabelName("__proxy_source__"): "influx",
@@ -59,20 +55,123 @@ func (s *Suite) Test_WriteLineProtocol_MultipleFields() {
 		Value: 3,
 	}
 
-	s.verifyCortexWrite("prometheus/api/v1/query?query=measurement_f1", expectedResultLine1)
-	s.verifyCortexWrite("prometheus/api/v1/query?query=measurement_f2", expectedResultLine2)
+	result, _, err := s.api.querierClient.Query(context.Background(), "{__name__=~\"measurement_.+\",__proxy_source__=\"influx\"}", time.Now())
+	s.Require().NoError(err)
+	resultVector := result.(model.Vector)
+	s.Require().Len(resultVector, 2)
+
+	s.Require().Equal(expectedResult1.Metric, resultVector[0].Metric)
+	s.Require().Equal(expectedResult1.Value, resultVector[0].Value)
+	s.Require().Equal(expectedResult2.Metric, resultVector[1].Metric)
+	s.Require().Equal(expectedResult2.Value, resultVector[1].Value)
 
 }
 
-func (s *Suite) verifyCortexWrite(path string, expectedResult model.Sample) {
-	code, resp, err := s.api.proxy_client.query(path, "unknown")
-	s.Require().NoError(err)
-	s.Require().Equal(200, code)
+func (s *Suite) Test_WriteLineProtocol_MetricWithDifferentTags() {
+	var err error
+	lines := []string{
+		"sample,tag1=val1 metric=3",
+		"sample,tag2=val2 metric=4",
+		"sample,tag3=val3 metric=5",
+	}
+	for _, line := range lines {
+		err = s.api.writeAPI.WriteRecord(context.Background(), line)
+		s.Require().NoError(err)
+	}
 
-	var writeResponse Response
-	err = json.Unmarshal(resp, &writeResponse)
+	expectedResult1 := model.Sample{
+		Metric: model.Metric{
+			model.MetricNameLabel:               "sample_metric",
+			model.LabelName("__proxy_source__"): "influx",
+			model.LabelName("tag1"):             "val1",
+		},
+		Value: 3,
+	}
+	expectedResult2 := model.Sample{
+		Metric: model.Metric{
+			model.MetricNameLabel:               "sample_metric",
+			model.LabelName("__proxy_source__"): "influx",
+			model.LabelName("tag2"):             "val2",
+		},
+		Value: 4,
+	}
+	expectedResult3 := model.Sample{
+		Metric: model.Metric{
+			model.MetricNameLabel:               "sample_metric",
+			model.LabelName("__proxy_source__"): "influx",
+			model.LabelName("tag3"):             "val3",
+		},
+		Value: 5,
+	}
+
+	result, _, err := s.api.querierClient.Query(context.Background(), "sample_metric", time.Now())
 	s.Require().NoError(err)
 
-	s.Require().Equal(expectedResult.Metric.Equal(writeResponse.Data.Result[0].Metric), true)
-	s.Require().Equal(expectedResult.Value, writeResponse.Data.Result[0].Sample.Value)
+	resultVector := result.(model.Vector)
+	s.Require().Len(resultVector, 3)
+
+	s.Require().Equal(expectedResult1.Metric, resultVector[0].Metric)
+	s.Require().Equal(expectedResult1.Value, resultVector[0].Value)
+	s.Require().Equal(expectedResult2.Metric, resultVector[1].Metric)
+	s.Require().Equal(expectedResult2.Value, resultVector[1].Value)
+	s.Require().Equal(expectedResult3.Metric, resultVector[2].Metric)
+	s.Require().Equal(expectedResult3.Value, resultVector[2].Value)
+}
+
+func (s *Suite) Test_WriteLineProtocol_MultipleMetrics() {
+	lines := []string{
+		"test_metric,test=1,tag=2 foo=1",
+		"test_metric_time,test=1,tag=4 sample=3.14",
+		"test_metric_duration,test=2 total=1",
+	}
+	for _, line := range lines {
+		err := s.api.writeAPI.WriteRecord(context.Background(), line)
+		s.Require().NoError(err)
+	}
+
+	expectedResult1 := model.Sample{
+		Metric: model.Metric{
+			model.MetricNameLabel:               "test_metric_duration_total",
+			model.LabelName("__proxy_source__"): "influx",
+			model.LabelName("test"):             "2",
+		},
+		Value: 1,
+	}
+	expectedResult2 := model.Sample{
+		Metric: model.Metric{
+			model.MetricNameLabel:               "test_metric_foo",
+			model.LabelName("__proxy_source__"): "influx",
+			model.LabelName("test"):             "1",
+			model.LabelName("tag"):              "2",
+		},
+		Value: 1,
+	}
+	expectedResult3 := model.Sample{
+		Metric: model.Metric{
+			model.MetricNameLabel:               "test_metric_time_sample",
+			model.LabelName("__proxy_source__"): "influx",
+			model.LabelName("test"):             "1",
+			model.LabelName("tag"):              "4",
+		},
+		Value: 3.14,
+	}
+
+	result, _, err := s.api.querierClient.QueryRange(context.Background(),
+		"{__name__=~\"test_metric_.+\",__proxy_source__=\"influx\"}",
+		v1.Range{
+			Start: time.Now().Add(-time.Hour),
+			End:   time.Now(),
+			Step:  15 * time.Second,
+		})
+	s.Require().NoError(err)
+
+	resultMatrix := result.(model.Matrix)
+	s.Require().Len(resultMatrix, 3)
+
+	s.Require().Equal(expectedResult1.Metric, resultMatrix[0].Metric)
+	s.Require().Equal(expectedResult1.Value, resultMatrix[0].Values[0].Value)
+	s.Require().Equal(expectedResult2.Metric, resultMatrix[1].Metric)
+	s.Require().Equal(expectedResult2.Value, resultMatrix[1].Values[0].Value)
+	s.Require().Equal(expectedResult3.Metric, resultMatrix[2].Metric)
+	s.Require().Equal(expectedResult3.Value, resultMatrix[2].Values[0].Value)
 }
