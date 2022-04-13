@@ -6,7 +6,7 @@ COPY . .
 
 RUN GIT_COMMIT="${DRONE_COMMIT:-$(git rev-list -1 HEAD)}"; \
     COMMIT_UNIX_TIMESTAMP="$(git --no-pager show -s --format=%ct "${GIT_COMMIT}")"; \
-    DOCKER_TAG="$(sh scripts/generate-tags.sh)"; \
+    DOCKER_TAG="$(cat .tag)"; \
     GOPRIVATE="github.com/grafana/*"; \
     CGO_ENABLED=0; \
     go build -o /bin/influx2cortex \
