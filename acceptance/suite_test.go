@@ -86,12 +86,9 @@ func (s *Suite) SetupSuite() {
 	s.api.influx_client = influx_client
 	s.api.writeAPI = write_api
 
-	s.api.promClient, err = promapi.NewClient(promapi.Config{
+	s.api.promClient, _ = promapi.NewClient(promapi.Config{
 		Address: fmt.Sprintf("http://%s:%s/api/prom", s.cfg.Docker.Host, s.cortexResource.GetPort("9009/tcp")),
 	})
-	if err != nil {
-		fmt.Println("err: ", err)
-	}
 	s.api.querierClient = promv1.NewAPI(s.api.promClient)
 
 	s.suiteReady = time.Now()
@@ -158,6 +155,9 @@ func (s *Suite) startCortex() *dockertest.Resource {
 		repo = "cortexproject/cortex"
 		tag  = "master-3018a54"
 	)
+	fmt.Println("file path: ", s.testFilePath())
+	path := []string{s.testFilePath() + "/config/cortex.yaml:/etc/config/cortex-config.yaml"}
+	fmt.Println("path: ", path)
 
 	container := s.startContainer(&dockertest.RunOptions{
 		Name:         name,
@@ -165,7 +165,7 @@ func (s *Suite) startCortex() *dockertest.Resource {
 		Tag:          tag,
 		Env:          nil,
 		Cmd:          []string{"cortex", "-config.file=/etc/config/cortex-config.yaml"},
-		Mounts:       []string{s.testFilePath() + "/../operations/jsonnet/lib/cortex/cortex.yaml:/etc/config/cortex-config.yaml"},
+		Mounts:       []string{s.testFilePath() + "/config/cortex.yaml:/etc/config/cortex-config.yaml"},
 		ExposedPorts: []string{"9009"},
 		PortBindings: map[docker.Port][]docker.PortBinding{"9009/tcp": {}},
 		Networks:     []*dockertest.Network{s.network},
@@ -221,10 +221,7 @@ func (s *Suite) testFilePath() string {
 func healthCheck(template string, args ...interface{}) func() error {
 	url := fmt.Sprintf(template, args...)
 	return func() error {
-		fmt.Println("health check url: ", url)
 		resp, err := http.Get(url)
-		fmt.Println("health check resp: ", resp)
-		fmt.Println("health check err: ")
 		if err != nil {
 			return err
 		}
@@ -261,8 +258,6 @@ func (s *Suite) startContainer(runOptions *dockertest.RunOptions, healthEndpoint
 
 	resource, err := s.pool.RunWithOptions(runOptions)
 	s.Require().NoError(err)
-	fmt.Println("starting wait for ready")
 	s.waitForReady("http://%s:%s/"+healthEndpoint, s.cfg.Docker.Host, resource.GetPort(healthPort))
-	fmt.Println("done with wait for ready")
 	return resource
 }
