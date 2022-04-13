@@ -37,7 +37,7 @@ func main() {
 
 	proxyService, err := influx.NewProxy(proxyConfig)
 	if err != nil {
-		loghelp.Error(logger, "msg", "error instantiating influx2cortex proxy", "error", err)
+		loghelp.Error(logger, "msg", "error instantiating influx write proxy", "error", err)
 		os.Exit(1)
 	}
 	appServices = append(appServices, proxyService)
