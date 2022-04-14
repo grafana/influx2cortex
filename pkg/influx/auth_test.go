@@ -85,7 +85,7 @@ func TestAuthentication(t *testing.T) {
 			require.NoError(t, services.StartAndAwaitRunning(context.Background(), service))
 			defer service.StopAsync()
 
-			url := fmt.Sprintf("http://%s/api/v2/write/influx/write", service.Addr())
+			url := fmt.Sprintf("http://%s/api/v2/write", service.Addr())
 			req, err := http.NewRequest("POST", url, bytes.NewReader([]byte("measurement,t1=v1 f1=2 1465839830100400200")))
 			require.NoError(t, err)
 			req = req.WithContext(user.InjectOrgID(req.Context(), tt.orgID))
