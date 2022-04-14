@@ -86,6 +86,7 @@ func (s *Suite) SetupSuite() {
 	s.api.influx_client = influx_client
 	s.api.writeAPI = write_api
 
+	// Prometheus client and API for verifying that writes occurred as expected
 	s.api.promClient, _ = promapi.NewClient(promapi.Config{
 		Address: fmt.Sprintf("http://%s:%s/api/prom", s.cfg.Docker.Host, s.cortexResource.GetPort("9009/tcp")),
 	})
@@ -155,9 +156,6 @@ func (s *Suite) startCortex() *dockertest.Resource {
 		repo = "cortexproject/cortex"
 		tag  = "master-3018a54"
 	)
-	fmt.Println("file path: ", s.testFilePath())
-	path := []string{s.testFilePath() + "/config/cortex.yaml:/etc/config/cortex-config.yaml"}
-	fmt.Println("path: ", path)
 
 	container := s.startContainer(&dockertest.RunOptions{
 		Name:         name,
