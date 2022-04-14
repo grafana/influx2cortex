@@ -26,6 +26,14 @@ var (
 	suiteContainerLabels = map[string]string{"acceptance-suite": "influx-proxy"}
 )
 
+// These tests verify that the Influx proxy is able to take in InfluxDB line protocol,
+// correctly parse it and convert it into a timeseries, and write the timeseries to
+// Cortex. Several services are run to execute the tests. The InfluxDB client is used to
+// send line protocol to the proxy. The proxy service accepts the line protocol, parses it,
+// and writes it to the Cortex service. The Prometheus client and API are used to query
+// Prometheus to verify that the line protocol was parsed and converted into the expected
+// timeseries, and that the timeseries was successfully written.
+
 func TestSuite(t *testing.T) {
 	suite.Run(t, new(Suite))
 }
@@ -66,6 +74,8 @@ type Suite struct {
 	suiteReady time.Time
 }
 
+// This method sets up the services that are used for these tests: cortex, the influx proxy,
+// the InfluxDB client, and the Prometheus client and API.
 func (s *Suite) SetupSuite() {
 	t0 := time.Now()
 	s.Require().NoError(envconfig.Process("ACCEPTANCE", &s.cfg))
