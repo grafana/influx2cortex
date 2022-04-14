@@ -203,13 +203,13 @@ func (s *Suite) startInfluxProxy() *dockertest.Resource {
 			"-auth.enable=false",
 			"-write-endpoint=http://cortex:9009/api/prom/push",
 		},
-		ExposedPorts: []string{"8080", "9095"},
+		ExposedPorts: []string{"8080", "8081", "9095"},
 		Networks:     []*dockertest.Network{s.network},
-		PortBindings: map[docker.Port][]docker.PortBinding{"8080/tcp": {}, "9095/tcp": {}},
+		PortBindings: map[docker.Port][]docker.PortBinding{"8080/tcp": {}, "8081/tcp": {}, "9095/tcp": {}},
 		Privileged:   false,
 		Auth:         s.cfg.Docker.Auth,
 		Labels:       suiteContainerLabels,
-	}, "healthz", "8080/tcp")
+	}, "healthz", "8081/tcp")
 }
 
 func (s *Suite) waitForReady(template string, args ...interface{}) {
