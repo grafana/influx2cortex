@@ -22,7 +22,6 @@ import (
 func TestAuthentication(t *testing.T) {
 	tests := []struct {
 		name          string
-		url           string
 		data          string
 		enableAuth    bool
 		orgID         string
@@ -32,7 +31,6 @@ func TestAuthentication(t *testing.T) {
 	}{
 		{
 			name:          "test auth enabled valid org ID",
-			url:           "/write",
 			data:          "measurement,t1=v1 f1=2 1465839830100400200",
 			enableAuth:    true,
 			orgID:         "valid",
@@ -42,7 +40,6 @@ func TestAuthentication(t *testing.T) {
 		},
 		{
 			name:          "test auth enabled invalid org ID",
-			url:           "/write",
 			data:          "measurement,t1=v1 f1=2 1465839830100400200",
 			enableAuth:    true,
 			orgID:         "",
@@ -52,7 +49,6 @@ func TestAuthentication(t *testing.T) {
 		},
 		{
 			name:          "test auth disabled",
-			url:           "/write",
 			data:          "measurement,t1=v1 f1=2 1465839830100400200",
 			enableAuth:    false,
 			orgID:         "",
@@ -89,7 +85,7 @@ func TestAuthentication(t *testing.T) {
 			require.NoError(t, services.StartAndAwaitRunning(context.Background(), service))
 			defer service.StopAsync()
 
-			url := fmt.Sprintf("http://%s/api/v1/push/influx/write", service.Addr())
+			url := fmt.Sprintf("http://%s/api/v2/write/influx/write", service.Addr())
 			req, err := http.NewRequest("POST", url, bytes.NewReader([]byte("measurement,t1=v1 f1=2 1465839830100400200")))
 			require.NoError(t, err)
 			req = req.WithContext(user.InjectOrgID(req.Context(), tt.orgID))
