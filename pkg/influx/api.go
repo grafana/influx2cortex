@@ -20,7 +20,7 @@ type API struct {
 func (a *API) Register(router *mux.Router) {
 	registerer := route.NewMuxRegisterer(router)
 
-	// Registering two write endpoints; the second is necessary to allow for direct pushes to the proxy
+	// Registering two write endpoints; the second is necessary to allow for compatibility with clients that hard-code the endpoint
 	registerer.RegisterRoute("/api/v1/push/influx/write", http.HandlerFunc(a.handleSeriesPush), http.MethodPost)
 	registerer.RegisterRoute("/api/v2/write", http.HandlerFunc(a.handleSeriesPush), http.MethodPost)
 }
