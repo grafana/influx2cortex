@@ -85,6 +85,7 @@ local withDockerInDockerService = {
 
 [
   drone.pipeline('pr')
+  + drone.withInlineStep('generate tags', generateTags)
   + drone.withInlineStep('test', [    
     'export ACCEPTANCE_DOCKER_TAG=$(cat .tag)',
     'echo $${ACCEPTANCE_DOCKER_TAG}',
@@ -101,7 +102,6 @@ local withDockerInDockerService = {
       ACCEPTANCE_DOCKER_AUTH_PASSWORD: { from_secret: 'gcr_admin' },
     },
   })
-  + drone.withInlineStep('generate tags', generateTags)
   + drone.withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + imagePullSecrets
   + withDockerInDockerService

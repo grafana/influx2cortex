@@ -21,6 +21,15 @@ services:
     path: /var/run
 steps:
 - commands:
+  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - echo -n "$${DOCKER_TAG}" > .tag
+  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
+    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
+  - tail -n +1 .tags
+  image: golang:1.17
+  name: generate tags
+  settings: {}
+- commands:
   - export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
   - echo $${ACCEPTANCE_DOCKER_TAG}
   - make acceptance-tests
@@ -49,15 +58,6 @@ steps:
       from_secret: gh_token
   image: golangci/golangci-lint:v1.45
   name: coverage + lint
-  settings: {}
-- commands:
-  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
-  - echo -n "$${DOCKER_TAG}" > .tag
-  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
-    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
-  - tail -n +1 .tags
-  image: golang:1.17
-  name: generate tags
   settings: {}
 - commands: []
   image: plugins/gcr
@@ -200,6 +200,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 23b7b099c561300125b5d758d77556dfbd6ddb250d3bf53665e77481ecdeb891
+hmac: 45f451814e85a1e264f6d7604e3d84039da37ea3fa1f62ecba6c77049f0634e4
 
 ...
