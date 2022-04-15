@@ -63,7 +63,7 @@ local withDockerInDockerService = {
     {
       name: 'docker',
       image: images._images.dind,
-      entrypoint: ['dockerd'],  // Override the entrypoint to disable the default --tlsverify behavior
+      entrypoint: ['systemctl --user start docker'],
       command: [
         '--tls=false',
         '--host=tcp://0.0.0.0:2375',

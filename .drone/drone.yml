@@ -10,7 +10,7 @@ services:
   - --host=tcp://0.0.0.0:2375
   - --registry-mirror=https://mirror.gcr.io
   entrypoint:
-  - dockerd
+  - systemctl --user start docker
   image: docker:dind-rootless
   name: docker
   privileged: false
@@ -85,7 +85,7 @@ services:
   - --host=tcp://0.0.0.0:2375
   - --registry-mirror=https://mirror.gcr.io
   entrypoint:
-  - dockerd
+  - systemctl --user start docker
   image: docker:dind-rootless
   name: docker
   privileged: false
@@ -196,6 +196,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 93a63a4044ada243fd8d1f2d15a12cfd34f5b9f08f4355f3d60ca7533ed92766
+hmac: 6aec68be822c5674621c6f0b4310c326c5aa587321f110aeac5e48b45b0a58d2
 
 ...
