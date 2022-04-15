@@ -9,7 +9,7 @@ name: pr
 services:
 - command:
   - --tls=false
-  - --host=tcp://0.0.0.0:2375
+  - --host=tcp://0.0.0.0:2376
   - --registry-mirror=https://mirror.gcr.io
   entrypoint:
   - dockerd-rootless.sh
@@ -86,7 +86,7 @@ name: main
 services:
 - command:
   - --tls=false
-  - --host=tcp://0.0.0.0:2375
+  - --host=tcp://0.0.0.0:2376
   - --registry-mirror=https://mirror.gcr.io
   entrypoint:
   - dockerd-rootless.sh
@@ -200,6 +200,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 5a9e059eb1f6f4c04c7af3bae7b43d39c2a7e467fc10bd67a8f543e82f76f4fa
+hmac: cee27aec64025cc70d493da01ae84f3d21ac5c5c070dfa59870b996b22b53c2c
 
 ...

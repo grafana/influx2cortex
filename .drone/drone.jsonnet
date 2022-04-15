@@ -66,7 +66,7 @@ local withDockerInDockerService = {
       entrypoint: ['dockerd-rootless.sh'],
       command: [
         '--tls=false',
-        '--host=tcp://0.0.0.0:2375',
+        '--host=tcp://0.0.0.0:2376',
         '--registry-mirror=https://mirror.gcr.io',
       ],
       privileged: false,
