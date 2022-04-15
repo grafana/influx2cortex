@@ -4,8 +4,24 @@ image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
 name: pr
+services:
+- command:
+  - --tls=false
+  - --host=tcp://0.0.0.0:2375
+  - --registry-mirror=https://mirror.gcr.io
+  entrypoint:
+  - dockerd
+  image: docker:dind
+  name: docker
+  privileged: true
+  volumes:
+  - name: dockersock
+    path: /var/run
 steps:
 - commands:
+  - export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
+  - echo $${ACCEPTANCE_DOCKER_TAG}
+  - make acceptance-tests
   - go test ./...
   image: golang:1.17
   name: test
@@ -20,6 +36,13 @@ steps:
   - cat lint.out >> report.out
   - .drone/ghcomment -id "Go coverage report:" -bodyfile report.out
   environment:
+    ACCEPTANCE_CI: "true"
+    ACCEPTANCE_DOCKER_AUTH_PASSWORD:
+      from_secret: gcr_admin
+    ACCEPTANCE_DOCKER_AUTH_USERNAME: _json_key
+    ACCEPTANCE_DOCKER_HOST: docker
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
     GRAFANABOT_PAT:
       from_secret: gh_token
   image: golangci/golangci-lint:v1.45
@@ -47,18 +70,29 @@ trigger:
     include:
     - pull_request
 type: docker
+volumes:
+- name: dockersock
+  temp: {}
 ---
 depends_on: null
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
 name: main
+services:
+- command:
+  - --tls=false
+  - --host=tcp://0.0.0.0:2375
+  - --registry-mirror=https://mirror.gcr.io
+  entrypoint:
+  - dockerd
+  image: docker:dind
+  name: docker
+  privileged: true
+  volumes:
+  - name: dockersock
+    path: /var/run
 steps:
-- commands:
-  - go test ./...
-  image: golang:1.17
-  name: test
-  settings: {}
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
   - echo -n "$${DOCKER_TAG}" > .tag
@@ -67,6 +101,11 @@ steps:
   - tail -n +1 .tags
   image: golang:1.17
   name: generate tags
+  settings: {}
+- commands:
+  - go test ./...
+  image: golang:1.17
+  name: test
   settings: {}
 - commands: []
   image: plugins/gcr
@@ -83,6 +122,9 @@ trigger:
     include:
     - push
 type: docker
+volumes:
+- name: dockersock
+  temp: {}
 ---
 depends_on:
 - main
@@ -152,8 +194,3 @@ get:
   path: infra/data/ci/argo-workflows/trigger-service-account
 kind: secret
 name: argo_token
----
-kind: signature
-hmac: 5decf4444fd44ab9286dbdd01dc4241bd5817d63aae97b12b6999e99fcef095f
-
-...
