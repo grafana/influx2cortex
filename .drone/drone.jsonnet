@@ -63,7 +63,7 @@ local withDockerInDockerService = {
     {
       name: 'docker',
       image: images._images.dind,
-      entrypoint: ['systemctl --user start docker'],
+      entrypoint: ['dockerd-rootless.sh'],
       command: [
         '--tls=false',
         '--host=tcp://0.0.0.0:2375',
@@ -72,6 +72,9 @@ local withDockerInDockerService = {
       privileged: false,
     } + withDockerSockVolume,
   ],
+  environment+: {
+    DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: "-p 0.0.0.0:2376:2376/tcp",
+  },
   volumes+: [
     {
       name: 'dockersock',

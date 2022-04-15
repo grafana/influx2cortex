@@ -1,5 +1,7 @@
 ---
 depends_on: null
+environment:
+  DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
@@ -10,7 +12,7 @@ services:
   - --host=tcp://0.0.0.0:2375
   - --registry-mirror=https://mirror.gcr.io
   entrypoint:
-  - systemctl --user start docker
+  - dockerd-rootless.sh
   image: docker:dind-rootless
   name: docker
   privileged: false
@@ -75,6 +77,8 @@ volumes:
   temp: {}
 ---
 depends_on: null
+environment:
+  DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
@@ -85,7 +89,7 @@ services:
   - --host=tcp://0.0.0.0:2375
   - --registry-mirror=https://mirror.gcr.io
   entrypoint:
-  - systemctl --user start docker
+  - dockerd-rootless.sh
   image: docker:dind-rootless
   name: docker
   privileged: false
@@ -196,6 +200,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 6aec68be822c5674621c6f0b4310c326c5aa587321f110aeac5e48b45b0a58d2
+hmac: 23b7b099c561300125b5d758d77556dfbd6ddb250d3bf53665e77481ecdeb891
 
 ...
