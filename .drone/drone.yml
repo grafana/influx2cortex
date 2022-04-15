@@ -11,7 +11,7 @@ services:
   - --registry-mirror=https://mirror.gcr.io
   entrypoint:
   - dockerd
-  image: docker:dind
+  image: docker:dind-rootless
   name: docker
   privileged: false
   volumes:
@@ -86,7 +86,7 @@ services:
   - --registry-mirror=https://mirror.gcr.io
   entrypoint:
   - dockerd
-  image: docker:dind
+  image: docker:dind-rootless
   name: docker
   privileged: false
   volumes:
@@ -196,6 +196,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: c38ef5060a48f81c29480dbdc640374ce3c0e68db2554b9131549584ccc20d34
+hmac: 93a63a4044ada243fd8d1f2d15a12cfd34f5b9f08f4355f3d60ca7533ed92766
 
 ...
