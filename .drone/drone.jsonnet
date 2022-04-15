@@ -69,7 +69,7 @@ local withDockerInDockerService = {
         '--host=tcp://0.0.0.0:2375',
         '--registry-mirror=https://mirror.gcr.io',
       ],
-      privileged: true,
+      privileged: false,
     } + withDockerSockVolume,
   ],
   volumes+: [

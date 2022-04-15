@@ -13,7 +13,7 @@ services:
   - dockerd
   image: docker:dind
   name: docker
-  privileged: true
+  privileged: false
   volumes:
   - name: dockersock
     path: /var/run
@@ -88,7 +88,7 @@ services:
   - dockerd
   image: docker:dind
   name: docker
-  privileged: true
+  privileged: false
   volumes:
   - name: dockersock
     path: /var/run
@@ -194,3 +194,8 @@ get:
   path: infra/data/ci/argo-workflows/trigger-service-account
 kind: secret
 name: argo_token
+---
+kind: signature
+hmac: c38ef5060a48f81c29480dbdc640374ce3c0e68db2554b9131549584ccc20d34
+
+...
