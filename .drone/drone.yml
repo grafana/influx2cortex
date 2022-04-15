@@ -32,7 +32,7 @@ steps:
 - commands:
   - export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
   - echo $${ACCEPTANCE_DOCKER_TAG}
-  - make acceptance-tests
+  - sleep 60
   - go test ./...
   image: golang:1.17
   name: test
@@ -200,6 +200,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 45f451814e85a1e264f6d7604e3d84039da37ea3fa1f62ecba6c77049f0634e4
+hmac: 5a9e059eb1f6f4c04c7af3bae7b43d39c2a7e467fc10bd67a8f543e82f76f4fa
 
 ...

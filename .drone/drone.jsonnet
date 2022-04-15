@@ -89,7 +89,7 @@ local withDockerInDockerService = {
   + drone.withInlineStep('test', [    
     'export ACCEPTANCE_DOCKER_TAG=$(cat .tag)',
     'echo $${ACCEPTANCE_DOCKER_TAG}',
-    'make acceptance-tests',
+    'sleep 60',
     'go test ./...'])
   + drone.withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
     environment: {
