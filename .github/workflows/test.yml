@@ -9,8 +9,6 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
-        with:
-          path: "influx2cortex"
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
