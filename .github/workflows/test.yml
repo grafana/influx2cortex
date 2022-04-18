@@ -1,0 +1,19 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        with:
+          path: "influx2cortex"
+      - name: Install Docker Client
+        run: ./.github/workflows/scripts/install-docker.sh
+      - name: Build command binaries
+        run: ./.github/workflows/scripts/compile_commands.sh
+      - name: Build Docker images
+        run: docker build -f ../../cmd/Dockerfile -t "us.gcr.io/kubernetes-dev/influx2cortex:local" --build-arg "cmd=influx2cortex" .
