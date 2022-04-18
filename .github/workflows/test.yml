@@ -10,7 +10,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.17
       - name: Symlink Expected Path to Workspace
@@ -26,7 +26,5 @@ jobs:
         uses: actions/checkout@v2
         with:
           path: "influx2cortex"
-      - name: Build command binaries
-        run: go build -tags netgo
       - name: Build Docker images
         run: docker build -f ../../cmd/Dockerfile -t "us.gcr.io/kubernetes-dev/influx2cortex:local" --build-arg "cmd=influx2cortex" .
