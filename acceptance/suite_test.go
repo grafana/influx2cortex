@@ -186,7 +186,7 @@ func (s *Suite) startCortex() *dockertest.Resource {
 func (s *Suite) startInfluxProxy() *dockertest.Resource {
 	const (
 		name = "influx2cortex"
-		repo = "us.gcr.io/kubernetes-dev/influx2cortex"
+		repo = "us.gcr.io/kubernetes-dev/influx2cortex/local"
 	)
 
 	return s.startContainer(&dockertest.RunOptions{
