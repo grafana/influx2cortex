@@ -4,6 +4,19 @@ on:
   pull_request:
 
 jobs:
+  binaries:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        with:
+          path: "influx2cortex"
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Build binaries
+        run: ./.github/workflows/scripts/compile-commands.sh
   build:
     runs-on: ubuntu-latest
     steps:
@@ -12,6 +25,6 @@ jobs:
         with:
           path: "influx2cortex"
       - name: Build command binaries
-        run: ./.github/workflows/scripts/compile_commands.sh
+        run: go build -tags netgo
       - name: Build Docker images
         run: docker build -f ../../cmd/Dockerfile -t "us.gcr.io/kubernetes-dev/influx2cortex:local" --build-arg "cmd=influx2cortex" .
