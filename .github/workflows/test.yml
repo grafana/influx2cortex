@@ -20,4 +20,4 @@ jobs:
       - name: Check current dir
         run: pwd
       - name: Build binaries
-        run: $GITHUB_WORKSPACE/.github/workflows/scripts/compile-commands.sh
+        run: bash $GITHUB_WORKSPACE/.github/workflows/scripts/compile-commands.sh
