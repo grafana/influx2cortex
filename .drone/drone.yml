@@ -55,7 +55,7 @@ kind: pipeline
 name: main
 steps:
 - commands:
-  - go test ./...
+  - go test ./pkg/...
   image: golang:1.17
   name: test
   settings: {}
@@ -154,6 +154,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 5decf4444fd44ab9286dbdd01dc4241bd5817d63aae97b12b6999e99fcef095f
+hmac: 7983393c36b0b032c2d92d10ac5e74313ff1187344a7e6f7de76d177c03ef41b
 
 ...

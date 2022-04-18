@@ -55,7 +55,7 @@ local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
   + triggers.pr,
 
   drone.pipeline('main')
-  + drone.withInlineStep('test', ['go test ./...'])
+  + drone.withInlineStep('test', ['go test ./pkg/...'])
   + drone.withInlineStep('generate tags', generateTags)
   + drone.withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + imagePullSecrets
