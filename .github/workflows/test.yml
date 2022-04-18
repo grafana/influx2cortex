@@ -14,7 +14,7 @@ jobs:
         with:
           go-version: 1.17
       - name: Build binaries
-        run: ./.github/workflows/scripts/compile-commands.sh
+        run: ./../../scripts/compile-commands.sh
   build:
     runs-on: ubuntu-latest
     steps:
