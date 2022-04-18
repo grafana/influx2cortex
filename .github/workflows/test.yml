@@ -17,5 +17,7 @@ jobs:
         run: |
           sudo mkdir -p /go/src/github.com/grafana/influx2cortex
           sudo ln -s $GITHUB_WORKSPACE/* /go/src/github.com/grafana/influx2cortex
+      - name: Check current dir
+        run: pwd
       - name: Build binaries
-        run: ./$GITHUB_WORKSPACE/.github/workflows/scripts/compile-commands.sh
+        run: $GITHUB_WORKSPACE/.github/workflows/scripts/compile-commands.sh
