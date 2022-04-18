@@ -13,8 +13,12 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: 1.17
+      - name: Symlink Expected Path to Workspace
+        run: |
+          mkdir -p /go/src/github.com/grafana/influx2cortex
+          ln -s $GITHUB_WORKSPACE/* /go/src/github.com/grafana/influx2cortex
       - name: Build binaries
-        run: ./../../scripts/compile-commands.sh
+        run: ./.github/workflows/scripts/compile-commands.sh
   build:
     runs-on: ubuntu-latest
     steps:
