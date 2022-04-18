@@ -21,3 +21,14 @@ jobs:
         run: pwd
       - name: Build binaries
         run: bash $GITHUB_WORKSPACE/.github/workflows/scripts/compile-commands.sh
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Symlink Expected Path to Workspace
+        run: |
+          sudo mkdir -p /go/src/github.com/grafana/influx2cortex
+          sudo ln -s $GITHUB_WORKSPACE/* /go/src/github.com/grafana/influx2cortex
+      - name: Build Docker images
+        run: bash $GITHUB_WORKSPACE/.github/workflows/scripts/build-local-images.sh
