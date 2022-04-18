@@ -18,7 +18,7 @@ jobs:
           sudo mkdir -p /go/src/github.com/grafana/influx2cortex
           sudo ln -s $GITHUB_WORKSPACE/* /go/src/github.com/grafana/influx2cortex
       - name: Build binaries
-        run: sudo ./.github/workflows/scripts/compile-commands.sh
+        run: ./go/src/github.com/grafana/influx2cortex/.github/workflows/scripts/compile-commands.sh
   build:
     runs-on: ubuntu-latest
     steps:
