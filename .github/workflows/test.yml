@@ -31,4 +31,4 @@ jobs:
           sudo mkdir -p /go/src/github.com/grafana/influx2cortex
           sudo ln -s $GITHUB_WORKSPACE/* /go/src/github.com/grafana/influx2cortex
       - name: Build Docker images
-        run: bash $GITHUB_WORKSPACE/.github/workflows/scripts/build-local-images.sh
+        run: docker build -f cmd/Dockerfile -t "us.gcr.io/kubernetes-dev/influx2cortex:local" --build-arg "cmd=influx2cortex" .
