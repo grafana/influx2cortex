@@ -6,7 +6,7 @@ kind: pipeline
 name: pr
 steps:
 - commands:
-  - go test ./...
+  - go test ./pkg/
   image: golang:1.17
   name: test
   settings: {}
@@ -55,7 +55,7 @@ kind: pipeline
 name: main
 steps:
 - commands:
-  - go test ./pkg/...
+  - go test $(go list ./... | grep -v /acceptance/)
   image: golang:1.17
   name: test
   settings: {}
@@ -154,6 +154,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 7983393c36b0b032c2d92d10ac5e74313ff1187344a7e6f7de76d177c03ef41b
+hmac: bd76d83d3666bf79072607be1f301fc471047975c33e1a990e1bef313833a2d0
 
 ...
