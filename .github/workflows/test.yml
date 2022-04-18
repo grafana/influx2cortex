@@ -23,3 +23,19 @@ jobs:
         run: bash $GITHUB_WORKSPACE/.github/workflows/scripts/compile-commands.sh
       - name: Build Docker images
         run: docker build -f cmd/Dockerfile -t "us.gcr.io/kubernetes-dev/influx2cortex:local" --build-arg "cmd=influx2cortex" .
+  acceptance:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - name: Symlink Expected Path to Workspace
+        run: |
+          sudo mkdir -p /go/src/github.com/grafana/influx2cortex
+          sudo ln -s $GITHUB_WORKSPACE/* /go/src/github.com/grafana/influx2cortex
+      - name: Run tests
+        run: go test -count 1 -v -race -tags=acceptance ./acceptance/...
