@@ -43,7 +43,7 @@ local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
 
 [
   drone.pipeline('pr')
-  + drone.withInlineStep('test', ['go test ./pkg/...'])
+  + drone.withInlineStep('test', ['go test $(go list ./... | grep -v /acceptance/)'])
   + drone.withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
     environment: {
       GRAFANABOT_PAT: { from_secret: 'gh_token' },
@@ -55,7 +55,7 @@ local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
   + triggers.pr,
 
   drone.pipeline('main')
-  + drone.withInlineStep('test', ['go test ./pkg/...'])
+  + drone.withInlineStep('test', ['go test $(go list ./... | grep -v /acceptance/)'])
   + drone.withInlineStep('generate tags', generateTags)
   + drone.withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + imagePullSecrets
