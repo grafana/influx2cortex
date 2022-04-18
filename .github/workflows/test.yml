@@ -4,7 +4,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  build-influx:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
@@ -24,7 +24,7 @@ jobs:
       - name: Build Docker images
         run: docker build -f cmd/Dockerfile -t "us.gcr.io/kubernetes-dev/influx2cortex:local" --build-arg "cmd=influx2cortex" .
   acceptance:
-    needs: build
+    needs: build-influx
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
@@ -37,5 +37,7 @@ jobs:
         run: |
           sudo mkdir -p /go/src/github.com/grafana/influx2cortex
           sudo ln -s $GITHUB_WORKSPACE/* /go/src/github.com/grafana/influx2cortex
+      - name: Build local
+        run: make build-local
       - name: Run tests
-        run: go test -count 1 -v -race -tags=acceptance ./acceptance/...
+        run: make acceptance-tests
