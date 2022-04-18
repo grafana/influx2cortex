@@ -2,7 +2,6 @@ local drone = import 'lib/drone/drone.libsonnet';
 local images = import 'lib/drone/images.libsonnet';
 local triggers = import 'lib/drone/triggers.libsonnet';
 local vault = import 'lib/vault/vault.libsonnet';
-local step = drone.step;
 
 local dockerPluginName = 'plugins/gcr';
 local dockerPluginBaseSettings = {
@@ -42,75 +41,22 @@ local commentCoverageLintReport = [
 
 local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
 
-local buildBinaries = {
-  step: step('build binaries', $.commands, image=images.go),
-  commands: [
-    'bash ./scripts/compile_commands.sh',
-  ],
-};
-
-local withDockerSockVolume = {
-  volumes+: [
-    {
-      name: 'dockersock',
-      path: '/var/run',
-    },
-  ],
-};
-
-local withDockerInDockerService = {
-  services: [
-    {
-      name: 'docker',
-      image: images._images.dind,
-      entrypoint: ['dockerd-rootless.sh'],
-      command: [
-        '--tls=false',
-        '--host=tcp://0.0.0.0:2376',
-        '--registry-mirror=https://mirror.gcr.io',
-      ],
-      privileged: false,
-    } + withDockerSockVolume,
-  ],
-  environment+: {
-    DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: "-p 0.0.0.0:2376:2376/tcp",
-  },
-  volumes+: [
-    {
-      name: 'dockersock',
-      temp: {},
-    },
-  ],
-};
-
 [
   drone.pipeline('pr')
-  + drone.withInlineStep('generate tags', generateTags)
-  + drone.withInlineStep('test', [    
-    'export ACCEPTANCE_DOCKER_TAG=$(cat .tag)',
-    'echo $${ACCEPTANCE_DOCKER_TAG}',
-    'sleep 60',
-    'go test ./...'])
+  + drone.withInlineStep('test', ['go test ./...'])
   + drone.withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
     environment: {
       GRAFANABOT_PAT: { from_secret: 'gh_token' },
-      DOCKER_HOST: 'tcp://docker:2375',
-      DOCKER_TLS_CERTDIR: '',
-      ACCEPTANCE_CI: 'true',
-      ACCEPTANCE_DOCKER_HOST: 'docker',
-      ACCEPTANCE_DOCKER_AUTH_USERNAME: '_json_key',
-      ACCEPTANCE_DOCKER_AUTH_PASSWORD: { from_secret: 'gcr_admin' },
     },
   })
+  + drone.withInlineStep('generate tags', generateTags)
   + drone.withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + imagePullSecrets
-  + withDockerInDockerService
   + triggers.pr,
 
   drone.pipeline('main')
-  + drone.withInlineStep('generate tags', generateTags)
   + drone.withInlineStep('test', ['go test ./...'])
-  + withDockerInDockerService
+  + drone.withInlineStep('generate tags', generateTags)
   + drone.withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + imagePullSecrets
   + triggers.main,
