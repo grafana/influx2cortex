@@ -2,9 +2,15 @@ local drone = import 'lib/drone/drone.libsonnet';
 local images = import 'lib/drone/images.libsonnet';
 local triggers = import 'lib/drone/triggers.libsonnet';
 local vault = import 'lib/vault/vault.libsonnet';
+
+local pipeline = drone.pipeline;
 local step = drone.step;
+local withInlineStep = drone.withInlineStep;
+local withSteps = drone.withSteps;
+local withStep = drone.withStep;
 
 local dockerPluginName = 'plugins/gcr';
+
 local dockerPluginBaseSettings = {
   registry: 'us.gcr.io',
   repo: 'kubernetes-dev/influx2cortex',
@@ -83,43 +89,51 @@ local withDockerInDockerService = {
   ],
 };
 
-[
-  drone.pipeline('pr')
-  + drone.withInlineStep('generate tags', generateTags)
-  + drone.withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
-  + imagePullSecrets
-  + withDockerInDockerService
-  + drone.withInlineStep('test', [    
+local acceptance = {
+  step: step('acceptance', $.commands, environment=$.environment) + withDockerSockVolume,
+  commands: [
     'export ACCEPTANCE_DOCKER_TAG=$(cat .tag)',
     'echo $${ACCEPTANCE_DOCKER_TAG}',
-    'sleep 60',
-    'go test ./...'])
-  + drone.withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
-    environment: {
-      GRAFANABOT_PAT: { from_secret: 'gh_token' },
-      DOCKER_HOST: 'tcp://docker:2375',
-      DOCKER_TLS_CERTDIR: '',
-      ACCEPTANCE_CI: 'true',
-      ACCEPTANCE_DOCKER_HOST: 'docker',
-      ACCEPTANCE_DOCKER_AUTH_USERNAME: '_json_key',
-      ACCEPTANCE_DOCKER_AUTH_PASSWORD: { from_secret: 'gcr_admin' },
-    },
-  })
-  + triggers.pr,
+    'make acceptance-tests',
+  ],
+  environment: {
+    DOCKER_HOST: 'tcp://docker:2375',
+    DOCKER_TLS_CERTDIR: '',
+    ACCEPTANCE_CI: 'true',
+    ACCEPTANCE_DOCKER_HOST: 'docker',
+    ACCEPTANCE_DOCKER_AUTH_USERNAME: '_json_key',
+    ACCEPTANCE_DOCKER_AUTH_PASSWORD: { from_secret: 'gcr_admin' },
+  },
+};
 
-
-  drone.pipeline('main')
-  + drone.withInlineStep('generate tags', generateTags)
-  + drone.withInlineStep('test', ['go test ./...'])
+[
+pipeline('build')
+  + withInlineStep('generate tags', generateTags)
+  + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
+  + imagePullSecrets
   + withDockerInDockerService
-  + drone.withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
+  + triggers.pr
+  + triggers.main,
+
+  pipeline('acceptance', depends_on=['build'])
+  + withInlineStep('generate tags', generateTags)
+  + withStep(acceptance.step)
+  + imagePullSecrets
+  + withDockerInDockerService
+  + triggers.pr
+  + triggers.main,
+  
+  pipeline('test', depends_on=['build'])
+  + withInlineStep('generate tags', generateTags)
+  + withInlineStep('test', ['go test ./...'])
+  + withDockerInDockerService
   + imagePullSecrets
   + triggers.main,
 
-  drone.pipeline('launch influx argo workflow', depends_on=['main'])
-  + drone.withInlineStep('check is latest commit', ['[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'])
-  + drone.withInlineStep('generate tags', generateTags)
-  + drone.withStep(drone.step(
+  pipeline('launch influx argo workflow', depends_on=['main'])
+  + withInlineStep('check is latest commit', ['[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'])
+  + withInlineStep('generate tags', generateTags)
+  + withStep(drone.step(
     'launch argo workflow',
     commands=[],
     settings={
