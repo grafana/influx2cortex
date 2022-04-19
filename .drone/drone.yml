@@ -1,12 +1,39 @@
 ---
 depends_on: null
+environment:
+  DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
 name: pr
+services:
+- command:
+  - --tls=false
+  - --host=tcp://0.0.0.0:2375
+  - --registry-mirror=https://mirror.gcr.io
+  entrypoint:
+  - dockerd-rootless.sh
+  image: docker:dind
+  name: docker
+  privileged: true
+  volumes:
+  - name: dockersock
+    path: /var/run
 steps:
 - commands:
-  - go test pkg
+  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - echo -n "$${DOCKER_TAG}" > .tag
+  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
+    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
+  - tail -n +1 .tags
+  image: golang:1.17
+  name: generate tags
+  settings: {}
+- commands:
+  - export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
+  - echo $${ACCEPTANCE_DOCKER_TAG}
+  - sleep 60
+  - go test ./...
   image: golang:1.17
   name: test
   settings: {}
@@ -20,19 +47,17 @@ steps:
   - cat lint.out >> report.out
   - .drone/ghcomment -id "Go coverage report:" -bodyfile report.out
   environment:
+    ACCEPTANCE_CI: "true"
+    ACCEPTANCE_DOCKER_AUTH_PASSWORD:
+      from_secret: gcr_admin
+    ACCEPTANCE_DOCKER_AUTH_USERNAME: _json_key
+    ACCEPTANCE_DOCKER_HOST: docker
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
     GRAFANABOT_PAT:
       from_secret: gh_token
   image: golangci/golangci-lint:v1.45
   name: coverage + lint
-  settings: {}
-- commands:
-  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
-  - echo -n "$${DOCKER_TAG}" > .tag
-  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
-    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
-  - tail -n +1 .tags
-  image: golang:1.17
-  name: generate tags
   settings: {}
 - commands: []
   image: plugins/gcr
@@ -47,18 +72,31 @@ trigger:
     include:
     - pull_request
 type: docker
+volumes:
+- name: dockersock
+  temp: {}
 ---
 depends_on: null
+environment:
+  DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
 name: main
+services:
+- command:
+  - --tls=false
+  - --host=tcp://0.0.0.0:2375
+  - --registry-mirror=https://mirror.gcr.io
+  entrypoint:
+  - dockerd-rootless.sh
+  image: docker:dind
+  name: docker
+  privileged: true
+  volumes:
+  - name: dockersock
+    path: /var/run
 steps:
-- commands:
-  - go test ./...
-  image: golang:1.17
-  name: test
-  settings: {}
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
   - echo -n "$${DOCKER_TAG}" > .tag
@@ -67,6 +105,11 @@ steps:
   - tail -n +1 .tags
   image: golang:1.17
   name: generate tags
+  settings: {}
+- commands:
+  - go test ./...
+  image: golang:1.17
+  name: test
   settings: {}
 - commands: []
   image: plugins/gcr
@@ -83,6 +126,9 @@ trigger:
     include:
     - push
 type: docker
+volumes:
+- name: dockersock
+  temp: {}
 ---
 depends_on:
 - main
@@ -154,6 +200,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 3ffa60d5832e00b189b8aeed3b2d784115dd806963167138b86ed6fea29ab341
+hmac: 3c469870e0af31fac28958c7b6650dc6a2b96df83dbfb416a1861cc578884c07
 
 ...
