@@ -1,24 +1,9 @@
 ---
 depends_on: null
-environment:
-  DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
-name: pr
-services:
-- command:
-  - --tls=false
-  - --host=tcp://0.0.0.0:2376
-  - --registry-mirror=https://mirror.gcr.io
-  entrypoint:
-  - dockerd-rootless.sh
-  image: docker:dind
-  name: docker
-  privileged: false
-  volumes:
-  - name: dockersock
-    path: /var/run
+name: build
 steps:
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
@@ -26,14 +11,67 @@ steps:
   - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
+  depends_on: []
+  entrypoint: null
+  environment: {}
   image: golang:1.17
   name: generate tags
   settings: {}
+- commands: []
+  depends_on: []
+  entrypoint: null
+  environment: {}
+  image: plugins/gcr
+  name: build + push
+  settings:
+    json_key:
+      from_secret: gcr_admin
+    registry: us.gcr.io
+    repo: kubernetes-dev/influx2cortex
 - commands:
-  - export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
-  - echo $${ACCEPTANCE_DOCKER_TAG}
-  - sleep 60
-  - go test ./...
+  - bash ./scripts/compile-commands.sh
+  depends_on: []
+  entrypoint: null
+  environment: {}
+  image: golang:1.17
+  name: build binaries
+  settings: {}
+- commands: []
+  depends_on: []
+  entrypoint: null
+  environment: {}
+  image: plugins/gcr
+  name: 'influx2cortex: build and push'
+  settings:
+    build_args:
+    - cmd=influx2cortex
+    dockerfile: ./cmd/Dockerfile
+    json_key:
+      from_secret: gcr_admin
+    mirror: https://mirror.gcr.io
+    registry: us.gcr.io
+    repo: kubernetes-dev/influx2cortex
+trigger:
+  branch:
+  - main
+  event:
+    include:
+    - pull_request
+    - push
+type: docker
+---
+depends_on:
+- build
+image_pull_secrets:
+- dockerconfigjson
+kind: pipeline
+name: test
+steps:
+- commands:
+  - bash ./scripts/test.sh
+  depends_on: []
+  entrypoint: null
+  environment: {}
   image: golang:1.17
   name: test
   settings: {}
@@ -46,53 +84,42 @@ steps:
   - echo "" >> report.out
   - cat lint.out >> report.out
   - .drone/ghcomment -id "Go coverage report:" -bodyfile report.out
+  depends_on: []
+  entrypoint: null
   environment:
-    ACCEPTANCE_CI: "true"
-    ACCEPTANCE_DOCKER_AUTH_PASSWORD:
-      from_secret: gcr_admin
-    ACCEPTANCE_DOCKER_AUTH_USERNAME: _json_key
-    ACCEPTANCE_DOCKER_HOST: docker
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
-    GRAFANABOT_PAT:
-      from_secret: gh_token
+    environment:
+      GRAFANABOT_PAT:
+        from_secret: gh_token
   image: golangci/golangci-lint:v1.45
   name: coverage + lint
   settings: {}
-- commands: []
-  image: plugins/gcr
-  name: build + push
-  settings:
-    json_key:
-      from_secret: gcr_admin
-    registry: us.gcr.io
-    repo: kubernetes-dev/influx2cortex
 trigger:
+  branch:
+  - main
   event:
     include:
     - pull_request
+    - push
 type: docker
-volumes:
-- name: dockersock
-  temp: {}
 ---
-depends_on: null
+depends_on:
+- build
 environment:
   DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
-name: main
+name: acceptance
 services:
 - command:
   - --tls=false
-  - --host=tcp://0.0.0.0:2376
+  - --host=tcp://0.0.0.0:2375
   - --registry-mirror=https://mirror.gcr.io
   entrypoint:
-  - dockerd-rootless.sh
+  - dockerd
   image: docker:dind
   name: docker
-  privileged: false
+  privileged: true
   volumes:
   - name: dockersock
     path: /var/run
@@ -103,27 +130,38 @@ steps:
   - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
+  depends_on: []
+  entrypoint: null
+  environment: {}
   image: golang:1.17
   name: generate tags
   settings: {}
 - commands:
-  - go test ./...
-  image: golang:1.17
-  name: test
-  settings: {}
-- commands: []
-  image: plugins/gcr
-  name: build + push
-  settings:
-    json_key:
+  - export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
+  - echo $${ACCEPTANCE_DOCKER_TAG}
+  - make acceptance-tests
+  depends_on: []
+  entrypoint: null
+  environment:
+    ACCEPTANCE_CI: "true"
+    ACCEPTANCE_DOCKER_AUTH_PASSWORD:
       from_secret: gcr_admin
-    registry: us.gcr.io
-    repo: kubernetes-dev/influx2cortex
+    ACCEPTANCE_DOCKER_AUTH_USERNAME: _json_key
+    ACCEPTANCE_DOCKER_HOST: docker
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  image: golang:1.17
+  name: acceptance
+  settings: {}
+  volumes:
+  - name: dockersock
+    path: /var/run
 trigger:
   branch:
   - main
   event:
     include:
+    - pull_request
     - push
 type: docker
 volumes:
@@ -131,7 +169,8 @@ volumes:
   temp: {}
 ---
 depends_on:
-- main
+- build
+- acceptance
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
@@ -139,6 +178,9 @@ name: launch influx argo workflow
 steps:
 - commands:
   - '[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'
+  depends_on: []
+  entrypoint: null
+  environment: {}
   image: golang:1.17
   name: check is latest commit
   settings: {}
@@ -148,10 +190,16 @@ steps:
   - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
     > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
   - tail -n +1 .tags
+  depends_on: []
+  entrypoint: null
+  environment: {}
   image: golang:1.17
   name: generate tags
   settings: {}
 - commands: []
+  depends_on: []
+  entrypoint: null
+  environment: {}
   image: us.gcr.io/kubernetes-dev/drone/plugins/argo-cli
   name: launch argo workflow
   settings:
@@ -200,6 +248,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 27d7eaae6e9e329525c24a5b0465456ca5c8282048aa3de2422c94f7df258fff
+hmac: f8235948ae4786d7bff49431fb15b9bcd3ffabf25929ab0acbdb5585ca011c22
 
 ...
