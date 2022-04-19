@@ -1,19 +1,11 @@
 ---
-commands:
-- DOCKER_TAG=$(bash scripts/generate-tags.sh)
-- echo -n "$${DOCKER_TAG}" > .tag
-- if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
-  > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
-- tail -n +1 .tags
-depends_on: []
-entrypoint: null
+depends_on: null
 environment:
   DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
-image: golang:1.17
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
-name: generate tags
+name: build
 services:
 - command:
   - --tls=false
@@ -27,8 +19,19 @@ services:
   volumes:
   - name: dockersock
     path: /var/run
-settings: {}
 steps:
+- commands:
+  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - echo -n "$${DOCKER_TAG}" > .tag
+  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
+    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
+  - tail -n +1 .tags
+  depends_on: []
+  entrypoint: null
+  environment: {}
+  image: golang:1.17
+  name: generate tags
+  settings: {}
 - commands: []
   depends_on: []
   entrypoint: null
@@ -75,21 +78,14 @@ volumes:
 - name: dockersock
   temp: {}
 ---
-commands:
-- DOCKER_TAG=$(bash scripts/generate-tags.sh)
-- echo -n "$${DOCKER_TAG}" > .tag
-- if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
-  > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
-- tail -n +1 .tags
-depends_on: []
-entrypoint: null
+depends_on:
+- build
 environment:
   DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
-image: golang:1.17
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
-name: generate tags
+name: acceptance
 services:
 - command:
   - --tls=false
@@ -103,8 +99,19 @@ services:
   volumes:
   - name: dockersock
     path: /var/run
-settings: {}
 steps:
+- commands:
+  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - echo -n "$${DOCKER_TAG}" > .tag
+  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
+    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
+  - tail -n +1 .tags
+  depends_on: []
+  entrypoint: null
+  environment: {}
+  image: golang:1.17
+  name: generate tags
+  settings: {}
 - commands:
   - export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
   - echo $${ACCEPTANCE_DOCKER_TAG}
@@ -137,21 +144,14 @@ volumes:
 - name: dockersock
   temp: {}
 ---
-commands:
-- DOCKER_TAG=$(bash scripts/generate-tags.sh)
-- echo -n "$${DOCKER_TAG}" > .tag
-- if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
-  > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
-- tail -n +1 .tags
-depends_on: []
-entrypoint: null
+depends_on:
+- build
 environment:
   DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
-image: golang:1.17
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
-name: generate tags
+name: test
 services:
 - command:
   - --tls=false
@@ -165,8 +165,19 @@ services:
   volumes:
   - name: dockersock
     path: /var/run
-settings: {}
 steps:
+- commands:
+  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - echo -n "$${DOCKER_TAG}" > .tag
+  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
+    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
+  - tail -n +1 .tags
+  depends_on: []
+  entrypoint: null
+  environment: {}
+  image: golang:1.17
+  name: generate tags
+  settings: {}
 - commands:
   - go test ./...
   depends_on: []
@@ -186,21 +197,13 @@ volumes:
 - name: dockersock
   temp: {}
 ---
-commands:
-- DOCKER_TAG=$(bash scripts/generate-tags.sh)
-- echo -n "$${DOCKER_TAG}" > .tag
-- if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
-  > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
-- tail -n +1 .tags
-depends_on: []
-entrypoint: null
-environment: {}
-image: golang:1.17
+depends_on:
+- build
+- acceptance
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
-name: generate tags
-settings: {}
+name: launch influx argo workflow
 steps:
 - commands:
   - '[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'
@@ -209,6 +212,18 @@ steps:
   environment: {}
   image: golang:1.17
   name: check is latest commit
+  settings: {}
+- commands:
+  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
+  - echo -n "$${DOCKER_TAG}" > .tag
+  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
+    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
+  - tail -n +1 .tags
+  depends_on: []
+  entrypoint: null
+  environment: {}
+  image: golang:1.17
+  name: generate tags
   settings: {}
 - commands: []
   depends_on: []
@@ -262,6 +277,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: ef2d6226abcfb6986725c3a9436fee7cc8868dfc4c946904afe0cf016caf46e2
+hmac: 508da310e6b9198b0bf240308bf540a0c307215a875725dd9765685ad16b6b37
 
 ...

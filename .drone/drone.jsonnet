@@ -143,7 +143,7 @@ local acceptance = {
 
 [
   pipeline('build')
-  + generateTags.step
+  + withStep(generateTags.step)
   + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + withStep(buildBinaries.step)
   + withSteps([dockerBuilder.step(app) for app in apps])
@@ -153,7 +153,7 @@ local acceptance = {
   + triggers.main,
 
   pipeline('acceptance', depends_on=['build'])
-  + generateTags.step
+  + withStep(generateTags.step)
   + withStep(acceptance.step)
   + imagePullSecrets
   + withDockerInDockerService
@@ -161,7 +161,7 @@ local acceptance = {
   + triggers.main,
 
   pipeline('test', depends_on=['build'])
-  + generateTags.step
+  + withStep(generateTags.step)
   + withInlineStep('test', ['go test ./...'])
   + withDockerInDockerService
   + imagePullSecrets
@@ -169,7 +169,7 @@ local acceptance = {
 
   pipeline('launch influx argo workflow', depends_on=['build', 'acceptance'])
   + withInlineStep('check is latest commit', ['[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'])
-  + generateTags.step
+  + withStep(generateTags.step)
   + withStep(drone.step(
     'launch argo workflow',
     commands=[],
