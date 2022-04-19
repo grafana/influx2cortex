@@ -1,11 +1,22 @@
 local images = import 'images.libsonnet';
 {
-  step(name, commands, image=images._images.go, settings={}):: {
+  step(name,
+       commands,
+       image=images._images.go,
+       settings={},
+       environment={},
+       entrypoint=null,
+       depends_on=[],
+       dir=null):: {
     name: name,
-    commands: commands,
+    entrypoint: entrypoint,
+    commands: if (dir == null || dir == '') then commands else ['cd %s' % dir] + commands,
     image: image,
     settings: settings,
+    environment: environment,
+    depends_on: depends_on,
   },
+
 
   withStep(step):: {
     steps+: [step],

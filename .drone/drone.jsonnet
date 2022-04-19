@@ -130,7 +130,7 @@ pipeline('build')
   + imagePullSecrets
   + triggers.main,
 
-  pipeline('launch influx argo workflow', depends_on=['main'])
+  pipeline('launch influx argo workflow', depends_on=['build', 'acceptance'])
   + withInlineStep('check is latest commit', ['[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'])
   + withInlineStep('generate tags', generateTags)
   + withStep(drone.step(
