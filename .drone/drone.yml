@@ -29,6 +29,14 @@ steps:
   image: golang:1.17
   name: generate tags
   settings: {}
+- commands: []
+  image: plugins/gcr
+  name: build + push
+  settings:
+    json_key:
+      from_secret: gcr_admin
+    registry: us.gcr.io
+    repo: kubernetes-dev/influx2cortex
 - commands:
   - export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
   - echo $${ACCEPTANCE_DOCKER_TAG}
@@ -59,14 +67,6 @@ steps:
   image: golangci/golangci-lint:v1.45
   name: coverage + lint
   settings: {}
-- commands: []
-  image: plugins/gcr
-  name: build + push
-  settings:
-    json_key:
-      from_secret: gcr_admin
-    registry: us.gcr.io
-    repo: kubernetes-dev/influx2cortex
 trigger:
   event:
     include:
@@ -200,6 +200,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 3c469870e0af31fac28958c7b6650dc6a2b96df83dbfb416a1861cc578884c07
+hmac: 7e8cd1327d818fa53622457be5cb2f404c1368e6819910d34b648399430c4d11
 
 ...
