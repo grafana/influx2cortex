@@ -23,16 +23,6 @@ local apps = [
   'influx2cortex',
 ];
 
-local generateTags = [
-  'DOCKER_TAG=$(bash scripts/generate-tags.sh)',
-  // `.tag` is the file consumed by the `deploy-image` plugin.
-  'echo -n "$${DOCKER_TAG}" > .tag',
-  // `.tags` is the file consumed by the Docker (GCR inluded) plugins to tag the built Docker image accordingly.
-  'if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest" > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi',
-  // Print the contents of .tags for debugging purposes.
-  'tail -n +1 .tags',
-];
-
 local commentCoverageLintReport = [
   // Build drone utilities.
   'scripts/build-drone-utilities.sh',
@@ -53,9 +43,22 @@ local commentCoverageLintReport = [
 local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
 
 local buildBinaries = {
-  step: step('build binaries', $.commands, images._images),
+  step: step('build binaries', $.commands),
   commands: [
     'bash ./scripts/compile_commands.sh',
+  ],
+};
+
+local generateTags = {
+  step: step('generate tags', $.commands),
+  commands: [
+    'DOCKER_TAG=$(bash scripts/generate-tags.sh)',
+    // `.tag` is the file consumed by the `deploy-image` plugin.
+    'echo -n "$${DOCKER_TAG}" > .tag',
+    // `.tags` is the file consumed by the Docker (GCR inluded) plugins to tag the built Docker image accordingly.
+    'if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest" > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi',
+    // Print the contents of .tags for debugging purposes.
+    'tail -n +1 .tags',
   ],
 };
 
@@ -66,7 +69,6 @@ local dockerBuilder = {
     [],
     image=dockerBuilder.pluginName,
     settings=dockerBuilder.settings(app),
-    depends_on=[generateTags.step.name, buildBinaries.step.name]
   ),
 
   pluginName: 'plugins/gcr',
@@ -102,7 +104,7 @@ local withDockerInDockerService = {
     {
       name: 'docker',
       image: images._images.dind,
-      entrypoint: ['dockerd-rootless.sh'],
+      entrypoint: ['dockerd.sh'],
       command: [
         '--tls=false',
         '--host=tcp://0.0.0.0:2375',
@@ -112,7 +114,7 @@ local withDockerInDockerService = {
     } + withDockerSockVolume,
   ],
   environment+: {
-    DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: "-p 0.0.0.0:2376:2376/tcp",
+    DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: '-p 0.0.0.0:2376:2376/tcp',
   },
   volumes+: [
     {
@@ -140,8 +142,8 @@ local acceptance = {
 };
 
 [
-pipeline('build')
-  + withInlineStep('generate tags', generateTags)
+  pipeline('build')
+  + generateTags.step
   + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
   + withStep(buildBinaries.step)
   + withSteps([dockerBuilder.step(app) for app in apps])
@@ -151,15 +153,15 @@ pipeline('build')
   + triggers.main,
 
   pipeline('acceptance', depends_on=['build'])
-  + withInlineStep('generate tags', generateTags)
+  + generateTags.step
   + withStep(acceptance.step)
   + imagePullSecrets
   + withDockerInDockerService
   + triggers.pr
   + triggers.main,
-  
+
   pipeline('test', depends_on=['build'])
-  + withInlineStep('generate tags', generateTags)
+  + generateTags.step
   + withInlineStep('test', ['go test ./...'])
   + withDockerInDockerService
   + imagePullSecrets
@@ -167,7 +169,7 @@ pipeline('build')
 
   pipeline('launch influx argo workflow', depends_on=['build', 'acceptance'])
   + withInlineStep('check is latest commit', ['[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'])
-  + withInlineStep('generate tags', generateTags)
+  + generateTags.step
   + withStep(drone.step(
     'launch argo workflow',
     commands=[],
