@@ -45,7 +45,7 @@ local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
 local buildBinaries = {
   step: step('build binaries', $.commands),
   commands: [
-    'bash ./scripts/compile_commands.sh',
+    'bash ./scripts/compile-commands.sh',
   ],
 };
 

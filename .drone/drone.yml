@@ -44,7 +44,7 @@ steps:
     registry: us.gcr.io
     repo: kubernetes-dev/influx2cortex
 - commands:
-  - bash ./scripts/compile_commands.sh
+  - bash ./scripts/compile-commands.sh
   depends_on: []
   entrypoint: null
   environment: {}
@@ -277,6 +277,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 508da310e6b9198b0bf240308bf540a0c307215a875725dd9765685ad16b6b37
+hmac: b31a8e59b5acf738ee04ac4f406b17703ff95aa80c446c33cf972ce942801d62
 
 ...
