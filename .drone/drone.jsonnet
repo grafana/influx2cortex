@@ -104,7 +104,7 @@ local withDockerInDockerService = {
     {
       name: 'docker',
       image: images._images.dind,
-      entrypoint: ['dockerd.sh'],
+      entrypoint: ['dockerd'],
       command: [
         '--tls=false',
         '--host=tcp://0.0.0.0:2375',
