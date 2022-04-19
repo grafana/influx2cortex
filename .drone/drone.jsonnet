@@ -19,6 +19,10 @@ local dockerPluginBaseSettings = {
   },
 };
 
+local apps = [
+  'influx2cortex',
+];
+
 local generateTags = [
   'DOCKER_TAG=$(bash scripts/generate-tags.sh)',
   // `.tag` is the file consumed by the `deploy-image` plugin.
@@ -49,10 +53,39 @@ local commentCoverageLintReport = [
 local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
 
 local buildBinaries = {
-  step: step('build binaries', $.commands, image=images.go),
+  step: step('build binaries', $.commands, images._images),
   commands: [
     'bash ./scripts/compile_commands.sh',
   ],
+};
+
+local dockerBuilder = {
+  // step builds the pipeline step to build and push a docker image
+  step(app): step(
+    '%s: build and push' % app,
+    [],
+    image=dockerBuilder.pluginName,
+    settings=dockerBuilder.settings(app),
+    depends_on=[generateTags.step.name, buildBinaries.step.name]
+  ),
+
+  pluginName: 'plugins/gcr',
+
+  // settings generates the CI Pipeline step settings
+  settings(app): {
+    repo: $._repo(app),
+    registry: $._registry,
+    dockerfile: './cmd/Dockerfile',
+    json_key: { from_secret: 'gcr_admin' },
+    mirror: 'https://mirror.gcr.io',
+    build_args: ['cmd=' + app],
+  },
+
+  // image generates the image for the given app
+  image(app): $._registry + '/' + $._repo(app),
+
+  _repo(app):: 'kubernetes-dev/' + app,
+  _registry:: 'us.gcr.io',
 };
 
 local withDockerSockVolume = {
@@ -110,6 +143,8 @@ local acceptance = {
 pipeline('build')
   + withInlineStep('generate tags', generateTags)
   + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
+  + withStep(buildBinaries.step)
+  + withSteps([dockerBuilder.step(app) for app in apps])
   + imagePullSecrets
   + withDockerInDockerService
   + triggers.pr
