@@ -24,6 +24,13 @@ steps:
   entrypoint: null
   environment:
     environment:
+      ACCEPTANCE_CI: "true"
+      ACCEPTANCE_DOCKER_AUTH_PASSWORD:
+        from_secret: gcr_admin
+      ACCEPTANCE_DOCKER_AUTH_USERNAME: _json_key
+      ACCEPTANCE_DOCKER_HOST: docker
+      DOCKER_HOST: tcp://docker:2375
+      DOCKER_TLS_CERTDIR: ""
       GRAFANABOT_PAT:
         from_secret: gh_token
   image: golangci/golangci-lint:v1.45
@@ -246,6 +253,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 1fcff39a2cdd49a11069f24bab5aaad314e59be5d46e3ac896511b6453eca61a
+hmac: 5ddad1054325545e99b7ece1eafde260df3ce31b5530d2783a2d81e3058a6274
 
 ...

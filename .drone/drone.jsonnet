@@ -144,9 +144,15 @@ local acceptance = {
 [
   pipeline('check')
   + withInlineStep('test', ['bash ./scripts/test.sh'])
-  + withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
+  + drone.withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
     environment: {
       GRAFANABOT_PAT: { from_secret: 'gh_token' },
+      DOCKER_HOST: 'tcp://docker:2375',
+      DOCKER_TLS_CERTDIR: '',
+      ACCEPTANCE_CI: 'true',
+      ACCEPTANCE_DOCKER_HOST: 'docker',
+      ACCEPTANCE_DOCKER_AUTH_USERNAME: '_json_key',
+      ACCEPTANCE_DOCKER_AUTH_PASSWORD: { from_secret: 'gcr_admin' },
     },
   })
   + triggers.pr
