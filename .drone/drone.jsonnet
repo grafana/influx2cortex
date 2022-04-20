@@ -161,7 +161,7 @@ local acceptance = {
 
   pipeline('test', depends_on=['build'])
   + withStep(generateTags.step)
-  + withInlineStep('test', ['go test ./...'])
+  + withInlineStep('test', ['bash ./scripts/test.sh'])
   + withDockerInDockerService
   + imagePullSecrets
   + triggers.pr

@@ -161,7 +161,7 @@ steps:
   name: generate tags
   settings: {}
 - commands:
-  - go test ./...
+  - bash ./scripts/test.sh
   depends_on: []
   entrypoint: null
   environment: {}
@@ -260,6 +260,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: dbb899b438a8c193a7e9e525c1be123a897bf8e833415c878469aac094d4d6be
+hmac: d06346623098a6375c4946a8443597297a1939d6d4f3bd805b00eb6a4529f199
 
 ...
