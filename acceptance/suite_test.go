@@ -90,7 +90,7 @@ func (s *Suite) SetupSuite() {
 	s.cortexResource = s.startCortex()
 	s.influxProxyResource = s.startInfluxProxy()
 
-	influx_write_endpoint := fmt.Sprintf("http://%s:%s/", "0.0.0.0", s.influxProxyResource.GetPort("8080/tcp"))
+	influx_write_endpoint := fmt.Sprintf("http://%s:%s/", s.cfg.Docker.Host, s.influxProxyResource.GetPort("8080/tcp"))
 	influx_client := influxdb.NewClient(influx_write_endpoint, "my-token")
 	write_api := influx_client.WriteAPIBlocking("my-org", "my-bucket")
 	s.api.influx_client = influx_client
