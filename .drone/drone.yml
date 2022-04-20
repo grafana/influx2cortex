@@ -1,5 +1,45 @@
 ---
 depends_on: null
+kind: pipeline
+name: check
+steps:
+- commands:
+  - bash ./scripts/test.sh
+  depends_on: []
+  entrypoint: null
+  environment: {}
+  image: golang:1.17
+  name: test
+  settings: {}
+- commands:
+  - scripts/build-drone-utilities.sh
+  - go test -coverprofile=coverage.out ./...
+  - .drone/coverage > coverage_report.out
+  - scripts/generate-lint-report.sh
+  - cat coverage_report.out > report.out
+  - echo "" >> report.out
+  - cat lint.out >> report.out
+  - .drone/ghcomment -id "Go coverage report:" -bodyfile report.out
+  depends_on: []
+  entrypoint: null
+  environment:
+    environment:
+      GRAFANABOT_PAT:
+        from_secret: gh_token
+  image: golangci/golangci-lint:v1.45
+  name: coverage + lint
+  settings: {}
+trigger:
+  branch:
+  - main
+  event:
+    include:
+    - pull_request
+    - push
+type: docker
+---
+depends_on:
+- check
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
@@ -51,48 +91,6 @@ steps:
     mirror: https://mirror.gcr.io
     registry: us.gcr.io
     repo: kubernetes-dev/influx2cortex
-trigger:
-  branch:
-  - main
-  event:
-    include:
-    - pull_request
-    - push
-type: docker
----
-depends_on:
-- build
-image_pull_secrets:
-- dockerconfigjson
-kind: pipeline
-name: test
-steps:
-- commands:
-  - bash ./scripts/test.sh
-  depends_on: []
-  entrypoint: null
-  environment: {}
-  image: golang:1.17
-  name: test
-  settings: {}
-- commands:
-  - scripts/build-drone-utilities.sh
-  - go test -coverprofile=coverage.out ./...
-  - .drone/coverage > coverage_report.out
-  - scripts/generate-lint-report.sh
-  - cat coverage_report.out > report.out
-  - echo "" >> report.out
-  - cat lint.out >> report.out
-  - .drone/ghcomment -id "Go coverage report:" -bodyfile report.out
-  depends_on: []
-  entrypoint: null
-  environment:
-    environment:
-      GRAFANABOT_PAT:
-        from_secret: gh_token
-  image: golangci/golangci-lint:v1.45
-  name: coverage + lint
-  settings: {}
 trigger:
   branch:
   - main
@@ -248,6 +246,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: f8235948ae4786d7bff49431fb15b9bcd3ffabf25929ab0acbdb5585ca011c22
+hmac: 1fcff39a2cdd49a11069f24bab5aaad314e59be5d46e3ac896511b6453eca61a
 
 ...
