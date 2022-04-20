@@ -10,8 +10,13 @@ import (
 )
 
 func (s *Suite) Test_WriteLineProtocol_SingleMetric() {
+	result, _, err := s.api.querierClient.Query(context.Background(), "stat_avg", time.Now())
+	s.Require().NoError(err)
+	s.Require().Empty(result)
+	fmt.Println("Result: ", result)
+
 	line := fmt.Sprintf("stat,unit=temperature,status=measured avg=%f", 23.5)
-	err := s.api.writeAPI.WriteRecord(context.Background(), line)
+	err = s.api.writeAPI.WriteRecord(context.Background(), line)
 	s.Require().NoError(err)
 
 	expectedResult := model.Sample{
@@ -24,7 +29,7 @@ func (s *Suite) Test_WriteLineProtocol_SingleMetric() {
 		Value: 23.5,
 	}
 
-	result, _, err := s.api.querierClient.Query(context.Background(), "stat_avg", time.Now())
+	result, _, err = s.api.querierClient.Query(context.Background(), "stat_avg", time.Now())
 	s.Require().NoError(err)
 
 	resultVector := result.(model.Vector)
@@ -122,7 +127,7 @@ func (s *Suite) Test_WriteLineProtocol_MultipleMetrics() {
 	lines := []string{
 		"test_metric,test=1,tag=2 foo=1",
 		"test_metric_time,test=1,tag=4 sample=3.14",
-		"test_metric_duration,test=2 total=1",
+		"test_metric_duration,test=2 total=0.5",
 	}
 	for _, line := range lines {
 		err := s.api.writeAPI.WriteRecord(context.Background(), line)
@@ -135,7 +140,7 @@ func (s *Suite) Test_WriteLineProtocol_MultipleMetrics() {
 			model.LabelName("__proxy_source__"): "influx",
 			model.LabelName("test"):             "2",
 		},
-		Value: 1,
+		Value: 0.5,
 	}
 	expectedResult2 := model.Sample{
 		Metric: model.Metric{
