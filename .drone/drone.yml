@@ -62,6 +62,48 @@ type: docker
 ---
 depends_on:
 - build
+image_pull_secrets:
+- dockerconfigjson
+kind: pipeline
+name: test
+steps:
+- commands:
+  - bash ./scripts/test.sh
+  depends_on: []
+  entrypoint: null
+  environment: {}
+  image: golang:1.17
+  name: test
+  settings: {}
+- commands:
+  - scripts/build-drone-utilities.sh
+  - go test -coverprofile=coverage.out ./...
+  - .drone/coverage > coverage_report.out
+  - scripts/generate-lint-report.sh
+  - cat coverage_report.out > report.out
+  - echo "" >> report.out
+  - cat lint.out >> report.out
+  - .drone/ghcomment -id "Go coverage report:" -bodyfile report.out
+  depends_on: []
+  entrypoint: null
+  environment:
+    environment:
+      GRAFANABOT_PAT:
+        from_secret: gh_token
+  image: golangci/golangci-lint:v1.45
+  name: coverage + lint
+  settings: {}
+trigger:
+  branch:
+  - main
+  event:
+    include:
+    - pull_request
+    - push
+type: docker
+---
+depends_on:
+- build
 environment:
   DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
 image_pull_secrets:
@@ -114,60 +156,6 @@ steps:
   volumes:
   - name: dockersock
     path: /var/run
-trigger:
-  branch:
-  - main
-  event:
-    include:
-    - pull_request
-    - push
-type: docker
-volumes:
-- name: dockersock
-  temp: {}
----
-depends_on:
-- build
-environment:
-  DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
-image_pull_secrets:
-- dockerconfigjson
-kind: pipeline
-name: test
-services:
-- command:
-  - --tls=false
-  - --host=tcp://0.0.0.0:2375
-  - --registry-mirror=https://mirror.gcr.io
-  entrypoint:
-  - dockerd
-  image: docker:dind
-  name: docker
-  privileged: true
-  volumes:
-  - name: dockersock
-    path: /var/run
-steps:
-- commands:
-  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
-  - echo -n "$${DOCKER_TAG}" > .tag
-  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
-    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
-  - tail -n +1 .tags
-  depends_on: []
-  entrypoint: null
-  environment: {}
-  image: golang:1.17
-  name: generate tags
-  settings: {}
-- commands:
-  - bash ./scripts/test.sh
-  depends_on: []
-  entrypoint: null
-  environment: {}
-  image: golang:1.17
-  name: test
-  settings: {}
 trigger:
   branch:
   - main
@@ -260,6 +248,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: d06346623098a6375c4946a8443597297a1939d6d4f3bd805b00eb6a4529f199
+hmac: f8235948ae4786d7bff49431fb15b9bcd3ffabf25929ab0acbdb5585ca011c22
 
 ...

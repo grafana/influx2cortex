@@ -151,19 +151,22 @@ local acceptance = {
   + triggers.pr
   + triggers.main,
 
+  pipeline('test', depends_on=['build'])
+  + withInlineStep('test', ['bash ./scripts/test.sh'])
+  + drone.withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
+    environment: {
+      GRAFANABOT_PAT: { from_secret: 'gh_token' },
+    },
+  })
+  + imagePullSecrets
+  + triggers.pr
+  + triggers.main,
+
   pipeline('acceptance', depends_on=['build'])
   + withStep(generateTags.step)
   + withStep(acceptance.step)
   + imagePullSecrets
   + withDockerInDockerService
-  + triggers.pr
-  + triggers.main,
-
-  pipeline('test', depends_on=['build'])
-  + withStep(generateTags.step)
-  + withInlineStep('test', ['bash ./scripts/test.sh'])
-  + withDockerInDockerService
-  + imagePullSecrets
   + triggers.pr
   + triggers.main,
 
