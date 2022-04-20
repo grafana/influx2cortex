@@ -1,24 +1,9 @@
 ---
 depends_on: null
-environment:
-  DOCKERD_ROOTLESS_ROOTLESSKIT_FLAGS: -p 0.0.0.0:2376:2376/tcp
 image_pull_secrets:
 - dockerconfigjson
 kind: pipeline
 name: build
-services:
-- command:
-  - --tls=false
-  - --host=tcp://0.0.0.0:2375
-  - --registry-mirror=https://mirror.gcr.io
-  entrypoint:
-  - dockerd
-  image: docker:dind
-  name: docker
-  privileged: true
-  volumes:
-  - name: dockersock
-    path: /var/run
 steps:
 - commands:
   - DOCKER_TAG=$(bash scripts/generate-tags.sh)
@@ -74,9 +59,6 @@ trigger:
     - pull_request
     - push
 type: docker
-volumes:
-- name: dockersock
-  temp: {}
 ---
 depends_on:
 - build
@@ -277,6 +259,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 66c7f676db76c2cf7ca08e9d2349c456b23256bce56f71f989ae914a534e6704
+hmac: 267cef721c23597e057192f6523ac6c53b4054931fa71d89b93b690eea367b4c
 
 ...

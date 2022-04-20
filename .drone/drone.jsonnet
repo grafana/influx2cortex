@@ -148,7 +148,6 @@ local acceptance = {
   + withStep(buildBinaries.step)
   + withSteps([dockerBuilder.step(app) for app in apps])
   + imagePullSecrets
-  + withDockerInDockerService
   + triggers.pr
   + triggers.main,
 
