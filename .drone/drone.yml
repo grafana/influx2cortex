@@ -23,9 +23,8 @@ steps:
   depends_on: []
   entrypoint: null
   environment:
-    environment:
-      GRAFANABOT_PAT:
-        from_secret: gh_token
+    GRAFANABOT_PAT:
+      from_secret: gh_token
   image: golangci/golangci-lint:v1.45
   name: coverage + lint
   settings: {}
@@ -246,6 +245,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: dbae5bde2b1065c8f9b8565cc97495036b8aab7905e98c5b44052a724e777f0c
+hmac: c0dd5ac69bec61545c34ec1a9d63603a0e9c284a1bc48da8bb770ea53bbfef18
 
 ...

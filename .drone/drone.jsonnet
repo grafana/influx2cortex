@@ -145,9 +145,7 @@ local acceptance = {
   pipeline('check')
   + withInlineStep('test', ['go test ./...'])
   + drone.withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
-    environment: {
-      GRAFANABOT_PAT: { from_secret: 'gh_token' },
-    },
+    GRAFANABOT_PAT: { from_secret: 'gh_token' },
   })
   + triggers.pr
   + triggers.main,
