@@ -142,22 +142,21 @@ local acceptance = {
 };
 
 [
-  pipeline('build')
-  + withStep(generateTags.step)
-  + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
-  + withStep(buildBinaries.step)
-  + withSteps([dockerBuilder.step(app) for app in apps])
-  + imagePullSecrets
-  + triggers.pr
-  + triggers.main,
-
-  pipeline('test', depends_on=['build'])
+  pipeline('check')
   + withInlineStep('test', ['bash ./scripts/test.sh'])
-  + drone.withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
+  + withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
     environment: {
       GRAFANABOT_PAT: { from_secret: 'gh_token' },
     }
   })
+  + triggers.pr
+  + triggers.main,
+
+  pipeline('build', depends_on=['check'])
+  + withStep(generateTags.step)
+  + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
+  + withStep(buildBinaries.step)
+  + withSteps([dockerBuilder.step(app) for app in apps])
   + imagePullSecrets
   + triggers.pr
   + triggers.main,
