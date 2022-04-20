@@ -4,7 +4,7 @@ kind: pipeline
 name: check
 steps:
 - commands:
-  - bash ./scripts/test.sh
+  - go test ./...
   depends_on: []
   entrypoint: null
   environment: {}
@@ -246,6 +246,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 1fcff39a2cdd49a11069f24bab5aaad314e59be5d46e3ac896511b6453eca61a
+hmac: dbae5bde2b1065c8f9b8565cc97495036b8aab7905e98c5b44052a724e777f0c
 
 ...
