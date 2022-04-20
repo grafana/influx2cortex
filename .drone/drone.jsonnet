@@ -144,7 +144,7 @@ local acceptance = {
 [
   pipeline('check')
   + withInlineStep('test', ['bash ./scripts/test.sh'])
-  + withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
+  + drone.withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
     environment: {
       GRAFANABOT_PAT: { from_secret: 'gh_token' },
     }
