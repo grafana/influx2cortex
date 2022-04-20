@@ -1,3 +1,6 @@
+//go:build acceptance
+// +build acceptance
+
 package influxtest
 
 import (
@@ -10,6 +13,11 @@ import (
 )
 
 func (s *Suite) Test_WriteLineProtocol_SingleMetric() {
+	// Ensure that query results no result before line protocol is written
+	result, _, err := s.api.querierClient.Query(context.Background(), "stat_avg", time.Now())
+	s.Require().NoError(err)
+	s.Require().Empty(result)
+
 	line := fmt.Sprintf("stat,unit=temperature,status=measured avg=%f", 23.5)
 	err := s.api.writeAPI.WriteRecord(context.Background(), line)
 	s.Require().NoError(err)
@@ -35,7 +43,12 @@ func (s *Suite) Test_WriteLineProtocol_SingleMetric() {
 }
 
 func (s *Suite) Test_WriteLineProtocol_MultipleFields() {
-	err := s.api.writeAPI.WriteRecord(context.Background(), "measurement,t1=v1 f1=2,f2=3")
+	// Ensure that query results no result before line protocol is written
+	result, _, err := s.api.querierClient.Query(context.Background(), "{__name__=~\"measurement_.+\",__proxy_source__=\"influx\"}", time.Now())
+	s.Require().NoError(err)
+	s.Require().Empty(result)
+
+	err = s.api.writeAPI.WriteRecord(context.Background(), "measurement,t1=v1 f1=2,f2=3")
 	s.Require().NoError(err)
 
 	expectedResult1 := model.Sample{
@@ -55,7 +68,7 @@ func (s *Suite) Test_WriteLineProtocol_MultipleFields() {
 		Value: 3,
 	}
 
-	result, _, err := s.api.querierClient.Query(context.Background(), "{__name__=~\"measurement_.+\",__proxy_source__=\"influx\"}", time.Now())
+	result, _, err = s.api.querierClient.Query(context.Background(), "{__name__=~\"measurement_.+\",__proxy_source__=\"influx\"}", time.Now())
 	s.Require().NoError(err)
 	resultVector := result.(model.Vector)
 	s.Require().Len(resultVector, 2)
@@ -68,7 +81,11 @@ func (s *Suite) Test_WriteLineProtocol_MultipleFields() {
 }
 
 func (s *Suite) Test_WriteLineProtocol_MetricWithDifferentTags() {
-	var err error
+	// Ensure that query results no result before line protocol is written
+	result, _, err := s.api.querierClient.Query(context.Background(), "sample_metric", time.Now())
+	s.Require().NoError(err)
+	s.Require().Empty(result)
+
 	lines := []string{
 		"sample,tag1=val1 metric=3",
 		"sample,tag2=val2 metric=4",
@@ -104,7 +121,7 @@ func (s *Suite) Test_WriteLineProtocol_MetricWithDifferentTags() {
 		Value: 5,
 	}
 
-	result, _, err := s.api.querierClient.Query(context.Background(), "sample_metric", time.Now())
+	result, _, err = s.api.querierClient.Query(context.Background(), "sample_metric", time.Now())
 	s.Require().NoError(err)
 
 	resultVector := result.(model.Vector)
@@ -119,6 +136,17 @@ func (s *Suite) Test_WriteLineProtocol_MetricWithDifferentTags() {
 }
 
 func (s *Suite) Test_WriteLineProtocol_MultipleMetrics() {
+	// Ensure that query results no result before line protocol is written
+	result, _, err := s.api.querierClient.QueryRange(context.Background(),
+		"{__name__=~\"test_metric_.+\",__proxy_source__=\"influx\"}",
+		v1.Range{
+			Start: time.Now().Add(-time.Hour),
+			End:   time.Now(),
+			Step:  15 * time.Second,
+		})
+	s.Require().NoError(err)
+	s.Require().Empty(result)
+
 	lines := []string{
 		"test_metric,test=1,tag=2 foo=1",
 		"test_metric_time,test=1,tag=4 sample=3.14",
@@ -156,7 +184,7 @@ func (s *Suite) Test_WriteLineProtocol_MultipleMetrics() {
 		Value: 3.14,
 	}
 
-	result, _, err := s.api.querierClient.QueryRange(context.Background(),
+	result, _, err = s.api.querierClient.QueryRange(context.Background(),
 		"{__name__=~\"test_metric_.+\",__proxy_source__=\"influx\"}",
 		v1.Range{
 			Start: time.Now().Add(-time.Hour),
