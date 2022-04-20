@@ -164,6 +164,7 @@ local acceptance = {
   + withInlineStep('test', ['go test ./...'])
   + withDockerInDockerService
   + imagePullSecrets
+  + triggers.pr
   + triggers.main,
 
   pipeline('launch influx argo workflow', depends_on=['build', 'acceptance'])
