@@ -6,8 +6,8 @@ local vault = import 'lib/vault/vault.libsonnet';
 local pipeline = drone.pipeline;
 local step = drone.step;
 local withInlineStep = drone.withInlineStep;
-local withSteps = drone.withSteps;
 local withStep = drone.withStep;
+local withSteps = drone.withSteps;
 
 local dockerPluginName = 'plugins/gcr';
 
@@ -23,22 +23,29 @@ local apps = [
   'influx2cortex',
 ];
 
-local commentCoverageLintReport = [
-  // Build drone utilities.
-  'scripts/build-drone-utilities.sh',
-  // Generate the raw coverage report.
-  'go test -coverprofile=coverage.out ./...',
-  // Process the raw coverage report.
-  '.drone/coverage > coverage_report.out',
-  // Generate the lint report.
-  'scripts/generate-lint-report.sh',
-  // Combine the reports.
-  'cat coverage_report.out > report.out',
-  'echo "" >> report.out',
-  'cat lint.out >> report.out',
-  // Submit the comment to GitHub.
-  '.drone/ghcomment -id "Go coverage report:" -bodyfile report.out',
-];
+local commentCoverageLintReport = {
+  step: step('coverage + lint', $.commands, image=$.image, environment=$.environment),
+  commands: [
+    // Build drone utilities.
+    'scripts/build-drone-utilities.sh',
+    // Generate the raw coverage report.
+    'go test -coverprofile=coverage.out ./...',
+    // Process the raw coverage report.
+    '.drone/coverage > coverage_report.out',
+    // Generate the lint report.
+    'scripts/generate-lint-report.sh',
+    // Combine the reports.
+    'cat coverage_report.out > report.out',
+    'echo "" >> report.out',
+    'cat lint.out >> report.out',
+    // Submit the comment to GitHub.
+    '.drone/ghcomment -id "Go coverage report:" -bodyfile report.out',
+  ],
+  environment: {
+    GRAFANABOT_PAT: { from_secret: 'gh_token' },
+  },
+  image: images._images.goLint,
+};
 
 local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
 
@@ -144,11 +151,12 @@ local acceptance = {
 [
   pipeline('check')
   + withInlineStep('test', ['go test ./...'])
-  + withInlineStep('coverage + lint', commentCoverageLintReport, image=images._images.goLint, environment={
-      GRAFANABOT_PAT: { from_secret: 'gh_token' },
-  })
   + triggers.pr
   + triggers.main,
+
+  pipeline('coverageLintReport')
+  + withStep(commentCoverageLintReport.step)
+  + triggers.pr,
 
   pipeline('build', depends_on=['check'])
   + withStep(generateTags.step)

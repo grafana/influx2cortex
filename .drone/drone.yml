@@ -11,6 +11,19 @@ steps:
   image: golang:1.17
   name: test
   settings: {}
+trigger:
+  branch:
+  - main
+  event:
+    include:
+    - pull_request
+    - push
+type: docker
+---
+depends_on: null
+kind: pipeline
+name: coverageLintReport
+steps:
 - commands:
   - scripts/build-drone-utilities.sh
   - go test -coverprofile=coverage.out ./...
@@ -29,12 +42,9 @@ steps:
   name: coverage + lint
   settings: {}
 trigger:
-  branch:
-  - main
   event:
     include:
     - pull_request
-    - push
 type: docker
 ---
 depends_on:
@@ -245,6 +255,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: c0dd5ac69bec61545c34ec1a9d63603a0e9c284a1bc48da8bb770ea53bbfef18
+hmac: 050b78c80541641b1826b0f47abc08c9739d3911e655883c47a96b6fa6f2ed55
 
 ...
