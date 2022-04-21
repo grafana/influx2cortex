@@ -16,6 +16,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	DefaultMaxRequestSizeBytes = 100 << 10 // 100 KB
+)
+
 // ProxyConfig holds objects needed to start running an influx2cortex proxy
 // server.
 type ProxyConfig struct {
@@ -34,6 +38,8 @@ type ProxyConfig struct {
 	// Registerer registers metrics Collectors. If left nil, will use
 	// prometheus.DefaultRegisterer.
 	Registerer prometheus.Registerer
+	// MaxRequestSizeBytes limits the size of an incoming request. Any value less than or equal to 0 means no limit.
+	MaxRequestSizeBytes int
 }
 
 func (c *ProxyConfig) RegisterFlags(flags *flag.FlagSet) {
@@ -41,6 +47,7 @@ func (c *ProxyConfig) RegisterFlags(flags *flag.FlagSet) {
 	c.RemoteWriteConfig.RegisterFlags(flags)
 
 	flags.BoolVar(&c.EnableAuth, "auth.enable", true, "require X-Scope-OrgId header")
+	flags.IntVar(&c.MaxRequestSizeBytes, "max.request.size.bytes", DefaultMaxRequestSizeBytes, "limit the size of incoming batches; 0 for no limit")
 }
 
 // ProxyService is the actual Influx Proxy dskit service.
@@ -89,7 +96,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 		return nil, fmt.Errorf("failed to create http server: %w", err)
 	}
 
-	api, err := NewAPI(conf.Logger, client, recorder)
+	api, err := NewAPI(conf, client, recorder)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create influx API: %w", err)
 	}

@@ -12,9 +12,10 @@ import (
 )
 
 type API struct {
-	logger   log.Logger
-	client   remotewrite.Client
-	recorder Recorder
+	logger              log.Logger
+	client              remotewrite.Client
+	recorder            Recorder
+	maxRequestSizeBytes int
 }
 
 func (a *API) Register(router *mux.Router) {
@@ -25,21 +26,20 @@ func (a *API) Register(router *mux.Router) {
 	registerer.RegisterRoute("/api/v2/write", http.HandlerFunc(a.handleSeriesPush), http.MethodPost)
 }
 
-func NewAPI(logger log.Logger, client remotewrite.Client, recorder Recorder) (*API, error) {
+func NewAPI(conf ProxyConfig, client remotewrite.Client, recorder Recorder) (*API, error) {
 	return &API{
-		logger:   logger,
-		client:   client,
-		recorder: recorder,
+		logger:              conf.Logger,
+		client:              client,
+		recorder:            recorder,
+		maxRequestSizeBytes: conf.MaxRequestSizeBytes,
 	}, nil
 }
 
 // HandlerForInfluxLine is a http.Handler which accepts Influx Line protocol and converts it to WriteRequests.
 func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
-	maxSize := 100 << 10 // TODO: Make this a CLI flag. 100KB for now.
-
 	beforeConversion := time.Now()
 
-	ts, err := parseInfluxLineReader(r.Context(), r, maxSize)
+	ts, err := parseInfluxLineReader(r.Context(), r, a.maxRequestSizeBytes)
 	if err != nil {
 		a.handleError(w, r, err)
 		return

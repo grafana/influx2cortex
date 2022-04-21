@@ -87,7 +87,10 @@ func TestHandleError(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			recorder := httptest.NewRecorder()
 			remoteWriteMock := &remotewritemock.Client{}
-			api, err := NewAPI(log.NewNopLogger(), remoteWriteMock, tt.recorderMock())
+			conf := ProxyConfig{
+				Logger: log.NewNopLogger(),
+			}
+			api, err := NewAPI(conf, remoteWriteMock, tt.recorderMock())
 			require.NoError(t, err)
 
 			api.handleError(recorder, tt.req, tt.err)
