@@ -36,11 +36,15 @@ func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([
 	reader, err := batchReadCloser(r.Body, encoding, int64(maxSize))
 	if err != nil {
 		return nil, errorx.BadRequest{Msg: "gzip compression error", Err: err}
-
 	}
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, errorx.BadRequest{Msg: "can't read body", Err: err}
+	}
+
+	err = reader.Close()
+	if err != nil {
+		return nil, errorx.BadRequest{Msg: "problem reading body", Err: err}
 	}
 
 	points, err := models.ParsePointsWithPrecision(data, time.Now().UTC(), precision)

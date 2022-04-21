@@ -18,12 +18,13 @@ import (
 
 func TestHandleSeriesPush(t *testing.T) {
 	tests := []struct {
-		name            string
-		url             string
-		data            string
-		expectedCode    int
-		remoteWriteMock func() *remotewritemock.Client
-		recorderMock    func() *MockRecorder
+		name                string
+		url                 string
+		data                string
+		expectedCode        int
+		remoteWriteMock     func() *remotewritemock.Client
+		recorderMock        func() *MockRecorder
+		maxRequestSizeBytes int
 	}{
 		{
 			name:         "POST",
@@ -57,6 +58,7 @@ func TestHandleSeriesPush(t *testing.T) {
 				recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
 				return recorderMock
 			},
+			maxRequestSizeBytes: DefaultMaxRequestSizeBytes,
 		},
 		{
 			name:         "POST with precision",
@@ -90,6 +92,7 @@ func TestHandleSeriesPush(t *testing.T) {
 				recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
 				return recorderMock
 			},
+			maxRequestSizeBytes: DefaultMaxRequestSizeBytes,
 		},
 		{
 			name:         "invalid parsing error handling",
@@ -110,6 +113,7 @@ func TestHandleSeriesPush(t *testing.T) {
 				recorderMock.On("measureConversionDuration", 0).Return(nil)
 				return recorderMock
 			},
+			maxRequestSizeBytes: DefaultMaxRequestSizeBytes,
 		},
 		{
 			name:         "invalid query params",
@@ -130,6 +134,7 @@ func TestHandleSeriesPush(t *testing.T) {
 				recorderMock.On("measureConversionDuration", 0).Return(nil)
 				return recorderMock
 			},
+			maxRequestSizeBytes: DefaultMaxRequestSizeBytes,
 		},
 		{
 			name:         "internal server error",
@@ -150,6 +155,26 @@ func TestHandleSeriesPush(t *testing.T) {
 				recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
 				return recorderMock
 			},
+			maxRequestSizeBytes: DefaultMaxRequestSizeBytes,
+		},
+		{
+			name:         "max batch size violated",
+			url:          "/write",
+			data:         "measurement,t1=v1 f1=2 0123456789",
+			expectedCode: http.StatusBadRequest,
+			remoteWriteMock: func() *remotewritemock.Client {
+				return &remotewritemock.Client{}
+			},
+			recorderMock: func() *MockRecorder {
+				recorderMock := &MockRecorder{}
+				recorderMock.On("measureMetricsParsed", 0).Return(nil)
+				recorderMock.On("measureMetricsWritten", 0).Return(nil)
+				recorderMock.On("measureProxyErrors", "errorx.BadRequest").Return(nil)
+				recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
+
+				return recorderMock
+			},
+			maxRequestSizeBytes: 8,
 		},
 	}
 
@@ -158,7 +183,11 @@ func TestHandleSeriesPush(t *testing.T) {
 			req := httptest.NewRequest("POST", tt.url, bytes.NewReader([]byte(tt.data)))
 			rec := httptest.NewRecorder()
 			logger := log.NewNopLogger()
-			api, err := NewAPI(logger, tt.remoteWriteMock(), tt.recorderMock())
+			conf := ProxyConfig{
+				Logger:              logger,
+				MaxRequestSizeBytes: tt.maxRequestSizeBytes,
+			}
+			api, err := NewAPI(conf, tt.remoteWriteMock(), tt.recorderMock())
 			require.NoError(t, err)
 
 			api.handleSeriesPush(rec, req)
