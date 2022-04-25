@@ -49,13 +49,6 @@ local commentCoverageLintReport = {
 
 local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
 
-local buildBinaries = {
-  step: step('build binaries', $.commands),
-  commands: [
-    'bash ./scripts/compile-commands.sh',
-  ],
-};
-
 local generateTags = {
   step: step('generate tags', $.commands),
   commands: [
@@ -69,13 +62,13 @@ local generateTags = {
   ],
 };
 
-local dockerBuilder = {
+local buildAndPushImages = {
   // step builds the pipeline step to build and push a docker image
   step(app): step(
     '%s: build and push' % app,
     [],
-    image=dockerBuilder.pluginName,
-    settings=dockerBuilder.settings(app),
+    image=buildAndPushImages.pluginName,
+    settings=buildAndPushImages.settings(app),
   ),
 
   pluginName: 'plugins/gcr',
@@ -84,7 +77,7 @@ local dockerBuilder = {
   settings(app): {
     repo: $._repo(app),
     registry: $._registry,
-    dockerfile: './cmd/Dockerfile',
+    dockerfile: './Dockerfile',
     json_key: { from_secret: 'gcr_admin' },
     mirror: 'https://mirror.gcr.io',
     build_args: ['cmd=' + app],
@@ -160,9 +153,7 @@ local acceptance = {
 
   pipeline('build', depends_on=['check'])
   + withStep(generateTags.step)
-  + withInlineStep('build + push', [], image=dockerPluginName, settings=dockerPluginBaseSettings)
-  + withStep(buildBinaries.step)
-  + withSteps([dockerBuilder.step(app) for app in apps])
+  + withSteps([buildAndPushImages.step(app) for app in apps])
   + imagePullSecrets
   + triggers.pr
   + triggers.main,

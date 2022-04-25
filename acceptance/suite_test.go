@@ -197,7 +197,6 @@ func (s *Suite) startInfluxProxy() *dockertest.Resource {
 		Repository: repo,
 		Tag:        s.cfg.Docker.Tag,
 		Cmd: []string{
-			"/app/influx2cortex",
 			"-server.http-listen-address=0.0.0.0",
 			"-server.http-listen-port=8080",
 			"-auth.enable=false",

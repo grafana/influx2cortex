@@ -71,30 +71,11 @@ steps:
   entrypoint: null
   environment: {}
   image: plugins/gcr
-  name: build + push
-  settings:
-    json_key:
-      from_secret: gcr_admin
-    registry: us.gcr.io
-    repo: kubernetes-dev/influx2cortex
-- commands:
-  - bash ./scripts/compile-commands.sh
-  depends_on: []
-  entrypoint: null
-  environment: {}
-  image: golang:1.17
-  name: build binaries
-  settings: {}
-- commands: []
-  depends_on: []
-  entrypoint: null
-  environment: {}
-  image: plugins/gcr
   name: 'influx2cortex: build and push'
   settings:
     build_args:
     - cmd=influx2cortex
-    dockerfile: ./cmd/Dockerfile
+    dockerfile: ./Dockerfile
     json_key:
       from_secret: gcr_admin
     mirror: https://mirror.gcr.io
@@ -255,6 +236,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 050b78c80541641b1826b0f47abc08c9739d3911e655883c47a96b6fa6f2ed55
+hmac: 0b037a968dd93607aa0cdb5d599858736d9dee5fb072a26ff6847cd441df18ee
 
 ...
