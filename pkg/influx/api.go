@@ -35,7 +35,7 @@ func NewAPI(conf ProxyConfig, client remotewrite.Client, recorder Recorder) (*AP
 	}, nil
 }
 
-// HandlerForInfluxLine is a http.Handler which accepts Influx Line protocol and converts it to WriteRequests.
+// HandlerForInfluxLine is a http.Handler which accepts Influx line protocol and converts it to WriteRequests.
 func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	beforeConversion := time.Now()
 
