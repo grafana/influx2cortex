@@ -7,8 +7,8 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/grafana/influx2cortex/pkg/errorx"
+	"github.com/grafana/mimir/pkg/mimirpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,20 +20,20 @@ func TestParseInfluxLineReader(t *testing.T) {
 		name           string
 		url            string
 		data           string
-		expectedResult []cortexpb.TimeSeries
+		expectedResult []mimirpb.TimeSeries
 	}{
 		{
 			name: "parse simple line",
 			url:  "/",
 			data: "measurement,t1=v1 f1=\"v2\" 1465839830100400200",
-			expectedResult: []cortexpb.TimeSeries{
+			expectedResult: []mimirpb.TimeSeries{
 				{
-					Labels: []cortexpb.LabelAdapter{
+					Labels: []mimirpb.LabelAdapter{
 						{Name: "__name__", Value: "measurement_f1"},
 						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "t1", Value: "v1"},
 					},
-					Samples: []cortexpb.Sample{{Value: 2, TimestampMs: 1465839830100}},
+					Samples: []mimirpb.Sample{{Value: 2, TimestampMs: 1465839830100}},
 				},
 			},
 		},
@@ -41,16 +41,16 @@ func TestParseInfluxLineReader(t *testing.T) {
 			name: "parse multiple tags",
 			url:  "/",
 			data: "measurement,t1=v1,t2=v2,t3=v3 f1=36 1465839830100400200",
-			expectedResult: []cortexpb.TimeSeries{
+			expectedResult: []mimirpb.TimeSeries{
 				{
-					Labels: []cortexpb.LabelAdapter{
+					Labels: []mimirpb.LabelAdapter{
 						{Name: "__name__", Value: "measurement_f1"},
 						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "t1", Value: "v1"},
 						{Name: "t2", Value: "v2"},
 						{Name: "t3", Value: "v3"},
 					},
-					Samples: []cortexpb.Sample{{Value: 36, TimestampMs: 1465839830100}},
+					Samples: []mimirpb.Sample{{Value: 36, TimestampMs: 1465839830100}},
 				},
 			},
 		},
@@ -58,30 +58,30 @@ func TestParseInfluxLineReader(t *testing.T) {
 			name: "parse multiple fields",
 			url:  "/",
 			data: "measurement,t1=v1 f1=3.0,f2=365,f3=0 1465839830100400200",
-			expectedResult: []cortexpb.TimeSeries{
+			expectedResult: []mimirpb.TimeSeries{
 				{
-					Labels: []cortexpb.LabelAdapter{
+					Labels: []mimirpb.LabelAdapter{
 						{Name: "__name__", Value: "measurement_f1"},
 						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "t1", Value: "v1"},
 					},
-					Samples: []cortexpb.Sample{{Value: 3, TimestampMs: 1465839830100}},
+					Samples: []mimirpb.Sample{{Value: 3, TimestampMs: 1465839830100}},
 				},
 				{
-					Labels: []cortexpb.LabelAdapter{
+					Labels: []mimirpb.LabelAdapter{
 						{Name: "__name__", Value: "measurement_f2"},
 						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "t1", Value: "v1"},
 					},
-					Samples: []cortexpb.Sample{{Value: 365, TimestampMs: 1465839830100}},
+					Samples: []mimirpb.Sample{{Value: 365, TimestampMs: 1465839830100}},
 				},
 				{
-					Labels: []cortexpb.LabelAdapter{
+					Labels: []mimirpb.LabelAdapter{
 						{Name: "__name__", Value: "measurement_f3"},
 						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "t1", Value: "v1"},
 					},
-					Samples: []cortexpb.Sample{{Value: 0, TimestampMs: 1465839830100}},
+					Samples: []mimirpb.Sample{{Value: 0, TimestampMs: 1465839830100}},
 				},
 			},
 		},
@@ -89,14 +89,14 @@ func TestParseInfluxLineReader(t *testing.T) {
 			name: "parse invalid char conversion",
 			url:  "/",
 			data: "*measurement,#t1?=v1 f1=0 1465839830100400200",
-			expectedResult: []cortexpb.TimeSeries{
+			expectedResult: []mimirpb.TimeSeries{
 				{
-					Labels: []cortexpb.LabelAdapter{
+					Labels: []mimirpb.LabelAdapter{
 						{Name: "__name__", Value: "_measurement_f1"},
 						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "_t1_", Value: "v1"},
 					},
-					Samples: []cortexpb.Sample{{Value: 0, TimestampMs: 1465839830100}},
+					Samples: []mimirpb.Sample{{Value: 0, TimestampMs: 1465839830100}},
 				},
 			},
 		},

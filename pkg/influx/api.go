@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/go-kit/log"
 	"github.com/gorilla/mux"
-	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/route"
+	"github.com/grafana/mimir-proxies/pkg/remotewrite"
+	"github.com/grafana/mimir/pkg/mimirpb"
 )
 
 type API struct {
@@ -49,13 +49,13 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	a.recorder.measureConversionDuration(time.Since(beforeConversion))
 
 	// Sigh, a write API optimisation needs me to jump through hoops.
-	pts := make([]cortexpb.PreallocTimeseries, 0, len(ts))
+	pts := make([]mimirpb.PreallocTimeseries, 0, len(ts))
 	for i := range ts {
-		pts = append(pts, cortexpb.PreallocTimeseries{
+		pts = append(pts, mimirpb.PreallocTimeseries{
 			TimeSeries: &ts[i],
 		})
 	}
-	rwReq := &cortexpb.WriteRequest{
+	rwReq := &mimirpb.WriteRequest{
 		Timeseries: pts,
 	}
 
