@@ -93,7 +93,7 @@ func TestHandleError(t *testing.T) {
 			api, err := NewAPI(conf, remoteWriteMock, tt.recorderMock())
 			require.NoError(t, err)
 
-			api.handleError(recorder, tt.req, tt.err)
+			api.handleError(recorder, tt.req, tt.err, api.logger)
 			require.Equal(t, tt.expectedStatus, recorder.Code)
 		})
 	}

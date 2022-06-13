@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/grafana/influx2cortex/pkg/errorx"
 	"github.com/pkg/errors"
@@ -26,7 +27,7 @@ func tryUnwrap(err error) error {
 // considered internal errors. Please do not try to fix error categorization in
 // this function. All client errors should be categorized as an errorx at the
 // site where they are thrown.
-func (a *API) handleError(w http.ResponseWriter, r *http.Request, err error) {
+func (a *API) handleError(w http.ResponseWriter, r *http.Request, err error, logger log.Logger) {
 	var statusCode int
 	var httpErrString string
 	var errx errorx.Error
@@ -60,9 +61,9 @@ func (a *API) handleError(w http.ResponseWriter, r *http.Request, err error) {
 		statusCode = http.StatusInternalServerError
 	}
 	if statusCode < 500 {
-		_ = level.Info(a.logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(err))
+		_ = level.Info(logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(err))
 	} else if statusCode >= 500 {
-		_ = level.Warn(a.logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(err))
+		_ = level.Warn(logger).Log("msg", httpErrString, "response_code", statusCode, "err", tryUnwrap(err))
 	}
 	a.recorder.measureProxyErrors(fmt.Sprintf("%T", err))
 	http.Error(w, httpErrString, statusCode)
