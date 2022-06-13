@@ -50,6 +50,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	if userID, err := user.ExtractUserID(r.Context()); err == nil {
 		logger = log.With(logger, "userID", userID)
 	}
+	logger = log.With(logger, "path", r.URL.EscapedPath())
 
 	beforeConversion := time.Now()
 
@@ -79,6 +80,6 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	}
 	a.recorder.measureMetricsWritten(len(rwReq.Timeseries))
 	statusCode := http.StatusNoContent
-	_ = level.Info(logger).Log("path", r.URL.EscapedPath(), "response_code", statusCode)
+	_ = level.Info(logger).Log("response_code", statusCode)
 	w.WriteHeader(statusCode) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
 }
