@@ -2,7 +2,6 @@ package influx
 
 import (
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
@@ -41,8 +40,7 @@ func NewAPI(conf ProxyConfig, client remotewrite.Client, recorder Recorder) (*AP
 
 // HandlerForInfluxLine is a http.Handler which accepts Influx Line protocol and converts it to WriteRequests.
 func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
-	var logger log.Logger
-
+	logger := a.logger
 	if traceID, ok := middleware.ExtractTraceID(r.Context()); ok {
 		logger = log.With(logger, "traceID", traceID)
 	}
@@ -81,18 +79,6 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	}
 	a.recorder.measureMetricsWritten(len(rwReq.Timeseries))
 	statusCode := http.StatusNoContent
-	_ = level.Info(logger).Log("uri", redactAPIKey(r.URL).RequestURI(), "response_code", statusCode)
+	_ = level.Info(logger).Log("path", r.URL.EscapedPath(), "response_code", statusCode)
 	w.WriteHeader(statusCode) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
-}
-
-// redactAPIKey modifies the provided URL's query redacting the api_key param if it's not empty and it's not grafana-labs
-// Then it returns the same URL (notice that the original URL is modified too)
-// copied from middleware logging.go.
-func redactAPIKey(u *url.URL) *url.URL {
-	reqQuery := u.Query()
-	if reqQuery.Get("api_key") != "" && reqQuery.Get("api_key") != "grafana-labs" {
-		reqQuery.Set("api_key", "redacted")
-		u.RawQuery = reqQuery.Encode()
-	}
-	return u
 }
