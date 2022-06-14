@@ -6,9 +6,12 @@ import (
 
 	"github.com/cortexproject/cortex/pkg/cortexpb"
 	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/gorilla/mux"
 	"github.com/grafana/influx2cortex/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/route"
+	"github.com/grafana/influx2cortex/pkg/server/middleware"
+	"github.com/weaveworks/common/user"
 )
 
 type API struct {
@@ -37,11 +40,23 @@ func NewAPI(conf ProxyConfig, client remotewrite.Client, recorder Recorder) (*AP
 
 // HandlerForInfluxLine is a http.Handler which accepts Influx Line protocol and converts it to WriteRequests.
 func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
+	logger := a.logger
+	if traceID, ok := middleware.ExtractTraceID(r.Context()); ok {
+		logger = log.With(logger, "traceID", traceID)
+	}
+	if orgID, err := user.ExtractOrgID(r.Context()); err == nil {
+		logger = log.With(logger, "orgID", orgID)
+	}
+	if userID, err := user.ExtractUserID(r.Context()); err == nil {
+		logger = log.With(logger, "userID", userID)
+	}
+	logger = log.With(logger, "path", r.URL.EscapedPath())
+
 	beforeConversion := time.Now()
 
 	ts, err := parseInfluxLineReader(r.Context(), r, a.maxRequestSizeBytes)
 	if err != nil {
-		a.handleError(w, r, err)
+		a.handleError(w, r, err, logger)
 		return
 	}
 
@@ -60,10 +75,11 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := a.client.Write(r.Context(), rwReq); err != nil {
-		a.handleError(w, r, err)
+		a.handleError(w, r, err, logger)
 		return
 	}
 	a.recorder.measureMetricsWritten(len(rwReq.Timeseries))
-
-	w.WriteHeader(http.StatusNoContent) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
+	statusCode := http.StatusNoContent
+	_ = level.Info(logger).Log("response_code", statusCode)
+	w.WriteHeader(statusCode) // Needed for Telegraf, otherwise it tries to marshal JSON and considers the write a failure.
 }
