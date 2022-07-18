@@ -8,7 +8,11 @@ While today it only accepts writes, I have plans to add Flux read support too!
 
 ## Influx Line Protocol ingestion and translation
 
-TODO
+The Influx write proxy accepts the ingest requests and then translates the incoming Influx metrics into Prometheus metrics. The name mapping scheme for the looks as follows:
+
+    Influx metric: cpu_load_short,host=server01,region=us-west value=0.64 1658139550000000000
+
+    Prometheus metric: cpu_load_short{__proxy_source__="influx",host="server01",region="us-west"}
 
 ## Building
 
@@ -54,10 +58,18 @@ $ dist/influx2cortex \
 
 Details of configurable options are available in the `-help` output.
 
-
 ### Example metric send
 
-TODO
+```
+$ NOW=`date +%s000000000` ; curl -H "Content-Type: application/json" "http://localhost:8007/api/v1/push/influx/write" -d 'cpu_load_short,host=server01,region=us-west value=0.64 $NOW'
+```
+
+The data can now be queried from Mimir via the HTTP API or via Grafana. To find the above series via the HTTP API we can issue:
+
+```
+$ curl -G http://localhost:9009/prometheus/api/v1/series -d 'match[]=cpu_load_short'
+{"status":"success","data":[{"__name__":"cpu_load_short","__proxy_source__":"influx","host":"server01","region":"us-west"}]}
+```
 
 ## Grafana Cloud as a destination
 
