@@ -3,6 +3,9 @@
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
+build: ## Build local binaries
+	bash ./scripts/compile_commands.sh
+
 build-local: ## Builds local versions of images
 	bash ./scripts/build-local-images.sh
 
