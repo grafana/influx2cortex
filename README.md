@@ -85,8 +85,3 @@ The _grafana_net_instance_ is server part of the URL to push Prometheus metrics.
 
 The influx2cortex binary exposes internal metrics on a `/metrics` endpoint on a separate port which can be scraped by a local prometheus installation. This is configurable with the `internalserver` command line options.
 
-## Roadmap
-
-1. Add tests for this.
-2. Add the read path.
-3. Support out of order ingests.
