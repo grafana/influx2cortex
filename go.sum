@@ -922,6 +922,8 @@ github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/ad
 github.com/grafana/dskit v0.0.0-20211021180445-3bd016e9d7f1/go.mod h1:uPG2nyK4CtgNDmWv7qyzYcdI+S90kHHRWvHnBtEMBXM=
 github.com/grafana/dskit v0.0.0-20220211095946-19921f863583 h1:UCLVGNJptATClAs4CbClVmn5b4YA6GTG3yoCObI//0E=
 github.com/grafana/dskit v0.0.0-20220211095946-19921f863583/go.mod h1:q51XdMLLHNZJSG6KOGujC20ed2OoLFdx0hBmOEVfRs0=
+github.com/grafana/mimir-proxies v0.0.0-20220802081420-7458681c04bf h1:jXs2EMSWVKGsV5G/WS60cnUKB4TYzFtQr0SMjgYAl4M=
+github.com/grafana/mimir-proxies v0.0.0-20220802081420-7458681c04bf/go.mod h1:uuT0qTJwBPvI5tUCwBt5qVvuk4H4ziN6creO623keM4=
 github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7/go.mod h1:FecbI9+v66THATjSRHfNgh1IVFe/9kFxbXtjV0ctIMA=
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.0/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
