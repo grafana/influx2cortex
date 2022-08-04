@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/grafana/influx2cortex/pkg/errorx"
-	"github.com/grafana/influx2cortex/pkg/remotewrite/remotewritemock"
+	"github.com/grafana/mimir-proxies/pkg/remotewrite/remotewritemock"
 	"github.com/stretchr/testify/require"
 )
 

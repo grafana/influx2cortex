@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cortexproject/cortex/pkg/cortexpb"
+	"github.com/grafana/mimir/pkg/mimirpb"
 	"github.com/go-kit/log"
 	"github.com/grafana/influx2cortex/pkg/errorx"
-	"github.com/grafana/influx2cortex/pkg/remotewrite/remotewritemock"
+	"github.com/grafana/mimir-proxies/pkg/remotewrite/remotewritemock"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -33,16 +33,16 @@ func TestHandleSeriesPush(t *testing.T) {
 			expectedCode: http.StatusNoContent,
 			remoteWriteMock: func() *remotewritemock.Client {
 				remoteWriteMock := &remotewritemock.Client{}
-				remoteWriteMock.On("Write", mock.Anything, &cortexpb.WriteRequest{
-					Timeseries: []cortexpb.PreallocTimeseries{
+				remoteWriteMock.On("Write", mock.Anything, &mimirpb.WriteRequest{
+					Timeseries: []mimirpb.PreallocTimeseries{
 						{
-							TimeSeries: &cortexpb.TimeSeries{
-								Labels: []cortexpb.LabelAdapter{
+							TimeSeries: &mimirpb.TimeSeries{
+								Labels: []mimirpb.LabelAdapter{
 									{Name: "__name__", Value: "measurement_f1"},
 									{Name: "__proxy_source__", Value: "influx"},
 									{Name: "t1", Value: "v1"},
 								},
-								Samples: []cortexpb.Sample{
+								Samples: []mimirpb.Sample{
 									{Value: 2, TimestampMs: 1465839830100},
 								},
 							},
@@ -67,16 +67,16 @@ func TestHandleSeriesPush(t *testing.T) {
 			expectedCode: http.StatusNoContent,
 			remoteWriteMock: func() *remotewritemock.Client {
 				remoteWriteMock := &remotewritemock.Client{}
-				remoteWriteMock.On("Write", mock.Anything, &cortexpb.WriteRequest{
-					Timeseries: []cortexpb.PreallocTimeseries{
+				remoteWriteMock.On("Write", mock.Anything, &mimirpb.WriteRequest{
+					Timeseries: []mimirpb.PreallocTimeseries{
 						{
-							TimeSeries: &cortexpb.TimeSeries{
-								Labels: []cortexpb.LabelAdapter{
+							TimeSeries: &mimirpb.TimeSeries{
+								Labels: []mimirpb.LabelAdapter{
 									{Name: "__name__", Value: "measurement_f1"},
 									{Name: "__proxy_source__", Value: "influx"},
 									{Name: "t1", Value: "v1"},
 								},
-								Samples: []cortexpb.Sample{
+								Samples: []mimirpb.Sample{
 									{Value: 2, TimestampMs: 1465839830100},
 								},
 							},

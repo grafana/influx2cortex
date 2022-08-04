@@ -10,9 +10,9 @@ import (
 	"github.com/go-kit/log"
 	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
-	"github.com/grafana/influx2cortex/pkg/remotewrite"
-	"github.com/grafana/influx2cortex/pkg/server"
-	"github.com/grafana/influx2cortex/pkg/server/middleware"
+	"github.com/grafana/mimir-proxies/pkg/remotewrite"
+	"github.com/grafana/mimir-proxies/pkg/server"
+	"github.com/grafana/mimir-proxies/pkg/server/middleware"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
