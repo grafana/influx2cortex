@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/grafana/influx2cortex/pkg/util/bytereplacer"
+	"github.com/grafana/mimir-proxies/pkg/util/bytereplacer"
 
 	"github.com/gorilla/mux"
 )
