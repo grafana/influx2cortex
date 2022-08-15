@@ -10,8 +10,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/cortexproject/cortex/pkg/cortexpb"
-	"github.com/cortexproject/cortex/pkg/util"
+	"github.com/grafana/mimir/pkg/mimirpb"
+	"github.com/grafana/mimir/pkg/util"
 	"github.com/grafana/influx2cortex/pkg/errorx"
 	io2 "github.com/influxdata/influxdb/v2/kit/io"
 	"github.com/influxdata/influxdb/v2/models"
@@ -21,7 +21,7 @@ import (
 const internalLabel = "__proxy_source__"
 
 // parseInfluxLineReader parses a Influx Line Protocol request from an io.Reader.
-func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([]cortexpb.TimeSeries, error) {
+func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([]mimirpb.TimeSeries, error) {
 	qp := r.URL.Query()
 	precision := qp.Get("precision")
 	if precision == "" {
@@ -54,14 +54,14 @@ func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([
 	return writeRequestFromInfluxPoints(points)
 }
 
-func writeRequestFromInfluxPoints(points []models.Point) ([]cortexpb.TimeSeries, error) {
+func writeRequestFromInfluxPoints(points []models.Point) ([]mimirpb.TimeSeries, error) {
 	// Technically the same series should not be repeated. We should put all the samples for
 	// a series in single client.Timeseries. Having said that doing it is not very optimal and the
 	// occurrence of multiple timestamps for the same series is rare. Only reason I see it happening is
 	// for backfilling and this is not the API for that. Keeping that in mind, we are going to create a new
 	// client.Timeseries for each sample.
 
-	returnTs := []cortexpb.TimeSeries{}
+	returnTs := []mimirpb.TimeSeries{}
 	for _, pt := range points {
 		ts, err := influxPointToTimeseries(pt)
 		if err != nil {
@@ -74,8 +74,8 @@ func writeRequestFromInfluxPoints(points []models.Point) ([]cortexpb.TimeSeries,
 }
 
 // Points to Prometheus is heavily inspired from https://github.com/prometheus/influxdb_exporter/blob/a1dc16ad596a990d8854545ea39a57a99a3c7c43/main.go#L148-L211
-func influxPointToTimeseries(pt models.Point) ([]cortexpb.TimeSeries, error) {
-	returnTs := []cortexpb.TimeSeries{}
+func influxPointToTimeseries(pt models.Point) ([]mimirpb.TimeSeries, error) {
+	returnTs := []mimirpb.TimeSeries{}
 
 	fields, err := pt.Fields()
 	if err != nil {
@@ -105,12 +105,12 @@ func influxPointToTimeseries(pt models.Point) ([]cortexpb.TimeSeries, error) {
 		replaceInvalidChars(&name)
 
 		tags := pt.Tags()
-		lbls := make([]cortexpb.LabelAdapter, 0, len(tags)+2) // An additional one for __name__, and one for internal label
-		lbls = append(lbls, cortexpb.LabelAdapter{
+		lbls := make([]mimirpb.LabelAdapter, 0, len(tags)+2) // An additional one for __name__, and one for internal label
+		lbls = append(lbls, mimirpb.LabelAdapter{
 			Name:  labels.MetricName,
 			Value: name,
 		})
-		lbls = append(lbls, cortexpb.LabelAdapter{
+		lbls = append(lbls, mimirpb.LabelAdapter{
 			Name:  internalLabel, // An internal label for tracking active series
 			Value: "influx",
 		})
@@ -120,7 +120,7 @@ func influxPointToTimeseries(pt models.Point) ([]cortexpb.TimeSeries, error) {
 				continue
 			}
 			replaceInvalidChars(&key)
-			lbls = append(lbls, cortexpb.LabelAdapter{
+			lbls = append(lbls, mimirpb.LabelAdapter{
 				Name:  key,
 				Value: string(tag.Value),
 			})
@@ -129,9 +129,9 @@ func influxPointToTimeseries(pt models.Point) ([]cortexpb.TimeSeries, error) {
 			return lbls[i].Name < lbls[j].Name
 		})
 
-		returnTs = append(returnTs, cortexpb.TimeSeries{
+		returnTs = append(returnTs, mimirpb.TimeSeries{
 			Labels: lbls,
-			Samples: []cortexpb.Sample{{
+			Samples: []mimirpb.Sample{{
 				TimestampMs: util.TimeToMillis(pt.Time()),
 				Value:       value,
 			}},
