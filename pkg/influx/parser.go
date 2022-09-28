@@ -10,9 +10,9 @@ import (
 	"sort"
 	"time"
 
+	"github.com/grafana/mimir-proxies/pkg/errorx"
 	"github.com/grafana/mimir/pkg/mimirpb"
 	"github.com/grafana/mimir/pkg/util"
-	"github.com/grafana/influx2cortex/pkg/errorx"
 	io2 "github.com/influxdata/influxdb/v2/kit/io"
 	"github.com/influxdata/influxdb/v2/models"
 	"github.com/prometheus/prometheus/model/labels"

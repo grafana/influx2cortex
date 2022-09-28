@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/grafana/mimir/pkg/mimirpb"
 	"github.com/go-kit/log"
-	"github.com/grafana/influx2cortex/pkg/errorx"
+	"github.com/grafana/mimir-proxies/pkg/errorx"
 	"github.com/grafana/mimir-proxies/pkg/remotewrite/remotewritemock"
+	"github.com/grafana/mimir/pkg/mimirpb"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

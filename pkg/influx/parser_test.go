@@ -7,8 +7,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/grafana/mimir-proxies/pkg/errorx"
 	"github.com/grafana/mimir/pkg/mimirpb"
-	"github.com/grafana/influx2cortex/pkg/errorx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

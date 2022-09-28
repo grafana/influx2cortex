@@ -21,9 +21,6 @@ coverage-output:
 coverage-show-func:
 	go tool cover -func cover.out
 
-protobuf: ## Runs protoc command to generate pb files
-	bash ./scripts/genprotobuf.sh
-
 # .PHONY: build
 # build: ## Build the grpc-cortex-gw docker image
 # build:
