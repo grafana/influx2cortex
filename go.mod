@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/grafana/dskit v0.0.0-20220817135401-71aee950db17
 	github.com/grafana/mimir v0.0.0-20220121165517-53d4f5914b50
-	github.com/grafana/mimir-proxies v0.0.0-20220928160543-fb1f8976c850
+	github.com/grafana/mimir-proxies v0.0.0-20220929103735-ecfe835fa036
 	github.com/influxdata/influxdb-client-go/v2 v2.3.1-0.20210518120617-5d1fff431040
 	github.com/influxdata/influxdb/v2 v2.0.3
 	github.com/opentracing/opentracing-go v1.2.0
