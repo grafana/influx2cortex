@@ -4,13 +4,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/grafana/mimir/pkg/mimirpb"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/gorilla/mux"
-	"github.com/grafana/mimir-proxies/pkg/remotewrite"
 	"github.com/grafana/influx2cortex/pkg/route"
+	"github.com/grafana/mimir-proxies/pkg/remotewrite"
 	"github.com/grafana/mimir-proxies/pkg/server/middleware"
+	"github.com/grafana/mimir/pkg/mimirpb"
 	"github.com/weaveworks/common/user"
 )
 

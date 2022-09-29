@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/grafana/dskit/services"
-	"github.com/grafana/influx2cortex/pkg/errorx"
+	"github.com/grafana/mimir-proxies/pkg/errorx"
 	"github.com/grafana/mimir-proxies/pkg/remotewrite"
 	"github.com/grafana/mimir-proxies/pkg/remotewrite/remotewritemock"
 	"github.com/grafana/mimir-proxies/pkg/server"
