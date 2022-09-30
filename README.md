@@ -85,3 +85,7 @@ The _grafana_net_instance_ is server part of the URL to push Prometheus metrics.
 
 The influx2cortex binary exposes internal metrics on a `/metrics` endpoint on a separate port which can be scraped by a local prometheus installation. This is configurable with the `internalserver` command line options.
 
+## TODO - package consolidation
+* Get `pkg/tenant` from source (DSKit) to remove duplication
+* Get `pkg/util/log` from Mimir
+* Consolidate `pkg/internalserver' into mimir-proxies
