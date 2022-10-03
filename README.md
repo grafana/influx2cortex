@@ -87,5 +87,4 @@ The influx2cortex binary exposes internal metrics on a `/metrics` endpoint on a 
 
 ## TODO - package consolidation
 * Get `pkg/tenant` from source (DSKit) to remove duplication
-* Get `pkg/util/log` from Mimir
 * Consolidate `pkg/internalserver' into mimir-proxies
