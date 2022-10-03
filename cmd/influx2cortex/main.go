@@ -7,11 +7,11 @@ import (
 	"os"
 
 	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/grafana/dskit/flagext"
 	"github.com/grafana/dskit/services"
 	"github.com/grafana/influx2cortex/pkg/influx"
 	"github.com/grafana/influx2cortex/pkg/internalserver"
-	loghelp "github.com/grafana/influx2cortex/pkg/util/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/weaveworks/common/logging"
 	"github.com/weaveworks/common/signals"
@@ -37,14 +37,14 @@ func main() {
 
 	proxyService, err := influx.NewProxy(proxyConfig)
 	if err != nil {
-		loghelp.Error(logger, "msg", "error instantiating influx write proxy", "error", err)
+		level.Error(logger).Log("msg", "error instantiating influx write proxy", "error", err)
 		os.Exit(1)
 	}
 	appServices = append(appServices, proxyService)
 
 	internalService, err := internalserver.NewService(internalServerConfig, logger)
 	if err != nil {
-		loghelp.Error(logger, "msg", "error instantiating internal server", "error", err)
+		level.Error(logger).Log("msg", "error instantiating internal server", "error", err)
 		os.Exit(1)
 	}
 	appServices = append(appServices, internalService)
@@ -55,7 +55,7 @@ func main() {
 	for _, service := range appServices {
 		err = services.StartAndAwaitRunning(ctx, service)
 		if err != nil {
-			loghelp.Error(logger,
+			level.Error(logger).Log(
 				"msg", "error starting service",
 				"service", services.DescribeService(service),
 				"error", err)
@@ -75,7 +75,7 @@ func main() {
 	for _, service := range appServices {
 		err = service.AwaitTerminated(context.Background())
 		if err != nil && !errors.Is(err, context.Canceled) {
-			loghelp.Error(logger, "msg", "error in service", "error", err)
+			level.Error(logger).Log("msg", "error in service", "error", err)
 			os.Exit(1)
 		}
 	}

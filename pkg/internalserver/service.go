@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"time"
 
-	gokitlog "github.com/go-kit/log"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/grafana/dskit/services"
-	"github.com/grafana/influx2cortex/pkg/util/log"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -35,14 +35,14 @@ func (c *ServiceConfig) RegisterFlags(flags *flag.FlagSet) {
 type Service struct {
 	services.Service
 
-	logger gokitlog.Logger
+	logger log.Logger
 
 	config  ServiceConfig
 	server  *http.Server
 	errChan chan error
 }
 
-func NewService(config ServiceConfig, logger gokitlog.Logger) (*Service, error) {
+func NewService(config ServiceConfig, logger log.Logger) (*Service, error) {
 	if logger == nil {
 		return nil, errors.New("logger should not be nil")
 	}
@@ -72,7 +72,7 @@ func NewService(config ServiceConfig, logger gokitlog.Logger) (*Service, error) 
 }
 
 func (s *Service) start(_ context.Context) error {
-	log.Info(s.logger, "msg", "Starting internal http server", "addr", s.server.Addr)
+	level.Info(s.logger).Log("msg", "Starting internal http server", "addr", s.server.Addr)
 
 	go func() {
 		err := s.server.ListenAndServe()
@@ -98,9 +98,9 @@ func (s *Service) stop(failureCase error) error {
 	defer cancel()
 
 	if failureCase != nil && !errors.Is(failureCase, context.Canceled) {
-		log.Warn(s.logger, "msg", "shutting down internal http server due to failure", "failure", failureCase)
+		level.Warn(s.logger).Log("msg", "shutting down internal http server due to failure", "failure", failureCase)
 	} else {
-		log.Info(s.logger, "msg", "shutting down internal http server")
+		level.Info(s.logger).Log("msg", "shutting down internal http server")
 	}
 
 	err := s.server.Shutdown(ctx)
