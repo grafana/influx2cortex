@@ -72,7 +72,7 @@ func NewService(config ServiceConfig, logger log.Logger) (*Service, error) {
 }
 
 func (s *Service) start(_ context.Context) error {
-	level.Info(s.logger).Log("msg", "Starting internal http server", "addr", s.server.Addr)
+	_ = level.Info(s.logger).Log("msg", "Starting internal http server", "addr", s.server.Addr)
 
 	go func() {
 		err := s.server.ListenAndServe()
@@ -98,9 +98,9 @@ func (s *Service) stop(failureCase error) error {
 	defer cancel()
 
 	if failureCase != nil && !errors.Is(failureCase, context.Canceled) {
-		level.Warn(s.logger).Log("msg", "shutting down internal http server due to failure", "failure", failureCase)
+		_ = level.Warn(s.logger).Log("msg", "shutting down internal http server due to failure", "failure", failureCase)
 	} else {
-		level.Info(s.logger).Log("msg", "shutting down internal http server")
+		_ = level.Info(s.logger).Log("msg", "shutting down internal http server")
 	}
 
 	err := s.server.Shutdown(ctx)

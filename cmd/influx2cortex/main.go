@@ -37,14 +37,14 @@ func main() {
 
 	proxyService, err := influx.NewProxy(proxyConfig)
 	if err != nil {
-		level.Error(logger).Log("msg", "error instantiating influx write proxy", "error", err)
+		_ = level.Error(logger).Log("msg", "error instantiating influx write proxy", "error", err)
 		os.Exit(1)
 	}
 	appServices = append(appServices, proxyService)
 
 	internalService, err := internalserver.NewService(internalServerConfig, logger)
 	if err != nil {
-		level.Error(logger).Log("msg", "error instantiating internal server", "error", err)
+		_ = level.Error(logger).Log("msg", "error instantiating internal server", "error", err)
 		os.Exit(1)
 	}
 	appServices = append(appServices, internalService)
@@ -55,7 +55,7 @@ func main() {
 	for _, service := range appServices {
 		err = services.StartAndAwaitRunning(ctx, service)
 		if err != nil {
-			level.Error(logger).Log(
+			_ = level.Error(logger).Log(
 				"msg", "error starting service",
 				"service", services.DescribeService(service),
 				"error", err)
@@ -75,7 +75,7 @@ func main() {
 	for _, service := range appServices {
 		err = service.AwaitTerminated(context.Background())
 		if err != nil && !errors.Is(err, context.Canceled) {
-			level.Error(logger).Log("msg", "error in service", "error", err)
+			_ = level.Error(logger).Log("msg", "error in service", "error", err)
 			os.Exit(1)
 		}
 	}
