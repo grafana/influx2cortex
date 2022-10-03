@@ -19,6 +19,9 @@ import (
 
 func main() {
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
+	// Add caller information by skipping 3 stack frames
+	logger = log.With(logger, "caller", log.Caller(3))
+
 	promRegisterer := prometheus.DefaultRegisterer
 
 	proxyConfig := influx.ProxyConfig{
