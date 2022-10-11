@@ -77,14 +77,79 @@ If the destination Mimir installation is part of a Grafana cloud instance the `-
   -write-endpoint https://_username_:_password_@_grafana_net_instance_/api/v1/push
 where the exact server details can be found on Prometheus instance details page for the stack on grafana.com
 
-The _username_ is the numeric `Username / Instance ID`
-The _password_ is the Grafana Cloud API Key with `metrics push` privileges/role.
-The _grafana_net_instance_ is server part of the URL to push Prometheus metrics.
+The `_username_` is the numeric `Username / Instance ID`
+The `_password_` is a Grafana Cloud API Key with the `MetricsPublisher` role.
+The `_grafana_net_instance_` is server part of the URL to push Prometheus metrics.
+
+## Configuring telegraf
+
+Telegraf can be configured in two ways to send data to the Influx proxy.
+- Using the `http` plugin
+- Using the `influxdb` plugin
+
+If connecting to a local influx proxy running on `localhost:8000` the two configs would look something like this:
+
+### outputs.influxdb
+
+Note: The url has a path of `/api/v1/push/influx/write`
+
+```
+[[outputs.influxdb]]
+  urls = ["https://localhost:8000/api/v1/push/influx/write"]
+  data_format = "influx"
+  skip_database_creation = true
+```
+
+The `skip_database_creation = true` option is to prevent errors such as:
+
+```
+022-09-27T16:20:20Z W! [outputs.influxdb] When writing to [https://localhost:8000/api/v1/push/influx/write]: database "telegraf" creation failed: 500 Internal Server Error
+```
+
+### outputs.http
+
+```
+[[outputs.http]]
+  url = "http://localhost:8000"
+  data_format = "influx"
+  timeout = "10s"
+  method = "POST"
+  interval = "300s"
+  flush_interval = "150s"
+  insecure_skip_verify = true
+```
+
+## Configuring telegraf for Grafana Cloud
+
+If you are a Grafana Cloud customer and wish to use telegraf to write to an Influx Proxy running inside Grafana Cloud you can use a config similar to this:
+
+```
+[[outputs.influxdb]]
+  urls = ["https://_grafana_net_instance_/api/v1/push/influx/write"]
+  username = "_username_"
+  password = "_password_"
+  data_format = "influx"
+  skip_database_creation = true
+```
+
+As above, the `_username_`, `_password_` and `_grafana_net_instance_` are adapted from the Prometheus instance details for the stack information page on [grafana.com](https://grafana.com/).
+
+For example, if your username was `123456789` and the Prometheus write endpoint was listed as `https://prometheus-prod-26-prod-ap-south-0.grafana.net/api/prom/push` then the corresponding config to send to Grafana Cloud would look something like:
+
+```
+[[outputs.influxdb]]
+  urls = ["https://influx-prod-26-prod-ap-south-0.grafana.net/api/v1/push/influx/write"]
+  username = "123456789"
+  password = "_ELIDED_"
+  data_format = "influx"
+  skip_database_creation = true
+```
+
+Note: The hostname in the URL has `influx` instead of `prometheus`.
 
 ## Internal metrics
 
 The influx2cortex binary exposes internal metrics on a `/metrics` endpoint on a separate port which can be scraped by a local prometheus installation. This is configurable with the `internalserver` command line options.
 
 ## TODO - package consolidation
-* Get `pkg/tenant` from source (DSKit) to remove duplication
 * Consolidate `pkg/internalserver' into mimir-proxies
