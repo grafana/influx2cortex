@@ -152,5 +152,4 @@ Note: The hostname in the URL has `influx` instead of `prometheus`.
 The influx2cortex binary exposes internal metrics on a `/metrics` endpoint on a separate port which can be scraped by a local prometheus installation. This is configurable with the `internalserver` command line options.
 
 ## TODO - package consolidation
-* Get `pkg/tenant` from source (DSKit) to remove duplication
 * Consolidate `pkg/internalserver' into mimir-proxies
