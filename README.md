@@ -78,7 +78,7 @@ If the destination Mimir installation is part of a Grafana cloud instance the `-
 where the exact server details can be found on Prometheus instance details page for the stack on grafana.com
 
 The `_username_` is the numeric `Username / Instance ID`
-The `_password_` is the Grafana Cloud API Key with the `MetricsPublisher` role.
+The `_password_` is a Grafana Cloud API Key with the `MetricsPublisher` role.
 The `_grafana_net_instance_` is server part of the URL to push Prometheus metrics.
 
 ## Configuring telegraf
