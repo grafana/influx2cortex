@@ -74,7 +74,7 @@ $ curl -G http://localhost:9009/prometheus/api/v1/series -d 'match[]=cpu_load_sh
 ## Grafana Cloud as a destination
 
 If the destination Mimir installation is part of a Grafana cloud instance the `-write-endpoint` argument should be of the form:
-  -write-endpoint https://_username_:_password_@_grafana_net_instance_/api/v1/push
+  `-write-endpoint https://_username_:_password_@_grafana_net_instance_/api/v1/push`
 where the exact server details can be found on Prometheus instance details page for the stack on grafana.com
 
 The `_username_` is the numeric `Username / Instance ID`
@@ -91,11 +91,11 @@ If connecting to a local influx proxy running on `localhost:8000` the two config
 
 ### outputs.influxdb
 
-Note: The url has a path of `/api/v1/push/influx/write`
+Note: The url has a path of `/api/v1/push/influx`. The trailing `/write` is not required as this is appended by the `telegraf` agent when using the `outputs.influxdb` output plugin.
 
 ```
 [[outputs.influxdb]]
-  urls = ["https://localhost:8000/api/v1/push/influx/write"]
+  urls = ["https://localhost:8000/api/v1/push/influx"]
   data_format = "influx"
   skip_database_creation = true
 ```
@@ -103,20 +103,21 @@ Note: The url has a path of `/api/v1/push/influx/write`
 The `skip_database_creation = true` option is to prevent errors such as:
 
 ```
-022-09-27T16:20:20Z W! [outputs.influxdb] When writing to [https://localhost:8000/api/v1/push/influx/write]: database "telegraf" creation failed: 500 Internal Server Error
+022-09-27T16:20:20Z W! [outputs.influxdb] When writing to [https://localhost:8000/api/v1/push/influx]: database "telegraf" creation failed: 500 Internal Server Error
 ```
 
 ### outputs.http
 
+Note: The url has a path of `/api/v1/push/influx/write`. The trailing `/write` is required as the `outputs.http` output plugin uses the URL without modification (unlike the `outputs.influxdb` output plugin above).
+
 ```
 [[outputs.http]]
-  url = "http://localhost:8000"
+  url = "http://localhost:8000/api/v1/push/influx/write"
   data_format = "influx"
   timeout = "10s"
   method = "POST"
   interval = "300s"
   flush_interval = "150s"
-  insecure_skip_verify = true
 ```
 
 ## Configuring telegraf for Grafana Cloud
@@ -146,6 +147,10 @@ For example, if your username was `123456789` and the Prometheus write endpoint 
 ```
 
 Note: The hostname in the URL has `influx` instead of `prometheus`.
+
+## More information
+
+More information, including example `python`, `ruby` and `Node.js` snippets to push to the influx2cortex proxy can be found in the [Push metrics from Influx Telegraf to Prometheus](https://grafana.com/docs/grafana-cloud/data-configuration/metrics/metrics-influxdb/push-from-telegraf/#pushing-from-applications-directly) blog post.
 
 ## Internal metrics
 
