@@ -21,6 +21,7 @@ func main() {
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 	// Add caller information by skipping 3 stack frames
 	logger = log.With(logger, "caller", log.Caller(3))
+	logger = log.WithPrefix(logger, "ts", log.DefaultTimestampUTC)
 
 	promRegisterer := prometheus.DefaultRegisterer
 
