@@ -22,6 +22,7 @@ func TestHandleSeriesPush(t *testing.T) {
 		url                 string
 		data                string
 		expectedCode        int
+		expectJsonBody      string
 		remoteWriteMock     func() *remotewritemock.Client
 		recorderMock        func() *MockRecorder
 		maxRequestSizeBytes int
@@ -99,6 +100,10 @@ func TestHandleSeriesPush(t *testing.T) {
 			url:          "/write",
 			data:         "measurement,t1=v1 f1= 1465839830100400200",
 			expectedCode: http.StatusBadRequest,
+			expectJsonBody: `{
+				"code": "invalid",
+				"message": "error parsing points"
+			}`,
 			remoteWriteMock: func() *remotewritemock.Client {
 				remoteWriteMock := &remotewritemock.Client{}
 				remoteWriteMock.On("Write", mock.Anything, mock.Anything).
@@ -120,6 +125,10 @@ func TestHandleSeriesPush(t *testing.T) {
 			url:          "/write?precision=?",
 			data:         "measurement,t1=v1 f1=2 1465839830100400200",
 			expectedCode: http.StatusBadRequest,
+			expectJsonBody: `{
+				"code": "invalid",
+				"message": "precision supplied is not valid: ?"
+			}`,
 			remoteWriteMock: func() *remotewritemock.Client {
 				remoteWriteMock := &remotewritemock.Client{}
 				remoteWriteMock.On("Write", mock.Anything, mock.Anything).
@@ -141,10 +150,14 @@ func TestHandleSeriesPush(t *testing.T) {
 			url:          "/write",
 			data:         "measurement,t1=v1 f1=2 1465839830100400200",
 			expectedCode: http.StatusInternalServerError,
+			expectJsonBody: `{
+				"code": "internal error",
+				"message": "some error message"
+			}`,
 			remoteWriteMock: func() *remotewritemock.Client {
 				remoteWriteMock := &remotewritemock.Client{}
 				remoteWriteMock.On("Write", mock.Anything, mock.Anything).
-					Return(errorx.Internal{})
+					Return(errorx.Internal{Msg: "some error message"})
 				return remoteWriteMock
 			},
 			recorderMock: func() *MockRecorder {
@@ -162,6 +175,10 @@ func TestHandleSeriesPush(t *testing.T) {
 			url:          "/write",
 			data:         "measurement,t1=v1 f1=2 0123456789",
 			expectedCode: http.StatusBadRequest,
+			expectJsonBody: `{
+				"code": "invalid",
+				"message": "problem reading body"
+			}`,
 			remoteWriteMock: func() *remotewritemock.Client {
 				return &remotewritemock.Client{}
 			},
@@ -192,6 +209,13 @@ func TestHandleSeriesPush(t *testing.T) {
 
 			api.handleSeriesPush(rec, req)
 			assert.Equal(t, tt.expectedCode, rec.Code)
+			if tt.expectJsonBody != "" {
+				assert.Equal(t, []string{"application/json; charset=utf-8"}, rec.Result().Header["Content-Type"])
+				assert.JSONEq(t, tt.expectJsonBody, rec.Body.String())
+			} else {
+				assert.Empty(t, rec.Body.String())
+			}
+
 		})
 	}
 }
