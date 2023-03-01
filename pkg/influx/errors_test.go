@@ -99,6 +99,36 @@ func TestHandleError(t *testing.T) {
 	}
 }
 
+func TestErrorxToInfluxErrorCode(t *testing.T) {
+	tests := map[string]struct {
+		err        errorx.Error
+		expectCode string
+	}{
+		"bad request": {
+			err:        errorx.BadRequest{},
+			expectCode: EInvalid,
+		},
+		"conflict": {
+			err:        errorx.Conflict{},
+			expectCode: EConflict,
+		},
+		"internal": {
+			err:        errorx.Internal{},
+			expectCode: EInternal,
+		},
+		"non-mapped error defaults to internal": {
+			err:        errorx.RateLimited{},
+			expectCode: EInternal,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, tt.expectCode, errorxToInfluxErrorCode(tt.err))
+		})
+	}
+}
+
 // Mock of Golang's internal poll.TimeoutError
 type mockNetworkError struct{}
 
