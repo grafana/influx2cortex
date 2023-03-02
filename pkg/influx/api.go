@@ -54,21 +54,17 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 
 	beforeConversion := time.Now()
 
-	ts, err, bytesRead := parseInfluxLineReader(r.Context(), r, a.maxRequestSizeBytes)
-	logger = log.With(logger, "bytesRead", bytesRead)
+	ts, err := parseInfluxLineReader(r.Context(), r, a.maxRequestSizeBytes)
 	if err != nil {
 		a.handleError(w, r, err, logger)
 		return
 	}
 
-	nosMetrics := len(ts)
-	logger = log.With(logger, "nosMetrics", nosMetrics)
-
-	a.recorder.measureMetricsParsed(nosMetrics)
+	a.recorder.measureMetricsParsed(len(ts))
 	a.recorder.measureConversionDuration(time.Since(beforeConversion))
 
 	// Sigh, a write API optimisation needs me to jump through hoops.
-	pts := make([]mimirpb.PreallocTimeseries, 0, nosMetrics)
+	pts := make([]mimirpb.PreallocTimeseries, 0, len(ts))
 	for i := range ts {
 		pts = append(pts, mimirpb.PreallocTimeseries{
 			TimeSeries: &ts[i],
