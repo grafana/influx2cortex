@@ -55,7 +55,7 @@ func tryUnwrap(err error) error {
 // handleError tries to extract an errorx.Error from the given error, logging
 // and setting the http response code as needed. All non-errorx errors are
 // considered internal errors. Please do not try to fix error categorization in
-// this function. All client errors should be categorized as an `errorx` at the
+// this function. All client errors should be categorized as an errorx at the
 // site where they are thrown.
 func (a *API) handleError(w http.ResponseWriter, r *http.Request, err error, logger log.Logger) {
 	var statusCode int
