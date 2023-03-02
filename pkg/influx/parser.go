@@ -21,7 +21,7 @@ import (
 const internalLabel = "__proxy_source__"
 
 // parseInfluxLineReader parses a Influx Line Protocol request from an io.Reader.
-func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([]mimirpb.TimeSeries, error) {
+func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([]mimirpb.TimeSeries, error, int) {
 	qp := r.URL.Query()
 	precision := qp.Get("precision")
 	if precision == "" {
@@ -29,29 +29,31 @@ func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([
 	}
 
 	if !models.ValidPrecision(precision) {
-		return nil, errorx.BadRequest{Msg: fmt.Sprintf("precision supplied is not valid: %s", precision)}
+		return nil, errorx.BadRequest{Msg: fmt.Sprintf("precision supplied is not valid: %s", precision)}, 0
 	}
 
 	encoding := r.Header.Get("Content-Encoding")
 	reader, err := batchReadCloser(r.Body, encoding, int64(maxSize))
 	if err != nil {
-		return nil, errorx.BadRequest{Msg: "gzip compression error", Err: err}
+		return nil, errorx.BadRequest{Msg: "gzip compression error", Err: err}, 0
 	}
 	data, err := ioutil.ReadAll(reader)
+	dataLen := len(data) // In case it something is read despite an error
 	if err != nil {
-		return nil, errorx.BadRequest{Msg: "can't read body", Err: err}
+		return nil, errorx.BadRequest{Msg: "can't read body", Err: err}, dataLen
 	}
 
 	err = reader.Close()
 	if err != nil {
-		return nil, errorx.BadRequest{Msg: "problem reading body", Err: err}
+		return nil, errorx.BadRequest{Msg: "problem reading body", Err: err}, dataLen
 	}
 
 	points, err := models.ParsePointsWithPrecision(data, time.Now().UTC(), precision)
 	if err != nil {
-		return nil, errorx.BadRequest{Msg: "error parsing points", Err: err}
+		return nil, errorx.BadRequest{Msg: "error parsing points", Err: err}, dataLen
 	}
-	return writeRequestFromInfluxPoints(points)
+	a, b := writeRequestFromInfluxPoints(points)
+	return a, b, dataLen
 }
 
 func writeRequestFromInfluxPoints(points []models.Point) ([]mimirpb.TimeSeries, error) {
