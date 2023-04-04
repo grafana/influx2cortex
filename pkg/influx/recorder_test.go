@@ -35,6 +35,19 @@ func TestRecorder(t *testing.T) {
 influxdb_proxy_ingester_metrics_parsed_total 3
 `,
 		},
+		"Measure dropped samples": {
+			measure: func(r Recorder) {
+				r.measureMetricsDropped(1)
+			},
+			expMetricNames: []string{
+				"influxdb_proxy_ingester_metrics_dropped_total",
+			},
+			expMetrics: `
+# HELP influxdb_proxy_ingester_metrics_dropped_total The total number of metrics that have been dropped.
+# TYPE influxdb_proxy_ingester_metrics_dropped_total counter
+influxdb_proxy_ingester_metrics_dropped_total 1
+`,
+		},
 		"Measure rejected samples": {
 			measure: func(r Recorder) {
 				r.measureProxyErrors("reason")

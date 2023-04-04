@@ -26,6 +26,7 @@ func TestHandleSeriesPush(t *testing.T) {
 		remoteWriteMock     func() *remotewritemock.Client
 		recorderMock        func() *MockRecorder
 		maxRequestSizeBytes int
+		maxSampleAgeSeconds int64
 	}{
 		{
 			name:         "POST",
@@ -193,6 +194,64 @@ func TestHandleSeriesPush(t *testing.T) {
 			},
 			maxRequestSizeBytes: 8,
 		},
+		{
+			name:         "max sample age passed",
+			url:          "/write",
+			data:         "measurement,t1=v1 f1=2 1680580378000000000",
+			expectedCode: http.StatusNoContent,
+			remoteWriteMock: func() *remotewritemock.Client {
+				remoteWriteMock := &remotewritemock.Client{}
+				remoteWriteMock.On("Write", mock.Anything, &mimirpb.WriteRequest{
+					Timeseries: []mimirpb.PreallocTimeseries{
+						{
+							TimeSeries: &mimirpb.TimeSeries{
+								Labels: []mimirpb.LabelAdapter{
+									{Name: "__name__", Value: "measurement_f1"},
+									{Name: "__proxy_source__", Value: "influx"},
+									{Name: "t1", Value: "v1"},
+								},
+								Samples: []mimirpb.Sample{
+									{Value: 2, TimestampMs: 1680580378000},
+								},
+							},
+						},
+					},
+				}).Return(nil)
+				return remoteWriteMock
+			},
+			recorderMock: func() *MockRecorder {
+				recorderMock := &MockRecorder{}
+				recorderMock.On("measureMetricsParsed", 1).Return(nil)
+				recorderMock.On("measureMetricsWritten", 1).Return(nil)
+				recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
+
+				return recorderMock
+			},
+			maxSampleAgeSeconds: 4000000000,
+		},
+		{
+			name:         "max sample age violated",
+			url:          "/write",
+			data:         "measurement,t1=v1 f1=2 1465839830100400200",
+			expectedCode: http.StatusNoContent,
+			remoteWriteMock: func() *remotewritemock.Client {
+				remoteWriteMock := &remotewritemock.Client{}
+				remoteWriteMock.On("Write", mock.Anything, &mimirpb.WriteRequest{
+					Timeseries: []mimirpb.PreallocTimeseries{},
+				}).Return(nil)
+				return remoteWriteMock
+			},
+			recorderMock: func() *MockRecorder {
+				recorderMock := &MockRecorder{}
+				recorderMock.On("measureMetricsParsed", 1).Return(nil)
+				recorderMock.On("measureMetricsDropped", 1).Return(nil)
+				recorderMock.On("measureMetricsWritten", 0).Return(nil)
+				recorderMock.On("measureConversionDuration", mock.MatchedBy(func(duration time.Duration) bool { return duration > 0 })).Return(nil)
+
+				return recorderMock
+			},
+			maxSampleAgeSeconds: 1,
+		},
 	}
 
 	for _, tt := range tests {
@@ -203,6 +262,7 @@ func TestHandleSeriesPush(t *testing.T) {
 			conf := ProxyConfig{
 				Logger:              logger,
 				MaxRequestSizeBytes: tt.maxRequestSizeBytes,
+				MaxSampleAgeSeconds: tt.maxSampleAgeSeconds,
 			}
 			api, err := NewAPI(conf, tt.remoteWriteMock(), tt.recorderMock())
 			require.NoError(t, err)

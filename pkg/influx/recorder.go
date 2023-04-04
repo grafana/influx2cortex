@@ -21,6 +21,7 @@ var (
 //go:generate mockery --inpackage --testonly --case underscore --name Recorder
 type Recorder interface {
 	measureMetricsParsed(count int)
+	measureMetricsDropped(count int)
 	measureMetricsWritten(count int)
 	measureProxyErrors(reason string)
 	measureConversionDuration(duration time.Duration)
@@ -33,6 +34,11 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 			Namespace: prefix,
 			Name:      "metrics_parsed_total",
 			Help:      "The total number of metrics that have been parsed.",
+		}, []string{}),
+		proxyMetricsDropped: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Namespace: prefix,
+			Name:      "metrics_dropped_total",
+			Help:      "The total number of metrics that have been dropped.",
 		}, []string{}),
 		proxyErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: prefix,
@@ -58,7 +64,7 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 		}),
 	}
 
-	reg.MustRegister(r.proxyMetricsParsed, r.proxyMetricsWritten, r.proxyErrors, r.conversionDuration, r.buildDateGauge)
+	reg.MustRegister(r.proxyMetricsParsed, r.proxyMetricsDropped, r.proxyMetricsWritten, r.proxyErrors, r.conversionDuration, r.buildDateGauge)
 
 	return r
 }
@@ -67,6 +73,7 @@ func NewRecorder(reg prometheus.Registerer) Recorder {
 // Prometheus.
 type prometheusRecorder struct {
 	proxyMetricsParsed  *prometheus.CounterVec
+	proxyMetricsDropped *prometheus.CounterVec
 	proxyMetricsWritten *prometheus.CounterVec
 	proxyErrors         *prometheus.CounterVec
 	conversionDuration  *prometheus.HistogramVec
@@ -76,6 +83,11 @@ type prometheusRecorder struct {
 // measureMetricsParsed measures the total amount of metrics parsed by the proxy.
 func (r prometheusRecorder) measureMetricsParsed(count int) {
 	r.proxyMetricsParsed.WithLabelValues().Add(float64(count))
+}
+
+// measureMetricsDropped measures the total amount of metrics dropped by the proxy.
+func (r prometheusRecorder) measureMetricsDropped(count int) {
+	r.proxyMetricsDropped.WithLabelValues().Add(float64(count))
 }
 
 // measureMetricsParsed measures the total amount of metrics written.

@@ -32,6 +32,11 @@ func (_m *MockRecorder) measureConversionDuration(duration time.Duration) {
 	_m.Called(duration)
 }
 
+// measureMetricsDropped provides a mock function with given fields: count
+func (_m *MockRecorder) measureMetricsDropped(count int) {
+	_m.Called(count)
+}
+
 // measureMetricsParsed provides a mock function with given fields: count
 func (_m *MockRecorder) measureMetricsParsed(count int) {
 	_m.Called(count)

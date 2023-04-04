@@ -19,6 +19,7 @@ type API struct {
 	client              remotewrite.Client
 	recorder            Recorder
 	maxRequestSizeBytes int
+	maxSampleAgeSeconds int64
 }
 
 func (a *API) Register(router *mux.Router) {
@@ -35,6 +36,7 @@ func NewAPI(conf ProxyConfig, client remotewrite.Client, recorder Recorder) (*AP
 		client:              client,
 		recorder:            recorder,
 		maxRequestSizeBytes: conf.MaxRequestSizeBytes,
+		maxSampleAgeSeconds: conf.MaxSampleAgeSeconds,
 	}, nil
 }
 
@@ -69,10 +71,21 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 
 	// Sigh, a write API optimisation needs me to jump through hoops.
 	pts := make([]mimirpb.PreallocTimeseries, 0, nosMetrics)
+	nowMs := time.Now().UnixMilli()
+	nosDropped := 0
 	for i := range ts {
-		pts = append(pts, mimirpb.PreallocTimeseries{
-			TimeSeries: &ts[i],
-		})
+		sampleTsMs := &ts[i].Samples[0].TimestampMs
+		if a.maxSampleAgeSeconds > 0 && (nowMs-*sampleTsMs)/1000 > a.maxSampleAgeSeconds {
+			nosDropped += 1
+			_ = level.Info(logger).Log("msg", "dropped sample", "sample", ts[i].GoString())
+		} else {
+			pts = append(pts, mimirpb.PreallocTimeseries{
+				TimeSeries: &ts[i],
+			})
+		}
+	}
+	if nosDropped > 0 {
+		a.recorder.measureMetricsDropped(nosDropped)
 	}
 	rwReq := &mimirpb.WriteRequest{
 		Timeseries: pts,

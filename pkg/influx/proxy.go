@@ -40,6 +40,9 @@ type ProxyConfig struct {
 	Registerer prometheus.Registerer
 	// MaxRequestSizeBytes limits the size of an incoming request. Any value less than or equal to 0 means no limit.
 	MaxRequestSizeBytes int
+	// MaxSampleAgeSeconds is used to drop samples with a timestamp older than the current
+	// time - MaxSampleAgeSeconds. Any value less than or equal to 0 means no limit.
+	MaxSampleAgeSeconds int64
 }
 
 func (c *ProxyConfig) RegisterFlags(flags *flag.FlagSet) {
@@ -48,6 +51,7 @@ func (c *ProxyConfig) RegisterFlags(flags *flag.FlagSet) {
 
 	flags.BoolVar(&c.EnableAuth, "auth.enable", true, "require X-Scope-OrgId header")
 	flags.IntVar(&c.MaxRequestSizeBytes, "max.request.size.bytes", DefaultMaxRequestSizeBytes, "limit the size of incoming batches; 0 for no limit")
+	flags.Int64Var(&c.MaxSampleAgeSeconds, "max.sample.age.seconds", 0, "max age of samples in seconds; 0 for no limit")
 }
 
 // ProxyService is the actual Influx Proxy dskit service.
