@@ -1,4 +1,4 @@
-FROM golang:1.17.8-alpine as build
+FROM golang:1.20.3-alpine as build
 RUN apk add --update --no-cache git coreutils
 
 WORKDIR /go/src/github.com/grafana/influx2cortex
