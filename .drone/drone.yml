@@ -234,3 +234,8 @@ get:
   path: infra/data/ci/argo-workflows/trigger-service-account
 kind: secret
 name: argo_token
+---
+kind: signature
+hmac: decc2723023b2a522ecde5c38b3cf758db964be5c3407a7e0b68f0c4853c2cc5
+
+...
