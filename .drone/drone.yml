@@ -8,7 +8,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.20.3
+  image: golang:1.20.4
   name: test
   settings: {}
 trigger:
@@ -63,7 +63,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.20.3
+  image: golang:1.20.4
   name: generate tags
   settings: {}
 - commands: []
@@ -121,7 +121,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.20.3
+  image: golang:1.20.4
   name: generate tags
   settings: {}
 - commands:
@@ -138,7 +138,7 @@ steps:
     ACCEPTANCE_DOCKER_HOST: docker
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
-  image: golang:1.20.3
+  image: golang:1.20.4
   name: acceptance
   settings: {}
   volumes:
@@ -169,7 +169,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.20.3
+  image: golang:1.20.4
   name: check is latest commit
   settings: {}
 - commands:
@@ -181,7 +181,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.20.3
+  image: golang:1.20.4
   name: generate tags
   settings: {}
 - commands: []
@@ -236,6 +236,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: da4ae4910a63c07533cb51616638eb2f3f8b40dfcbaba08b24b2b00bb0ddd967
+hmac: decc2723023b2a522ecde5c38b3cf758db964be5c3407a7e0b68f0c4853c2cc5
 
 ...
