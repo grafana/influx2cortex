@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	DefaultMaxRequestSizeBytes = 100 << 10 // 100 KB
+	// Upped to 10MB based on empirical evidence of proxy receiving batches from telegraf agent
+	DefaultMaxRequestSizeBytes = 10 << 20 // 10 MB
 )
 
 // ProxyConfig holds objects needed to start running an influx2cortex proxy
