@@ -32,3 +32,12 @@ drone:
 
 drone-utilities:
 	scripts/build-drone-utilities.sh
+
+packages-minor-autoupdate:
+	go mod edit -json \
+		| jq ".Require \
+			| map(select(.Indirect | not).Path) \
+			| map(select( \
+				. != \"github.com/thanos-io/thanos\" \
+			))" \
+		| tr -d '\n' | tr -d '  '
