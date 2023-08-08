@@ -10,7 +10,7 @@ require (
 	github.com/grafana/dskit v0.0.0-20220817135401-71aee950db17
 	github.com/grafana/mimir v0.0.0-20220121165517-53d4f5914b50
 	github.com/grafana/mimir-proxies v0.0.0-20220929103735-ecfe835fa036
-	github.com/influxdata/influxdb-client-go/v2 v2.3.1-0.20210518120617-5d1fff431040
+	github.com/influxdata/influxdb-client-go/v2 v2.12.3
 	github.com/influxdata/influxdb/v2 v2.7.1
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/pkg/errors v0.9.1
@@ -36,7 +36,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/deepmap/oapi-codegen v1.6.0 // indirect
+	github.com/deepmap/oapi-codegen v1.8.2 // indirect
 	github.com/dennwc/varint v1.0.0 // indirect
 	github.com/docker/cli v20.10.17+incompatible // indirect
 	github.com/docker/docker v23.0.3+incompatible // indirect
