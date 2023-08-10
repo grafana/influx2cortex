@@ -156,61 +156,6 @@ volumes:
 - name: dockersock
   temp: {}
 ---
-depends_on:
-- build
-- acceptance
-image_pull_secrets:
-- dockerconfigjson
-kind: pipeline
-name: launch influx argo workflow
-steps:
-- commands:
-  - '[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'
-  depends_on: []
-  entrypoint: null
-  environment: {}
-  image: golang:1.20.4
-  name: check is latest commit
-  settings: {}
-- commands:
-  - DOCKER_TAG=$(bash scripts/generate-tags.sh)
-  - echo -n "$${DOCKER_TAG}" > .tag
-  - if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest"
-    > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
-  - tail -n +1 .tags
-  depends_on: []
-  entrypoint: null
-  environment: {}
-  image: golang:1.20.4
-  name: generate tags
-  settings: {}
-- commands: []
-  depends_on: []
-  entrypoint: null
-  environment: {}
-  image: us.gcr.io/kubernetes-dev/drone/plugins/argo-cli
-  name: launch argo workflow
-  settings:
-    add_ci_labels: true
-    command: 'submit --from workflowtemplate/influx-deploy --name influx-deploy-$(cat
-      .tag) --parameter dockertag=$(cat .tag) --parameter commit=${DRONE_COMMIT} --parameter
-      commit_author=${DRONE_COMMIT_AUTHOR} --parameter commit_link=${DRONE_COMMIT_LINK} '
-    namespace: influx-cd
-    token:
-      from_secret: argo_token
-trigger:
-  branch:
-  - main
-  event:
-    include:
-    - push
-  paths:
-    exclude:
-    - .drone/**
-    - .gitignore
-    - README.md
-type: docker
----
 get:
   name: .dockerconfigjson
   path: secret/data/common/gcr
@@ -236,6 +181,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: decc2723023b2a522ecde5c38b3cf758db964be5c3407a7e0b68f0c4853c2cc5
+hmac: 605534dda4ca3e5528ebffe0a4e88dbc39576dcfbe1843632f554bff4c20149f
 
 ...
