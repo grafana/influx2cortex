@@ -165,35 +165,6 @@ local acceptance = {
   + withDockerInDockerService
   + triggers.pr
   + triggers.main,
-
-  pipeline('launch influx argo workflow', depends_on=['build', 'acceptance'])
-  + withInlineStep('check is latest commit', ['[ $(git rev-parse HEAD) = $(git rev-parse remotes/origin/main) ]'])
-  + withStep(generateTags.step)
-  + withStep(drone.step(
-    'launch argo workflow',
-    commands=[],
-    settings={
-      namespace: 'influx-cd',
-      token: { from_secret: 'argo_token' },
-      command: std.strReplace(|||
-        submit --from workflowtemplate/influx-deploy
-        --name influx-deploy-$(cat .tag)
-        --parameter dockertag=$(cat .tag)
-        --parameter commit=${DRONE_COMMIT}
-        --parameter commit_author=${DRONE_COMMIT_AUTHOR}
-        --parameter commit_link=${DRONE_COMMIT_LINK}
-      |||, '\n', ' '),
-      add_ci_labels: true,
-    },
-    image=images._images.argoCli,
-  ))
-  + imagePullSecrets
-  + triggers.excludeModifiedPaths([
-    '.drone/**',
-    '.gitignore',
-    'README.md',
-  ])
-  + triggers.main,
 ]
 + [
   vault.secret('dockerconfigjson', 'secret/data/common/gcr', '.dockerconfigjson'),
