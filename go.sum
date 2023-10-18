@@ -1046,8 +1046,8 @@ github.com/influxdata/influxdb v1.9.5/go.mod h1:4uPVvcry9KWQVWLxyT9641qpkRXUBN+x
 github.com/influxdata/influxdb-client-go/v2 v2.3.1-0.20210518120617-5d1fff431040/go.mod h1:vLNHdxTJkIf2mSLvGrpj8TCcISApPoXkaxP8g9uRlW8=
 github.com/influxdata/influxdb-client-go/v2 v2.12.3 h1:28nRlNMRIV4QbtIUvxhWqaxn0IpXeMSkY/uJa/O/vC4=
 github.com/influxdata/influxdb-client-go/v2 v2.12.3/go.mod h1:IrrLUbCjjfkmRuaCiGQg4m2GbkaeJDcuWoxiWdQEbA0=
-github.com/influxdata/influxdb/v2 v2.7.2 h1:xMO6xobN+c5lyALbpsS3BC/3Ju5qDJrZz7TXusE3rYc=
-github.com/influxdata/influxdb/v2 v2.7.2/go.mod h1:gGAfR1nepbJcjivByMC/OS0Hi9cRpFHkbftniX+mckI=
+github.com/influxdata/influxdb/v2 v2.7.3 h1:G+KldkZKNHoO6TfonjNCKbq4SydZTkmjgxyCe1cJlXE=
+github.com/influxdata/influxdb/v2 v2.7.3/go.mod h1:dRUXphkaobHlEDyXvjGV20Arj9HuESQY9bOSWkMzyng=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/influxdata/influxql v1.1.0/go.mod h1:KpVI7okXjK6PRi3Z5B+mtKZli+R1DnZgb3N+tzevNgo=

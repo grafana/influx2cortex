@@ -11,7 +11,7 @@ require (
 	github.com/grafana/mimir v0.0.0-20220121165517-53d4f5914b50
 	github.com/grafana/mimir-proxies v0.0.0-20220929103735-ecfe835fa036
 	github.com/influxdata/influxdb-client-go/v2 v2.12.3
-	github.com/influxdata/influxdb/v2 v2.7.2
+	github.com/influxdata/influxdb/v2 v2.7.3
 	github.com/ory/dockertest/v3 v3.10.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.17.0
