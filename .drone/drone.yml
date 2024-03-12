@@ -8,7 +8,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.20.4
+  image: golang:1.21.8
   name: test
   settings: {}
 trigger:
@@ -63,7 +63,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.20.4
+  image: golang:1.21.8
   name: generate tags
   settings: {}
 - commands: []
@@ -121,7 +121,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.20.4
+  image: golang:1.21.8
   name: generate tags
   settings: {}
 - commands:
@@ -138,7 +138,7 @@ steps:
     ACCEPTANCE_DOCKER_HOST: docker
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
-  image: golang:1.20.4
+  image: golang:1.21.8
   name: acceptance
   settings: {}
   volumes:
@@ -179,8 +179,3 @@ get:
   path: infra/data/ci/argo-workflows/trigger-service-account
 kind: secret
 name: argo_token
----
-kind: signature
-hmac: 605534dda4ca3e5528ebffe0a4e88dbc39576dcfbe1843632f554bff4c20149f
-
-...
