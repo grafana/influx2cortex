@@ -38,7 +38,7 @@ steps:
   environment:
     GRAFANABOT_PAT:
       from_secret: gh_token
-  image: golangci/golangci-lint:v1.45
+  image: golangci/golangci-lint:v1.54
   name: coverage + lint
   settings: {}
 trigger:
@@ -181,6 +181,6 @@ kind: secret
 name: argo_token
 ---
 kind: signature
-hmac: 091328c204b499dfa17f6f3710c7ff895edb53d9d72e81dbdaf92785acd7af7c
+hmac: c575abd08594dc037295ee9a820e43b40011fb7016eab6078457ad0c7384604d
 
 ...
