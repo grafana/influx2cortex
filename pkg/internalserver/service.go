@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-kit/log"
@@ -40,6 +41,7 @@ type Service struct {
 	config  ServiceConfig
 	server  *http.Server
 	errChan chan error
+	ready   *atomic.Bool
 }
 
 func NewService(config ServiceConfig, logger log.Logger) (*Service, error) {
@@ -47,12 +49,18 @@ func NewService(config ServiceConfig, logger log.Logger) (*Service, error) {
 		return nil, errors.New("logger should not be nil")
 	}
 
+	ready := &atomic.Bool{}
+	ready.Store(true)
 	mux := http.NewServeMux()
-
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/healthz", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
+		if ready.Load() {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("ok"))
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte("not ready"))
+		}
 	}))
 
 	httpServer := &http.Server{
@@ -65,10 +73,16 @@ func NewService(config ServiceConfig, logger log.Logger) (*Service, error) {
 		config:  config,
 		server:  httpServer,
 		errChan: make(chan error, 1),
+		ready:   ready,
 	}
 	s.Service = services.NewBasicService(s.start, s.run, s.stop).WithName("internal")
 
 	return s, nil
+}
+
+// SetReady sets the response for the health check endpoint.
+func (s *Service) SetReady(ready bool) {
+	s.ready.Store(ready)
 }
 
 func (s *Service) start(_ context.Context) error {
