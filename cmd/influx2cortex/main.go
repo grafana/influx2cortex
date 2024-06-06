@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"os"
+	"time"
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -30,10 +31,17 @@ func main() {
 		Registerer: promRegisterer,
 	}
 	internalServerConfig := internalserver.ServiceConfig{}
+	var shutdownDelay time.Duration
 
 	flagext.RegisterFlags(
 		&proxyConfig,
 		&internalServerConfig,
+	)
+	flag.DurationVar(
+		&shutdownDelay,
+		"shutdown-delay",
+		0,
+		"How long to wait between SIGTERM and shutdown. After receiving SIGTERM, a non-ready status will be reported via readiness handler.",
 	)
 	flag.Parse()
 
@@ -71,6 +79,11 @@ func main() {
 	handler := signals.NewHandler(logging.GoKit(logger))
 	go func() {
 		handler.Loop()
+		internalService.SetReady(false)
+		if shutdownDelay > 0 {
+			_ = level.Info(logger).Log("msg", "waiting for shutdown delay", "delay", shutdownDelay)
+			time.Sleep(shutdownDelay)
+		}
 		for _, service := range appServices {
 			service.StopAsync()
 		}
