@@ -41,7 +41,7 @@ func NewAPI(conf ProxyConfig, client remotewrite.Client, recorder Recorder) (*AP
 // HandlerForInfluxLine is a http.Handler which accepts Influx Line protocol and converts it to WriteRequests.
 func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	logger := a.logger
-	if traceID, ok := middleware.ExtractTraceID(r.Context()); ok {
+	if traceID, ok := middleware.ExtractSampledTraceID(r.Context()); ok {
 		logger = log.With(logger, "traceID", traceID)
 	}
 	if orgID, err := user.ExtractOrgID(r.Context()); err == nil {
