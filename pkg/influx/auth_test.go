@@ -59,6 +59,14 @@ func TestAuthentication(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// A dependency is using the default registerer. We refresh it
+			// on every run to avoid double registration panics.
+			old := prometheus.DefaultRegisterer
+			prometheus.DefaultRegisterer = prometheus.NewRegistry()
+			t.Cleanup(func() {
+				prometheus.DefaultRegisterer = old
+			})
+
 			serverConfig := server.Config{
 				HTTPListenAddress: "127.0.0.1",
 				HTTPListenPort:    0, // Request system available port
