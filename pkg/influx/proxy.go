@@ -10,6 +10,7 @@ import (
 	"github.com/go-kit/log"
 	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
+	"github.com/grafana/mimir-proxies/pkg/appcommon"
 	"github.com/grafana/mimir-proxies/pkg/remotewrite"
 	"github.com/grafana/mimir-proxies/pkg/server"
 	"github.com/grafana/mimir-proxies/pkg/server/middleware"
@@ -19,6 +20,7 @@ import (
 const (
 	// Upped to 10MB based on empirical evidence of proxy receiving batches from telegraf agent
 	DefaultMaxRequestSizeBytes = 10 << 20 // 10 MB
+	serviceName                = "influx-write-proxy"
 )
 
 // ProxyConfig holds objects needed to start running an influx2cortex proxy
@@ -60,6 +62,8 @@ type ProxyService struct {
 	config  ProxyConfig
 	server  *server.Server
 	errChan chan error
+
+	tracerCloser func() error
 }
 
 // NewProxy creates a new remotewrite client
@@ -84,6 +88,7 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 	}
 
 	recorder := NewRecorder(conf.Registerer)
+	router := mux.NewRouter()
 
 	var authMiddleware middleware.Interface
 	if conf.EnableAuth {
@@ -92,7 +97,19 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 		authMiddleware = middleware.HTTPFakeAuth{}
 	}
 
-	server, err := server.NewServer(conf.Logger, conf.HTTPConfig, mux.NewRouter(), []middleware.Interface{authMiddleware})
+	tracer, tracerCloser, err := appcommon.NewTracer(serviceName, conf.Logger)
+	if err != nil {
+		return nil, err
+	}
+	tracerMiddleware := middleware.NewTracer(router, tracer)
+
+	// Middlewares will be wrapped in order
+	middlewares := []middleware.Interface{
+		tracerMiddleware,
+		authMiddleware,
+	}
+
+	server, err := server.NewServer(conf.Logger, conf.HTTPConfig, router, middlewares)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create http server: %w", err)
 	}
@@ -109,12 +126,13 @@ func newProxyWithClient(conf ProxyConfig, client remotewrite.Client) (*ProxyServ
 	}
 
 	p := &ProxyService{
-		logger:  conf.Logger,
-		config:  conf,
-		server:  server,
-		errChan: make(chan error, 1),
+		logger:       conf.Logger,
+		config:       conf,
+		server:       server,
+		errChan:      make(chan error, 1),
+		tracerCloser: tracerCloser.Close,
 	}
-	p.Service = services.NewBasicService(p.start, p.run, p.stop).WithName("influx-write-proxy")
+	p.Service = services.NewBasicService(p.start, p.run, p.stop).WithName(serviceName)
 	return p, nil
 }
 
@@ -148,5 +166,5 @@ func (p *ProxyService) run(servCtx context.Context) error {
 
 func (p *ProxyService) stop(_ error) error {
 	p.server.Shutdown(nil)
-	return nil
+	return p.tracerCloser()
 }
