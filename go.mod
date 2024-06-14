@@ -203,16 +203,10 @@ replace (
 	github.com/docker/cli => github.com/docker/cli v26.1.4+incompatible
 	github.com/docker/docker => github.com/docker/docker v26.1.4+incompatible
 
-	// Use fork of gocql that has gokit logs and Prometheus metrics.
-	github.com/gocql/gocql => github.com/grafana/gocql v0.0.0-20200605141915-ba5dc39ece85
-
 	// Copied from Mimir.
 	github.com/prometheus/prometheus => github.com/grafana/mimir-prometheus v0.0.0-20240305114356-f1f7b4f2e5dc
 
 	// This replace comes from thanos, otherwise:
-	// # github.com/sercand/kuberesolver
-	// /Users/oleg/go/pkg/mod/github.com/sercand/kuberesolver@v2.1.0+incompatible/builder.go:108:82: undefined: resolver.BuildOption
-	// /Users/oleg/go/pkg/mod/github.com/sercand/kuberesolver@v2.1.0+incompatible/builder.go:163:32: undefined: resolver.ResolveNowOption
 	github.com/sercand/kuberesolver => github.com/sercand/kuberesolver v2.4.0+incompatible
 
 	github.com/thanos-io/thanos v0.22.0 => github.com/thanos-io/thanos v0.19.1-0.20211125080947-19dcc7902d24
@@ -249,6 +243,3 @@ exclude (
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/client-go v12.0.0+incompatible
 )
-
-// Replacing this cuts that dependency branch by making an older cortex version depend on on a newer thanos
-replace github.com/thanos-io/thanos v0.13.1-0.20210108102609-f85e4003ba51 => github.com/thanos-io/thanos v0.13.1-0.20210122144644-4b4994212b24
