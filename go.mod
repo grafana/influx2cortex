@@ -20,7 +20,6 @@ require (
 	github.com/prometheus/common v0.54.1-0.20240608102853-1c9da3533702
 	github.com/prometheus/prometheus v1.99.0
 	github.com/stretchr/testify v1.9.0
-	github.com/weaveworks/common v0.0.0-20230119144549-0aaa5abd1e63
 	google.golang.org/grpc v1.64.0
 )
 
@@ -155,7 +154,6 @@ require (
 	github.com/twmb/franz-go/plugin/kprom v1.1.0 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
-	github.com/weaveworks/promrus v1.2.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect

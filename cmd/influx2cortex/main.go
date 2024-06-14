@@ -11,11 +11,10 @@ import (
 	"github.com/go-kit/log/level"
 	"github.com/grafana/dskit/flagext"
 	"github.com/grafana/dskit/services"
+	"github.com/grafana/dskit/signals"
 	"github.com/grafana/influx2cortex/pkg/influx"
 	"github.com/grafana/influx2cortex/pkg/internalserver"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/weaveworks/common/logging"
-	"github.com/weaveworks/common/signals"
 )
 
 func main() {
@@ -76,7 +75,7 @@ func main() {
 	}
 
 	// Look for SIGTERM and stop the server if we get it
-	handler := signals.NewHandler(logging.GoKit(logger))
+	handler := signals.NewHandler(logger)
 	go func() {
 		handler.Loop()
 		internalService.SetReady(false)
