@@ -7,11 +7,11 @@ import (
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/gorilla/mux"
+	"github.com/grafana/dskit/user"
 	"github.com/grafana/mimir-proxies/pkg/remotewrite"
 	"github.com/grafana/mimir-proxies/pkg/route"
 	"github.com/grafana/mimir-proxies/pkg/server/middleware"
 	"github.com/grafana/mimir/pkg/mimirpb"
-	"github.com/weaveworks/common/user"
 )
 
 type API struct {

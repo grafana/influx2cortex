@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/grafana/dskit/services"
+	"github.com/grafana/dskit/user"
 	"github.com/grafana/mimir-proxies/pkg/errorx"
 	"github.com/grafana/mimir-proxies/pkg/remotewrite"
 	"github.com/grafana/mimir-proxies/pkg/remotewrite/remotewritemock"
@@ -16,7 +17,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/weaveworks/common/user"
 )
 
 func TestAuthentication(t *testing.T) {

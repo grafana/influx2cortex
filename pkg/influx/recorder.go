@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/grafana/dskit/instrument"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/weaveworks/common/instrument"
 )
 
 const (
