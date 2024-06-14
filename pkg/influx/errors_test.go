@@ -117,7 +117,7 @@ func TestErrorxToInfluxErrorCode(t *testing.T) {
 			expectCode: EInternal,
 		},
 		"non-mapped error defaults to internal": {
-			err:        errorx.RateLimited{},
+			err:        errorx.TooManyRequests{},
 			expectCode: EInternal,
 		},
 	}
