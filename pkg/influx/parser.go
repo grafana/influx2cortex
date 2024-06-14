@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"sort"
 	"time"
@@ -37,7 +36,7 @@ func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([
 	if err != nil {
 		return nil, errorx.BadRequest{Msg: "gzip compression error", Err: err}, 0
 	}
-	data, err := ioutil.ReadAll(reader)
+	data, err := io.ReadAll(reader)
 	dataLen := len(data) // In case it something is read despite an error
 	if err != nil {
 		return nil, errorx.BadRequest{Msg: "can't read body", Err: err}, dataLen
