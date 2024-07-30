@@ -81,9 +81,10 @@ jobs:
           if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest" > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
           tail -n +1 .tags
           make build-local
+          echo "ACCEPTANCE_DOCKER_TAG=$${DOCKER_TAG}" >> $GITHUB_ENV
       - name: Run Acceptance Tests
         run: |
-          export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
-          make acceptance-tests
-
-  
+            echo $ACCEPTANCE_DOCKER_TAG
+            make acceptance-tests
+        env:
+          ACCEPTANCE_DOCKER_TAG: ${{ env.ACCEPTANCE_DOCKER_TAG }}
