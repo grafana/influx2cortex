@@ -80,7 +80,7 @@ jobs:
           echo -n "$${DOCKER_TAG}" > .tag
           if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest" > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
           tail -n +1 .tags
-          echo $DOCKER_TAG
+          echo $${DOCKER_TAG}
           echo "ACCEPTANCE_DOCKER_TAG=$${DOCKER_TAG}" >> $GITHUB_ENV
           make build-local
       - name: Run Acceptance Tests
