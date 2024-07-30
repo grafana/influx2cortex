@@ -65,25 +65,25 @@ jobs:
       - name: Run Tests
         run: go test ./...
     
-    acceptance:
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v3
-        - name: Install Go
-          uses: actions/setup-go@v5
-          with:
-            go-version: ${{ env.GO_VERSION }}
-        - name: Build Local Images
-          run: |
-            DOCKER_TAG=$(bash scripts/generate-tags.sh)
-            echo -n "$${DOCKER_TAG}" > .tag
-            if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest" > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
-            tail -n +1 .tags
-            make build-local
-        - name: Run Acceptance Tests
-          run: |
-            export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
-            make acceptance-tests
+  acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Build Local Images
+        run: |
+          DOCKER_TAG=$(bash scripts/generate-tags.sh)
+          echo -n "$${DOCKER_TAG}" > .tag
+          if test "${DRONE_SOURCE_BRANCH}" = "main"; then echo -n "$${DOCKER_TAG},latest" > .tags; else echo -n "$${DOCKER_TAG}" > .tags; fi
+          tail -n +1 .tags
+          make build-local
+      - name: Run Acceptance Tests
+        run: |
+          export ACCEPTANCE_DOCKER_TAG=$(cat .tag)
+          make acceptance-tests
 
-    
+  
