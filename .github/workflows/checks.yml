@@ -70,6 +70,9 @@ jobs:
         uses: thollander/actions-comment-pull-request@v2
         with:
           filePath: comment.txt
+          comment_tag: to_delete
+          mode: delete
+          create_if_not_exists: true
       
     
   acceptance:
