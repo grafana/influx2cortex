@@ -23,6 +23,30 @@ local apps = [
   'influx2cortex',
 ];
 
+local commentCoverageLintReport = {
+  step: step('coverage + lint', $.commands, image=$.image, environment=$.environment),
+  commands: [
+    // Build drone utilities.
+    'scripts/build-drone-utilities.sh',
+    // Generate the raw coverage report.
+    'go test -coverprofile=coverage.out ./...',
+    // Process the raw coverage report.
+    '.drone/coverage > coverage_report.out',
+    // Generate the lint report.
+    'scripts/generate-lint-report.sh',
+    // Combine the reports.
+    'cat coverage_report.out > report.out',
+    'echo "" >> report.out',
+    'cat lint.out >> report.out',
+    // Submit the comment to GitHub.
+    '.drone/ghcomment -id "Go coverage report:" -bodyfile report.out',
+  ],
+  environment: {
+    GRAFANABOT_PAT: { from_secret: 'gh_token' },
+  },
+  image: images._images.goLint,
+};
+
 local imagePullSecrets = { image_pull_secrets: ['dockerconfigjson'] };
 
 local generateTags = {
@@ -118,6 +142,15 @@ local acceptance = {
 };
 
 [
+  pipeline('check')
+  + withInlineStep('test', ['go test ./...'])
+  + triggers.pr
+  + triggers.main,
+
+  pipeline('coverageLintReport')
+  + withStep(commentCoverageLintReport.step)
+  + triggers.pr,
+
   pipeline('build', depends_on=['check'])
   + withStep(generateTags.step)
   + withSteps([buildAndPushImages.step(app) for app in apps])
