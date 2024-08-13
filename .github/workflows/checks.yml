@@ -55,6 +55,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -67,12 +69,11 @@ jobs:
       - name: Generate Coverage Summary
         run: go run .drone/cmd/coverage/main.go -f coverage.out > comment.txt
       - name: Comment Coverage Summary
-        uses: thollander/actions-comment-pull-request@v2
+        uses: mshick/add-pr-comment@v2
         with:
-          filePath: comment.txt
-          comment_tag: to_delete
-          mode: delete
-          create_if_not_exists: true
+          message-path: comment.txt
+          update-only: true
+          refresh-message-position: true
       
     
   acceptance:
