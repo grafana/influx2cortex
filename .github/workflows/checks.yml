@@ -63,7 +63,14 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Run Tests
-        run: go test ./...
+        run: go test -coverprofile coverage.out ./...
+      - name: Generate Coverage Summary
+        run: go run .drone/cmd/coverage/main.go -f coverage.out > comment.txt
+      - name: Comment Coverage Summary
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: comment.txt
+      
     
   acceptance:
     runs-on: ubuntu-latest
