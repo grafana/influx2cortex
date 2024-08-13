@@ -15,6 +15,7 @@ COMMIT_UNIX_TIMESTAMP="$(git --no-pager show -s --format=%ct "${GIT_COMMIT}")"
 # DOCKER_TAG="$(bash scripts/docker-tag.sh)"
 DOCKER_TAG="TODO"
 
+# shellcheck disable=SC2043
 for cmd in influx2cortex
 do
     go build \

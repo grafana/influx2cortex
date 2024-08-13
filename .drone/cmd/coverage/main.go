@@ -75,9 +75,8 @@ func main() {
 	}
 	sort.Strings(keys)
 
-	fmt.Println("Go coverage report:")
 	fmt.Println("<details>")
-	fmt.Println("<summary>Click to expand.</summary>")
+	fmt.Println("<summary>Go coverage report (click to expand)</summary>")
 	fmt.Println("")
 	fmt.Println("| File | % |")
 	fmt.Println("| ---- | - |")
