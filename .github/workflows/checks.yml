@@ -69,6 +69,7 @@ jobs:
       - name: Generate Coverage Summary
         run: go run .drone/cmd/coverage/main.go -f coverage.out > comment.txt
       - name: Comment Coverage Summary
+        # This will update the comment in place on successive runs
         uses: mshick/add-pr-comment@v2
         with:
           message-path: comment.txt
