@@ -72,8 +72,6 @@ jobs:
         uses: mshick/add-pr-comment@v2
         with:
           message-path: comment.txt
-          update-only: true
-          refresh-message-position: true
       
     
   acceptance:
