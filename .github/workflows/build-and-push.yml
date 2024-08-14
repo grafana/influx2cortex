@@ -31,11 +31,11 @@ jobs:
         uses: grafana/shared-workflows/actions/push-to-gar-docker@main
         with:
           push: true
-          # If the event is a 'push', we are building main. Push to prod and add the 'latest' tag.
-          registry: "${{ github.event_name == 'push' && env.PROD_REGISTRY || env.DEV_REGISTRY }}"
+          # If we are building main, push to prod and add the 'latest' tag.
+          registry: "${{ github.ref_name == 'main' && env.PROD_REGISTRY || env.DEV_REGISTRY }}"
           tags: |-
             ${{ env.DOCKER_TAG }}
-            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+            type=raw,value=latest,enable=${{ github.ref_name == 'main' }}
           context: "."
           image_name: "influx2cortex"
-          environment: "${{ github.event_name == 'push' && 'prod' || 'dev' }}"
+          environment: "${{ github.ref_name == 'main' && 'prod' || 'dev' }}"
