@@ -6,10 +6,6 @@ on:
       - main
   pull_request:
 
-env:
-  PROD_REGISTRY: "us-docker.pkg.dev/grafanalabs-global/docker-influx2cortex-prod"
-  DEV_REGISTRY: "us-docker.pkg.dev/grafanalabs-dev/docker-influx2cortex-dev"
-
 permissions:
   contents: read
   id-token: write
