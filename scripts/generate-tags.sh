@@ -9,17 +9,23 @@ export SHELLOPTS        # propagate set to children by default
 IFS=$'\t\n'
 umask 0077
 
-BRANCH=${DRONE_SOURCE_BRANCH:-$(git branch --show-current)}
+# In GitHub Actions, GITHUB_HEAD_REF will be set to the PR branch if this is a PR build.
+# Otherwise, if it's a push, the branch name will be in GITHUB_REF_NAME.
+BRANCH="${DRONE_SOURCE_BRANCH:-${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-$(git branch --show-current)}}}"
 
 if git diff-index --quiet HEAD --
 then
-  if [[ ${DRONE_COMMIT:-unset} == 'unset' ]]
+  if [[ ${DRONE_COMMIT:-unset} != "unset" ]];
   then
-    GIT_COMMIT="$(git rev-list -1 HEAD)"
-    >&2 echo "\$DRONE_COMMIT is unset, using last git commit $GIT_COMMIT"
-  else
     GIT_COMMIT="${DRONE_COMMIT}"
     >&2 echo "\$DRONE_COMMIT=${DRONE_COMMIT}"
+  elif [[ ${GITHUB_SHA:-unset} != "unset" ]];
+  then
+    GIT_COMMIT="${GITHUB_SHA}"
+    >&2 echo "\$GITHUB_SHA=${GITHUB_SHA}"
+  else
+    GIT_COMMIT="$(git rev-list -1 HEAD)"
+    >&2 echo "\$DRONE_COMMIT and GITHUB_SHA are unset, using last git commit $GIT_COMMIT"
   fi
   # no changes
   UNIX_TIMESTAMP=$(git show -s --format=%ct "$GIT_COMMIT")

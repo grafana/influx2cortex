@@ -1,0 +1,41 @@
+name: "build-and-push"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  PROD_REGISTRY: "us-docker.pkg.dev/grafanalabs-global/docker-influx2cortex-prod"
+  DEV_REGISTRY: "us-docker.pkg.dev/grafanalabs-dev/docker-influx2cortex-dev"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Generate Tags
+        run: |
+          bash scripts/generate-tags.sh > .tag
+          echo "DOCKER_TAG=$(cat .tag)" >> $GITHUB_ENV
+          echo "$DOCKER_TAG"
+
+      - name: Build And Push
+        uses: grafana/shared-workflows/actions/push-to-gar-docker@main
+        with:
+          push: true
+          # If we are building main, push to prod and add the 'latest' tag.
+          registry: "${{ github.ref_name == 'main' && env.PROD_REGISTRY || env.DEV_REGISTRY }}"
+          tags: |-
+            ${{ env.DOCKER_TAG }}
+            type=raw,value=latest,enable=${{ github.ref_name == 'main' }}
+          context: "."
+          image_name: "influx2cortex"
+          environment: "${{ github.ref_name == 'main' && 'prod' || 'dev' }}"
