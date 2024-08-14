@@ -7,7 +7,6 @@ on:
   pull_request:
 
 env:
-  GO_VERSION: 1.21.8
   PROD_REGISTRY: "us-docker.pkg.dev/grafanalabs-global/docker-influx2cortex-prod"
   DEV_REGISTRY: "us-docker.pkg.dev/grafanalabs-dev/docker-influx2cortex-dev"
 
@@ -16,10 +15,10 @@ permissions:
   id-token: write
 
 jobs:
-  build-push:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - id: checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Generate Tags
@@ -29,7 +28,6 @@ jobs:
           echo "$DOCKER_TAG"
 
       - name: Build And Push
-        id: build-and-push
         uses: grafana/shared-workflows/actions/push-to-gar-docker@main
         with:
           push: true
