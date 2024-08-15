@@ -1,6 +1,6 @@
 module github.com/grafana/influx2cortex/drone
 
-go 1.21
+go 1.23
 
 require (
 	github.com/shurcooL/githubv4 v0.0.0-20220115235240-a14260e6f8a2
