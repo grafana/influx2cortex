@@ -21,18 +21,6 @@ coverage-output:
 coverage-show-func:
 	go tool cover -func cover.out
 
-# .PHONY: build
-# build: ## Build the grpc-cortex-gw docker image
-# build:
-# 	docker build --build-arg=revision=$(GIT_REVISION) -t jdbgrafana/grpc-cortex-gw .
-
-# CI
-drone:
-	scripts/generate-drone-yml.sh
-
-drone-utilities:
-	scripts/build-drone-utilities.sh
-
 packages-minor-autoupdate:
 	go mod edit -json \
 		| jq ".Require \
