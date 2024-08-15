@@ -8,7 +8,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.21.8
+  image: golang:1.23
   name: test
   settings: {}
 trigger:
@@ -36,7 +36,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.21.8
+  image: golang:1.23
   name: generate tags
   settings: {}
 - commands: []
@@ -94,7 +94,7 @@ steps:
   depends_on: []
   entrypoint: null
   environment: {}
-  image: golang:1.21.8
+  image: golang:1.23
   name: generate tags
   settings: {}
 - commands:
@@ -111,7 +111,7 @@ steps:
     ACCEPTANCE_DOCKER_HOST: docker
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
-  image: golang:1.21.8
+  image: golang:1.23
   name: acceptance
   settings: {}
   volumes:
