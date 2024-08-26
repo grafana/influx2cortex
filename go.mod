@@ -14,7 +14,7 @@ require (
 	github.com/influxdata/influxdb/v2 v2.7.10
 	github.com/ory/dockertest/v3 v3.11.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.20.1
+	github.com/prometheus/client_golang v1.20.2
 	github.com/prometheus/common v0.55.0
 	github.com/prometheus/prometheus v1.99.0
 	github.com/stretchr/testify v1.9.0
