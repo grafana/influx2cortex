@@ -21,7 +21,6 @@ jobs:
         run: |
           bash scripts/generate-tags.sh > .tag
           echo "DOCKER_TAG=$(cat .tag)" >> $GITHUB_ENV
-          echo "$DOCKER_TAG"
 
       - name: Build And Push
         uses: grafana/shared-workflows/actions/push-to-gar-docker@main
