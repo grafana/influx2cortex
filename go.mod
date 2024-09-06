@@ -11,14 +11,14 @@ require (
 	github.com/grafana/mimir v0.0.0-20240403161016-c7aab9e039d6
 	github.com/grafana/mimir-proxies v1.1.3-0.20240614200600-38818b085762
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
-	github.com/influxdata/influxdb/v2 v2.7.9
+	github.com/influxdata/influxdb/v2 v2.7.10
 	github.com/ory/dockertest/v3 v3.11.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.20.0
+	github.com/prometheus/client_golang v1.20.3
 	github.com/prometheus/common v0.55.0
 	github.com/prometheus/prometheus v1.99.0
 	github.com/stretchr/testify v1.9.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.0
 )
 
 require (
@@ -131,7 +131,7 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
-	github.com/opencontainers/runc v1.1.13 // indirect
+	github.com/opencontainers/runc v1.1.14 // indirect
 	github.com/opentracing-contrib/go-grpc v0.0.0-20210225150812-73cb765af46e // indirect
 	github.com/opentracing-contrib/go-stdlib v1.0.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b // indirect

@@ -7,5 +7,6 @@ jobs:
   call-workflow-passing-data:
     uses: grafana/security-github-actions/.github/workflows/dependabot-automerge.yaml@dependabot-automerge
     with:
+      repository-merge-method: squash
       packages-minor-autoupdate: '["github.com/ahmetalpbalkan/dlog","github.com/colega/envconfig","github.com/go-kit/log","github.com/gorilla/mux","github.com/grafana/dskit","github.com/grafana/mimir","github.com/grafana/mimir-proxies","github.com/influxdata/influxdb-client-go/v2","github.com/influxdata/influxdb/v2","github.com/ory/dockertest/v3","github.com/pkg/errors","github.com/prometheus/client_golang","github.com/prometheus/common","github.com/prometheus/prometheus","github.com/stretchr/testify","github.com/weaveworks/common","google.golang.org/grpc"]'
     secrets: inherit

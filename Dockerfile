@@ -4,7 +4,7 @@ RUN apk add --update --no-cache git coreutils
 WORKDIR /go/src/github.com/grafana/influx2cortex
 COPY . .
 
-RUN GIT_COMMIT="${DRONE_COMMIT:-$(git rev-list -1 HEAD)}"; \
+RUN GIT_COMMIT="${DRONE_COMMIT:-${GITHUB_SHA:-$(git rev-list -1 HEAD)}}"; \
     COMMIT_UNIX_TIMESTAMP="$(git --no-pager show -s --format=%ct "${GIT_COMMIT}")"; \
     DOCKER_TAG="$(cat .tag)"; \
     GOPRIVATE="github.com/grafana/*"; \
