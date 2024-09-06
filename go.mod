@@ -10,7 +10,7 @@ require (
 	github.com/grafana/dskit v0.0.0-20240229214108-b073df3747b2
 	github.com/grafana/mimir v0.0.0-20240403161016-c7aab9e039d6
 	github.com/grafana/mimir-proxies v1.1.3-0.20240614200600-38818b085762
-	github.com/influxdata/influxdb-client-go/v2 v2.12.4
+	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/influxdata/influxdb/v2 v2.7.10
 	github.com/ory/dockertest/v3 v3.11.0
 	github.com/pkg/errors v0.9.1
@@ -49,7 +49,6 @@ require (
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/deepmap/oapi-codegen v1.12.4 // indirect
 	github.com/dennwc/varint v1.0.0 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
@@ -127,6 +126,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
+	github.com/oapi-codegen/runtime v1.0.0 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
