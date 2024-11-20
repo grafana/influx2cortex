@@ -18,7 +18,7 @@ RUN GIT_COMMIT="${DRONE_COMMIT:-${GITHUB_SHA:-$(git rev-list -1 HEAD)}}"; \
     " \
     github.com/grafana/influx2cortex/cmd/influx2cortex
 
-FROM alpine:3.12
+FROM alpine:3.20
 
 RUN apk add --update --no-cache ca-certificates
 RUN addgroup -g 1000 app && \
