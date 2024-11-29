@@ -18,11 +18,15 @@ RUN GIT_COMMIT="${DRONE_COMMIT:-${GITHUB_SHA:-$(git rev-list -1 HEAD)}}"; \
     " \
     github.com/grafana/influx2cortex/cmd/influx2cortex
 
-FROM alpine:3.20
 
-RUN apk add --update --no-cache ca-certificates
 RUN addgroup -g 1000 app && \
   adduser -u 1000 -h /app -G app -S app
+
+FROM gcr.io/distroless/static-debian12
+
+COPY --from=groupbuilder /etc/passwd /etc/passwd
+COPY --from=groupbuilder /etc/group /etc/group
+
 WORKDIR /app
 USER app
 
