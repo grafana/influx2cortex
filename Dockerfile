@@ -24,8 +24,8 @@ RUN addgroup -g 1000 app && \
 
 FROM gcr.io/distroless/static-debian12
 
-COPY --from=groupbuilder /etc/passwd /etc/passwd
-COPY --from=groupbuilder /etc/group /etc/group
+COPY --from=build /etc/passwd /etc/passwd
+COPY --from=build /etc/group /etc/group
 
 WORKDIR /app
 USER app
