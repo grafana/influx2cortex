@@ -197,10 +197,6 @@ replace (
 	// Using a 3rd-party branch for custom dialer - see https://github.com/bradfitz/gomemcache/pull/86
 	github.com/bradfitz/gomemcache => github.com/themihai/gomemcache v0.0.0-20180902122335-24332e2d58ab
 
-	// Solving conflicting versions from dockertest, prometheus & influxdb
-	github.com/docker/cli => github.com/docker/cli v26.1.4+incompatible
-	github.com/docker/docker => github.com/docker/docker v26.1.4+incompatible
-
 	// Copied from Mimir.
 	github.com/prometheus/prometheus => github.com/grafana/mimir-prometheus v0.0.0-20240305114356-f1f7b4f2e5dc
 
