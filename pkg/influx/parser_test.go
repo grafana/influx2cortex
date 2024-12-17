@@ -159,6 +159,16 @@ func TestInvalidInput(t *testing.T) {
 			data:      "measurement,t1=v1 1465839830100400200", // missing field
 			errorType: &errorx.BadRequest{},
 		},
+		{
+			name: "parse missing tag name",
+			url:  "/write",
+			data: "measurement,=v1 1465839830100400200", // missing tag name
+		},
+		{
+			name: "parse missing tag value",
+			url:  "/write",
+			data: "measurement,t1= 1465839830100400200", // missing tag value
+		},
 	}
 
 	for _, tt := range tests {
