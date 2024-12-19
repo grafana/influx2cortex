@@ -219,3 +219,17 @@ func TestHandleSeriesPush(t *testing.T) {
 		})
 	}
 }
+func TestHandleHealth(t *testing.T) {
+	req := httptest.NewRequest("GET", "/healthz", nil)
+	req.Header.Set("X-Scope-OrgID", "fake")
+	rec := httptest.NewRecorder()
+	logger := log.NewNopLogger()
+	api := &API{
+		logger: logger,
+	}
+
+	api.handleHealth(rec, req)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "OK", rec.Body.String())
+}
