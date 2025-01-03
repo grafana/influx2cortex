@@ -25,7 +25,8 @@ jobs:
       - name: Build And Push
         uses: grafana/shared-workflows/actions/push-to-gar-docker@main
         with:
-          push: true
+          # Don't push from forks
+          push: github.event.pull_request.head.repo.full_name == github.repository
           # If we are building main, push to prod and add the 'latest' tag.
           tags: |-
             ${{ env.DOCKER_TAG }}
