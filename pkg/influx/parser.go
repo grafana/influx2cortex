@@ -39,6 +39,9 @@ func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([
 	data, err := io.ReadAll(reader)
 	dataLen := len(data) // In case it something is read despite an error
 	if err != nil {
+		if isNetworkTimeout(err) {
+			return nil, errorx.RequestTimeout{Msg: "can't read body", Err: err}, dataLen
+		}
 		return nil, errorx.BadRequest{Msg: "can't read body", Err: err}, dataLen
 	}
 

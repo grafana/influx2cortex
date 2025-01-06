@@ -431,8 +431,8 @@ github.com/grafana/mimir v0.0.0-20241202115302-451d592d6cd6 h1:c/fXE6juneNJuOJxs
 github.com/grafana/mimir v0.0.0-20241202115302-451d592d6cd6/go.mod h1:RiEw1uN/m/v+b74kNzF2KWlUDI4Bao7mjr+GAkqdw74=
 github.com/grafana/mimir-prometheus v0.0.0-20241202100552-120c71abae28 h1:aZcCAcjvHFNcpqnWOpdCjvKqA1jN1syHKYxFFrQBYYc=
 github.com/grafana/mimir-prometheus v0.0.0-20241202100552-120c71abae28/go.mod h1:zJ8WD0NpeWRafBVPm243oe6z1PFcQGEsX71fIwVsycs=
-github.com/grafana/mimir-proxies v1.1.3-0.20241224102942-130b7f6b1e6c h1:50l0PcvKoS7UWeTEde5J2ykT2+odiCooPDksKYhVxTc=
-github.com/grafana/mimir-proxies v1.1.3-0.20241224102942-130b7f6b1e6c/go.mod h1:itcbT4g3cW8mtGgiE7axn5sburwQDbjqQqvGoOIu6SI=
+github.com/grafana/mimir-proxies v1.1.3-0.20250106101656-ad9a596b493b h1:mN3BMhETUB/wpVxVBOzRm1v71ALsyTpZ5y//hAmFKz0=
+github.com/grafana/mimir-proxies v1.1.3-0.20250106101656-ad9a596b493b/go.mod h1:itcbT4g3cW8mtGgiE7axn5sburwQDbjqQqvGoOIu6SI=
 github.com/grafana/pyroscope-go/godeltaprof v0.1.8 h1:iwOtYXeeVSAeYefJNaxDytgjKtUuKQbJqgAIjlnicKg=
 github.com/grafana/pyroscope-go/godeltaprof v0.1.8/go.mod h1:2+l7K7twW49Ct4wFluZD3tZ6e0SjanjcUUBPVD/UuGU=
 github.com/grafana/regexp v0.0.0-20240607082908-2cb410fa05da h1:BML5sNe+bw2uO8t8cQSwe5QhvoP04eHPF7bnaQma0Kw=
