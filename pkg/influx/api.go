@@ -42,7 +42,18 @@ func NewAPI(conf ProxyConfig, client remotewrite.Client, recorder Recorder) (*AP
 }
 
 func (a *API) handleHealth(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("OK"))
+	span, _ := opentracing.StartSpanFromContext(r.Context(), "handleHealth")
+	defer span.Finish()
+
+	logger := withRequestInfo(a.logger, r)
+	_, err := w.Write([]byte("OK"))
+
+	if err != nil {
+		ext.LogError(span, err)
+		a.handleError(w, r, err, logger)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
