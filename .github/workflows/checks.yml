@@ -66,15 +66,32 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       - name: Run Tests
         run: go test -coverprofile coverage.out ./...
+      - name: Save Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
+  comment-coverage:
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Download Coverage Report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
       - name: Generate Coverage Summary
         run: go run ci/cmd/coverage/main.go -f coverage.out > comment.txt
       - name: Comment Coverage Summary
         # This will update the comment in place on successive runs
         uses: mshick/add-pr-comment@v2
         with:
-          message-path: comment.txt
-      
-    
+          message-path: comment.txt   
   acceptance:
     runs-on: ubuntu-latest
     steps:
