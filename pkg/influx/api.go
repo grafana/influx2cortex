@@ -29,6 +29,7 @@ func (a *API) Register(router *mux.Router) {
 	// Registering two write endpoints; the second is necessary to allow for compatibility with clients that hard-code the endpoint
 	registerer.RegisterRoute("/api/v1/push/influx/write", http.HandlerFunc(a.handleSeriesPush), http.MethodPost)
 	registerer.RegisterRoute("/api/v2/write", http.HandlerFunc(a.handleSeriesPush), http.MethodPost)
+	registerer.RegisterRoute("/healthz", http.HandlerFunc(a.handleHealth), http.MethodGet)
 }
 
 func NewAPI(conf ProxyConfig, client remotewrite.Client, recorder Recorder) (*API, error) {
@@ -38,6 +39,22 @@ func NewAPI(conf ProxyConfig, client remotewrite.Client, recorder Recorder) (*AP
 		recorder:            recorder,
 		maxRequestSizeBytes: conf.MaxRequestSizeBytes,
 	}, nil
+}
+
+func (a *API) handleHealth(w http.ResponseWriter, r *http.Request) {
+	span, _ := opentracing.StartSpanFromContext(r.Context(), "handleHealth")
+	defer span.Finish()
+
+	logger := withRequestInfo(a.logger, r)
+	_, err := w.Write([]byte("OK"))
+
+	if err != nil {
+		ext.LogError(span, err)
+		a.handleError(w, r, err, logger)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 // HandlerForInfluxLine is a http.Handler which accepts Influx Line protocol and converts it to WriteRequests.
