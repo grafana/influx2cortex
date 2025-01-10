@@ -177,6 +177,21 @@ func TestParseInfluxLineReader(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "parse invalid char conversion number prefix",
+			url:  "/",
+			data: "0measurement,1t1=v1 f1=0 1465839830100400200",
+			expectedResult: []mimirpb.TimeSeries{
+				{
+					Labels: []mimirpb.LabelAdapter{
+						{Name: "_1t1", Value: "v1"},
+						{Name: "__name__", Value: "_0measurement_f1"},
+						{Name: "__proxy_source__", Value: "influx"},
+					},
+					Samples: []mimirpb.Sample{{Value: 0, TimestampMs: 1465839830100}},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {
