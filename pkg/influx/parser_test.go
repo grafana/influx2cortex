@@ -23,9 +23,24 @@ func TestParseInfluxLineReader(t *testing.T) {
 		expectedResult []mimirpb.TimeSeries
 	}{
 		{
-			name: "parse simple line",
+			name: "parse simple line single value called value",
 			url:  "/",
-			data: "measurement,t1=v1 f1=\"v2\" 1465839830100400200",
+			data: "measurement,t1=v1 value=1.5 1465839830100400200",
+			expectedResult: []mimirpb.TimeSeries{
+				{
+					Labels: []mimirpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement"},
+						{Name: "__proxy_source__", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
+					Samples: []mimirpb.Sample{{Value: 1.5, TimestampMs: 1465839830100}},
+				},
+			},
+		},
+		{
+			name: "parse simple line single value",
+			url:  "/",
+			data: "measurement,t1=v1 f1=2 1465839830100400200",
 			expectedResult: []mimirpb.TimeSeries{
 				{
 					Labels: []mimirpb.LabelAdapter{
@@ -35,6 +50,68 @@ func TestParseInfluxLineReader(t *testing.T) {
 					},
 					Samples: []mimirpb.Sample{{Value: 2, TimestampMs: 1465839830100}},
 				},
+			},
+		},
+		{
+			name: "parse simple line single float value",
+			url:  "/",
+			data: "measurement,t1=v1 f1=3.14159 1465839830100400200",
+			expectedResult: []mimirpb.TimeSeries{
+				{
+					Labels: []mimirpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f1"},
+						{Name: "__proxy_source__", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
+					Samples: []mimirpb.Sample{{Value: 3.14159, TimestampMs: 1465839830100}},
+				},
+			},
+		},
+		{
+			name: "parse simple line multiple int/float values",
+			url:  "/",
+			data: "measurement,t1=v1 f1=2,f2=3i,f3=3.14159 1465839830100400200",
+			expectedResult: []mimirpb.TimeSeries{
+				{
+					Labels: []mimirpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f1"},
+						{Name: "__proxy_source__", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
+					Samples: []mimirpb.Sample{{Value: 2, TimestampMs: 1465839830100}},
+				},
+				{
+					Labels: []mimirpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f2"},
+						{Name: "__proxy_source__", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
+					Samples: []mimirpb.Sample{{Value: 3, TimestampMs: 1465839830100}},
+				},
+				{
+					Labels: []mimirpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f3"},
+						{Name: "__proxy_source__", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
+					Samples: []mimirpb.Sample{{Value: 3.14159, TimestampMs: 1465839830100}},
+				},
+			},
+		},
+		{
+			name: "parse simple line ignoring string value",
+			url:  "/",
+			data: "measurement,t1=v1 f1=2,f2=\"val2\" 1465839830100400200",
+			expectedResult: []mimirpb.TimeSeries{
+				{
+					Labels: []mimirpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement_f1"},
+						{Name: "__proxy_source__", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
+					Samples: []mimirpb.Sample{{Value: 2, TimestampMs: 1465839830100}},
+				},
+				// We don't produce a result for the f2="val2" field set
 			},
 		},
 		{
@@ -88,13 +165,28 @@ func TestParseInfluxLineReader(t *testing.T) {
 		{
 			name: "parse invalid char conversion",
 			url:  "/",
-			data: "*measurement,#t1?=v1 f1=0 1465839830100400200",
+			data: "*measurement,#t1?=v1 f#1=0 1465839830100400200",
 			expectedResult: []mimirpb.TimeSeries{
 				{
 					Labels: []mimirpb.LabelAdapter{
-						{Name: "__name__", Value: "_measurement_f1"},
+						{Name: "__name__", Value: "_measurement_f_1"},
 						{Name: "__proxy_source__", Value: "influx"},
 						{Name: "_t1_", Value: "v1"},
+					},
+					Samples: []mimirpb.Sample{{Value: 0, TimestampMs: 1465839830100}},
+				},
+			},
+		},
+		{
+			name: "parse invalid char conversion number prefix",
+			url:  "/",
+			data: "0measurement,1t1=v1 f1=0 1465839830100400200",
+			expectedResult: []mimirpb.TimeSeries{
+				{
+					Labels: []mimirpb.LabelAdapter{
+						{Name: "_1t1", Value: "v1"},
+						{Name: "__name__", Value: "_0measurement_f1"},
+						{Name: "__proxy_source__", Value: "influx"},
 					},
 					Samples: []mimirpb.Sample{{Value: 0, TimestampMs: 1465839830100}},
 				},
@@ -115,7 +207,12 @@ func TestParseInfluxLineReader(t *testing.T) {
 					return timeSeries[i].String() < timeSeries[j].String()
 				})
 			}
-			for i := 1; i < len(timeSeries); i++ {
+
+			// Ensure we are getting the expected number of results
+			assert.Equal(t, len(timeSeries), len(tt.expectedResult))
+
+			// Compare them one by one
+			for i := 0; i < len(timeSeries); i++ {
 				assert.Equal(t, timeSeries[i].String(), tt.expectedResult[i].String())
 			}
 		})
