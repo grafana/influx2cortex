@@ -23,6 +23,21 @@ func TestParseInfluxLineReader(t *testing.T) {
 		expectedResult []mimirpb.TimeSeries
 	}{
 		{
+			name: "parse simple line single value called value",
+			url:  "/",
+			data: "measurement,t1=v1 value=1.5 1465839830100400200",
+			expectedResult: []mimirpb.TimeSeries{
+				{
+					Labels: []mimirpb.LabelAdapter{
+						{Name: "__name__", Value: "measurement"},
+						{Name: "__proxy_source__", Value: "influx"},
+						{Name: "t1", Value: "v1"},
+					},
+					Samples: []mimirpb.Sample{{Value: 1.5, TimestampMs: 1465839830100}},
+				},
+			},
+		},
+		{
 			name: "parse simple line single value",
 			url:  "/",
 			data: "measurement,t1=v1 f1=2 1465839830100400200",
