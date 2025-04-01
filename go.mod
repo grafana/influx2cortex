@@ -2,6 +2,8 @@ module github.com/grafana/influx2cortex
 
 go 1.23.0
 
+toolchain go1.24.1
+
 require (
 	github.com/ahmetalpbalkan/dlog v0.0.0-20170105205344-4fb5f8204f26
 	github.com/colega/envconfig v0.1.0
@@ -19,7 +21,7 @@ require (
 	github.com/prometheus/common v0.62.0
 	github.com/prometheus/prometheus v1.99.0
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.71.1
 )
 
 require (
