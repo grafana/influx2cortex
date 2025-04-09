@@ -146,7 +146,7 @@ func influxPointToTimeseries(pt models.Point) ([]mimirpb.TimeSeries, error) {
 func replaceInvalidChars(in *string) {
 	for charIndex, char := range *in {
 		charInt := int(char)
-		//lint:ignore QF1001
+		//nolint:staticcheck
 		if !((charInt >= 'a' && charInt <= 'z') || // a-z
 			(charInt >= 'A' && charInt <= 'Z') || // A-Z
 			(charInt >= '0' && charInt <= '9') || // 0-9
