@@ -34,10 +34,10 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           args: --verbose  --timeout=3m
-          version: v1.60.1
+          version: v2.0.2
 
   go-mod-tidy:
     runs-on: ubuntu-latest

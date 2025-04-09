@@ -20,7 +20,7 @@ import (
 const internalLabel = "__proxy_source__"
 
 // parseInfluxLineReader parses a Influx Line Protocol request from an io.Reader.
-func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([]mimirpb.TimeSeries, error, int) {
+func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([]mimirpb.TimeSeries, int, error) {
 	qp := r.URL.Query()
 	precision := qp.Get("precision")
 	if precision == "" {
@@ -28,31 +28,31 @@ func parseInfluxLineReader(ctx context.Context, r *http.Request, maxSize int) ([
 	}
 
 	if !models.ValidPrecision(precision) {
-		return nil, errorx.BadRequest{Msg: fmt.Sprintf("precision supplied is not valid: %s", precision)}, 0
+		return nil, 0, errorx.BadRequest{Msg: fmt.Sprintf("precision supplied is not valid: %s", precision)}
 	}
 
 	encoding := r.Header.Get("Content-Encoding")
 	reader, err := batchReadCloser(r.Body, encoding, int64(maxSize))
 	if err != nil {
-		return nil, errorx.BadRequest{Msg: "gzip compression error", Err: err}, 0
+		return nil, 0, errorx.BadRequest{Msg: "gzip compression error", Err: err}
 	}
 	data, err := io.ReadAll(reader)
 	dataLen := len(data) // In case it something is read despite an error
 	if err != nil {
-		return nil, errorx.BadRequest{Msg: "can't read body", Err: err}, dataLen
+		return nil, dataLen, errorx.BadRequest{Msg: "can't read body", Err: err}
 	}
 
 	err = reader.Close()
 	if err != nil {
-		return nil, errorx.BadRequest{Msg: "problem reading body", Err: err}, dataLen
+		return nil, dataLen, errorx.BadRequest{Msg: "problem reading body", Err: err}
 	}
 
 	points, err := models.ParsePointsWithPrecision(data, time.Now().UTC(), precision)
 	if err != nil {
-		return nil, errorx.BadRequest{Msg: "error parsing points", Err: err}, dataLen
+		return nil, dataLen, errorx.BadRequest{Msg: "error parsing points", Err: err}
 	}
 	a, b := writeRequestFromInfluxPoints(points)
-	return a, b, dataLen
+	return a, dataLen, b
 }
 
 func writeRequestFromInfluxPoints(points []models.Point) ([]mimirpb.TimeSeries, error) {
@@ -146,6 +146,7 @@ func influxPointToTimeseries(pt models.Point) ([]mimirpb.TimeSeries, error) {
 func replaceInvalidChars(in *string) {
 	for charIndex, char := range *in {
 		charInt := int(char)
+		//nolint:staticcheck
 		if !((charInt >= 'a' && charInt <= 'z') || // a-z
 			(charInt >= 'A' && charInt <= 'Z') || // A-Z
 			(charInt >= '0' && charInt <= '9') || // 0-9

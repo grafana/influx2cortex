@@ -65,7 +65,7 @@ func (a *API) handleSeriesPush(w http.ResponseWriter, r *http.Request) {
 	logger := withRequestInfo(a.logger, r)
 	beforeConversion := time.Now()
 
-	ts, err, bytesRead := parseInfluxLineReader(ctx, r, a.maxRequestSizeBytes)
+	ts, bytesRead, err := parseInfluxLineReader(ctx, r, a.maxRequestSizeBytes)
 	span.LogKV("bytesRead", bytesRead)
 	logger = log.With(logger, "bytesRead", bytesRead)
 	if err != nil {
