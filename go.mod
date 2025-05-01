@@ -1,8 +1,6 @@
 module github.com/grafana/influx2cortex
 
-go 1.23.8
-
-toolchain go1.24.1
+go 1.24.1
 
 require (
 	github.com/ahmetalpbalkan/dlog v0.0.0-20170105205344-4fb5f8204f26
@@ -11,7 +9,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/grafana/dskit v0.0.0-20250422145853-90fa6b9a2b76
 	github.com/grafana/mimir v0.0.0-20250501105506-4584085047c0
-	github.com/grafana/mimir-proxies v1.1.3-0.20241224102942-130b7f6b1e6c
+	github.com/grafana/mimir-proxies v1.1.3-0.20250501120254-2f1ef9dc7d30
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/influxdata/influxdb/v2 v2.7.11
 	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b
