@@ -255,7 +255,6 @@ require (
 replace (
 	// Copied from Mimir.
 	github.com/prometheus/prometheus => github.com/grafana/mimir-prometheus v1.8.2-0.20250423083340-007de9b763aa
-	github.com/twmb/franz-go => github.com/grafana/franz-go v0.0.0-20241009100846-782ba1442937
 	gopkg.in/yaml.v3 => github.com/colega/go-yaml-yaml v0.0.0-20220720105220-255a8d16d094
 )
 
