@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/go-kit/log"
-	"github.com/grafana/mimir-proxies/pkg/errorx"
-	"github.com/grafana/mimir-proxies/pkg/remotewrite/remotewritemock"
+	"github.com/grafana/mimir-graphite/v2/pkg/errorx"
+	"github.com/grafana/mimir-graphite/v2/pkg/remotewrite/remotewritemock"
 	"github.com/stretchr/testify/require"
 )
 

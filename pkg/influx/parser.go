@@ -9,7 +9,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/grafana/mimir-proxies/pkg/errorx"
+	"github.com/grafana/mimir-graphite/v2/pkg/errorx"
 	"github.com/grafana/mimir/pkg/mimirpb"
 	"github.com/grafana/mimir/pkg/util"
 	io2 "github.com/influxdata/influxdb/v2/kit/io"

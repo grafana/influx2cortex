@@ -22,8 +22,8 @@ do
     -o "dist/${cmd}" \
     -ldflags "\
         -w \
-        -X 'github.com/grafana/mimir-proxies/pkg/appcommon.CommitUnixTimestamp=${COMMIT_UNIX_TIMESTAMP}' \
-        -X 'github.com/grafana/mimir-proxies/pkg/appcommon.DockerTag=${DOCKER_TAG}' \
+        -X 'github.com/grafana/mimir-graphite/v2/pkg/appcommon.CommitUnixTimestamp=${COMMIT_UNIX_TIMESTAMP}' \
+        -X 'github.com/grafana/mimir-graphite/v2/pkg/appcommon.DockerTag=${DOCKER_TAG}' \
         " \
     "github.com/grafana/influx2cortex/cmd/${cmd}"
 

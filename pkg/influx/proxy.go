@@ -10,10 +10,10 @@ import (
 	"github.com/go-kit/log"
 	"github.com/gorilla/mux"
 	"github.com/grafana/dskit/services"
-	"github.com/grafana/mimir-proxies/pkg/appcommon"
-	"github.com/grafana/mimir-proxies/pkg/remotewrite"
-	"github.com/grafana/mimir-proxies/pkg/server"
-	"github.com/grafana/mimir-proxies/pkg/server/middleware"
+	"github.com/grafana/mimir-graphite/v2/pkg/appcommon"
+	"github.com/grafana/mimir-graphite/v2/pkg/remotewrite"
+	"github.com/grafana/mimir-graphite/v2/pkg/server"
+	"github.com/grafana/mimir-graphite/v2/pkg/server/middleware"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
