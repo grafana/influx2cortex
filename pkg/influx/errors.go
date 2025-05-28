@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/grafana/mimir-proxies/pkg/errorx"
+	"github.com/grafana/mimir-graphite/v2/pkg/errorx"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 

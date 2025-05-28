@@ -7,7 +7,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/grafana/mimir-proxies/pkg/errorx"
+	"github.com/grafana/mimir-graphite/v2/pkg/errorx"
 	"github.com/grafana/mimir/pkg/mimirpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
