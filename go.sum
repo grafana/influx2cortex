@@ -428,8 +428,8 @@ github.com/huaweicloud/huaweicloud-sdk-go-obs v3.23.3+incompatible h1:tKTaPHNVwi
 github.com/huaweicloud/huaweicloud-sdk-go-obs v3.23.3+incompatible/go.mod h1:l7VUhRbTKCzdOacdT4oWCwATKyvZqUOlOqr0Ous3k4s=
 github.com/influxdata/influxdb-client-go/v2 v2.14.0 h1:AjbBfJuq+QoaXNcrova8smSjwJdUHnwvfjMF71M1iI4=
 github.com/influxdata/influxdb-client-go/v2 v2.14.0/go.mod h1:Ahpm3QXKMJslpXl3IftVLVezreAUtBOTZssDrjZEFHI=
-github.com/influxdata/influxdb/v2 v2.7.11 h1:qs9qr5hsuFrlTiBtr5lBrALbQ2dHAanf21fBLlLpKww=
-github.com/influxdata/influxdb/v2 v2.7.11/go.mod h1:zNOyzQy6WbfvGi1CK1aJ2W8khOq9+Gdsj8yLj8bHHqg=
+github.com/influxdata/influxdb/v2 v2.7.12 h1:m25dUSO7h6nm3zFC4v/aCNeFFmnN/mlN/uPo1T63bmk=
+github.com/influxdata/influxdb/v2 v2.7.12/go.mod h1:Mb0O9zNkhn4JTmr5vsr4ELa75um/ai6dY1pcoW192AU=
 github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 h1:W9WBk7wlPfJLvMCdtV4zPulc4uCPrlywQOmbFOhgQNU=
 github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839/go.mod h1:xaLFMmpvUxqXtVkUJfg9QmT88cDaCJ3ZKgdZ78oO8Qo=
 github.com/influxdata/tdigest v0.0.2-0.20210216194612-fc98d27c9e8b h1:i44CesU68ZBRvtCjBi3QSosCIKrjmMbYlQMFAwVLds4=

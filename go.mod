@@ -11,7 +11,7 @@ require (
 	github.com/grafana/mimir v0.0.0-20250501105506-4584085047c0
 	github.com/grafana/mimir-graphite/v2 v2.1.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
-	github.com/influxdata/influxdb/v2 v2.7.11
+	github.com/influxdata/influxdb/v2 v2.7.12
 	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b
 	github.com/ory/dockertest/v3 v3.12.0
 	github.com/pkg/errors v0.9.1
