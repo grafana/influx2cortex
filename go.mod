@@ -1,6 +1,6 @@
 module github.com/grafana/influx2cortex
 
-go 1.24.1
+go 1.24.4
 
 require (
 	github.com/ahmetalpbalkan/dlog v0.0.0-20170105205344-4fb5f8204f26
