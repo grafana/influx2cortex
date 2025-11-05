@@ -1,3 +1,9 @@
+# ⚠️ ARCHIVED REPOSITORY
+
+**This repository is now archived.** The feature to ingest InfluxDB metrics into Prometheus is now available in the [grafana/mimir](https://github.com/grafana/mimir) repository starting with the v2.16 release.
+
+---
+
 <a href="https://github.com/grafana/influx2cortex/actions/workflows/build-and-push.yml?query=branch%3Amain"><img src="https://github.com/grafana/influx2cortex/actions/workflows/build-and-push.yml/badge.svg" alt="Build And Push" /></a>
 
 <a href="https://goreportcard.com/report/github.com/grafana/influx2cortex"><img src="https://goreportcard.com/badge/github.com/grafana/influx2cortex" alt="Go Report Card" /></a>
