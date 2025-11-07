@@ -25,7 +25,7 @@ jobs:
           echo "DOCKER_TAG=$(cat .tag)" >> $GITHUB_ENV
 
       - name: Build And Push
-        uses: grafana/shared-workflows/actions/push-to-gar-docker@fa48192dac470ae356b3f7007229f3ac28c48a25 # main
+        uses: grafana/shared-workflows/actions/push-to-gar-docker@273c085fd3c84eb8f2ad9a1d5572818bc2040061 # main
         with:
           # Don't push from forks
           push: ${{ github.ref_name == 'main' || github.event.pull_request.head.repo.full_name == github.repository }}
