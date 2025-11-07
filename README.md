@@ -1,6 +1,8 @@
 # ⚠️ ARCHIVED REPOSITORY
 
-**This repository is now archived.** The feature to ingest InfluxDB metrics into Prometheus is now available in the [grafana/mimir](https://github.com/grafana/mimir) repository starting with the v2.16 release.
+**This repository was archived on November 7th 2025.** The feature to ingest InfluxDB metrics into Prometheus is now available in the [grafana/mimir](https://github.com/grafana/mimir) repository starting with the [v2.16 release](https://github.com/grafana/mimir/releases/tag/mimir-2.16.0).
+
+> Distributors now include experimental support for the Influx line protocol.
 
 ---
 
